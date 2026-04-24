@@ -1,0 +1,316 @@
+/*
+  style.css
+  ==========
+  这一份文件只管“长相”。
+  以后如果你只是想改颜色、字体、按钮大小，优先改这里，不要碰 game.js。
+*/
+
+:root{
+  --bg:#0b1020;
+  --panel:#151b33;
+  --panel2:#1b2442;
+  --text:#eef2ff;
+  --muted:#aab3d6;
+  --blue:#4ea1ff;
+  --red:#ff6b7a;
+  --gold:#ffd166;
+  --green:#5dd39e;
+  --danger:#ff7d7d;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:linear-gradient(180deg,#090d18,#11172c 60%,#0b1020);
+  color:var(--text);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+
+button{
+  border:0;
+  border-radius:12px;
+  padding:10px 12px;
+  background:#2a3360;
+  color:var(--text);
+  font-size:14px;
+}
+button:disabled{
+  opacity:.45;
+}
+
+.wrap{
+  max-width:980px;
+  margin:0 auto;
+  padding-bottom:180px;
+}
+
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(8,12,22,.96);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(10px);
+  padding:10px 12px;
+}
+
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.space{justify-content:space-between}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  color:var(--muted);
+  font-size:12px;
+}
+.badge strong{color:#fff}
+.badge.blue{background:rgba(78,161,255,.17);color:#dbeeff}
+.badge.red{background:rgba(255,107,122,.17);color:#ffe0e5}
+.badge.gold{background:rgba(255,209,102,.16);color:#fff2c3}
+
+.hud{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  padding:10px;
+}
+.card h3{margin:0 0 6px 0;font-size:14px}
+.small{font-size:12px;color:var(--muted);line-height:1.45}
+
+.bar{
+  margin-top:6px;
+  height:10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  overflow:hidden;
+}
+.bar>div{height:100%;border-radius:999px}
+.ap>div{background:linear-gradient(90deg,#ffd166,#ff9f1c)}
+.hp>div{background:linear-gradient(90deg,#6ee7b7,#22c55e)}
+.shield>div{background:linear-gradient(90deg,#93c5fd,#3b82f6)}
+
+.gridWrap{
+  margin:12px auto 0;
+  padding:10px;
+  max-width:780px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(9,minmax(0,1fr));
+  gap:4px;
+  user-select:none;
+}
+.cell{
+  position:relative;
+  aspect-ratio:1;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.spawnBlue{background:rgba(78,161,255,.08)}
+.spawnRed{background:rgba(255,107,122,.08)}
+.selected{outline:3px solid var(--gold)}
+.moveHint{outline:2px solid rgba(93,211,158,.85); background:rgba(93,211,158,.13)}
+.attackHint{outline:2px solid rgba(255,107,122,.85); background:rgba(255,107,122,.12)}
+.targetHint{outline:2px solid rgba(255,209,102,.9); background:rgba(255,209,102,.13)}
+.blockHint{background:rgba(148,163,184,.2)}
+
+.coord{
+  position:absolute;
+  left:4px;
+  top:4px;
+  font-size:9px;
+  color:rgba(255,255,255,.22);
+}
+.unit{
+  width:100%;
+  height:100%;
+  border-radius:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:#fff;
+  font-weight:800;
+  line-height:1.05;
+  padding:2px;
+}
+.unit.blue{background:linear-gradient(180deg,rgba(78,161,255,.95),rgba(39,107,205,.96))}
+.unit.red{background:linear-gradient(180deg,rgba(255,107,122,.95),rgba(204,48,72,.96))}
+.unit .name{font-size:11px;white-space:nowrap}
+.unit .hp{font-size:10px;font-weight:700;opacity:.96}
+.unit .fx{font-size:9px;opacity:.95;margin-top:2px;white-space:nowrap}
+
+.sidebar{
+  margin-top:12px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:12px;
+}
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  font-size:12px;
+}
+.sep{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
+.hintText{font-size:12px;color:var(--muted);line-height:1.5}
+
+.log{
+  height:140px;
+  overflow:auto;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:8px;
+  font-size:12px;
+  line-height:1.45;
+}
+.log div{margin-bottom:4px}
+
+.controls{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:40;
+  background:rgba(7,10,18,.98);
+  border-top:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(12px);
+}
+.controls .inner{
+  max-width:980px;
+  margin:0 auto;
+  padding:10px 12px;
+}
+
+.skillBar{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+.skillBar button{flex:1 1 auto; min-width:100px;}
+.btnRow{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.btnRow button{flex:1 1 auto; min-width:104px;}
+.btnGood{background:linear-gradient(180deg,#1e6f59,#134737)}
+.btnDanger{background:linear-gradient(180deg,#7d1f30,#561525)}
+.btnWarn{background:linear-gradient(180deg,#7c5c12,#553d0f)}
+.btnGhost{background:rgba(255,255,255,.08)}
+
+.ruleBox{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:10px;
+}
+.ruleBox strong{display:block;margin-bottom:6px}
+.ruleList{
+  margin:0;
+  padding-left:18px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.5;
+}
+.ruleList li{margin-bottom:4px}
+
+.summaryTable{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+  font-size:12px;
+}
+.summaryTable th,.summaryTable td{
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:8px 6px;
+  text-align:left;
+}
+.summaryTable th{color:var(--muted);font-weight:700}
+.summaryTable tr.blue td:first-child{color:var(--blue)}
+.summaryTable tr.red td:first-child{color:var(--red)}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  z-index:80;
+  background:rgba(0,0,0,.68);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+.overlay.show{display:flex}
+.modal{
+  width:min(760px,100%);
+  max-height:90vh;
+  overflow:auto;
+  background:linear-gradient(180deg,#161b32,#11162a);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;
+  padding:16px;
+  box-shadow:0 20px 70px rgba(0,0,0,.45);
+}
+.modal h2,.modal h3{margin:0 0 10px 0}
+.modal p,.modal li{color:var(--muted)}
+.modal .heroCard{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  padding:12px;
+  margin-bottom:10px;
+}
+.modal .heroCard strong{display:block;margin-bottom:6px;color:#fff}
+.modal .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.modal .heroPick{
+  cursor:pointer;
+  user-select:none;
+}
+.modal .heroPick.disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.modal .heroPick.selected{
+  outline:3px solid var(--gold);
+}
+.modal .overlayActions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.overlayActions button{min-width:120px}
+
+@media (max-width: 720px){
+  .hud{grid-template-columns:1fr}
+  .gridWrap{padding:6px}
+  .cell{border-radius:10px}
+  .wrap{padding-bottom:220px}
+  .skillBar button,.btnRow button{min-width:0}
+  .modal .grid2{grid-template-columns:1fr}
+}
