@@ -59,7 +59,7 @@ const state = {
   effects: [],
   barriers: [],
   logs: [],
-  lastUnusedAp: { blue: 0, red: 0 }, // 记录上一回合结束时剩余的 AP（给五条被动用）
+  lastUnusedAp: { blue: 0, red: 0 }, // 记录上一回合结束时剩余的行动点（给五条被动用）
   bonusTurn: null,         // 额外回合用的占位字段
   endSummary: null
 };
@@ -487,7 +487,7 @@ function startBattle() {
 
   log(`随机决定先手：${TEAM[state.firstTeam].name}。`);
   if (state.bonusTurn.team) {
-    log(`${TEAM[state.bonusTurn.team].name} 获得一张临时行动点卡（+1 AP）。`);
+    log(`${TEAM[state.bonusTurn.team].name} 获得一张临时行动点卡（+1 行动点）。`);
   }
 
   // 进入第一个回合前，先处理开局状态。
@@ -509,20 +509,14 @@ function beginTurn(team, opts = {}) {
   if (!opts.initial && state.bonusTurn && state.bonusTurn.team === team && !state.bonusTurn.used) {
     state.ap[team] = clamp(state.ap[team] + state.bonusTurn.apBonus, 0, 10);
     state.bonusTurn.used = true;
-    log(`${TEAM[team].name} 的临时行动点卡生效：+${state.bonusTurn.apBonus} AP。`);
+    log(`${TEAM[team].name} 的临时行动点卡生效：+${state.bonusTurn.apBonus} 行动点。`);
   }
 
   // 回合开始前：处理所有“在本方回合开始时触发”的效果。
   processStartOfTurnEffects(team);
 
-  // 记录上一回合剩余 AP，用于五条被动防御。
-  const unused = state.lastUnusedAp[team] ?? 0;
-  teamHeroes(team).forEach(h => {
-    if (h.dead) return;
-    if (h.defId === "gojo") {
-      h.gojoBlock = unused;
-    }
-  });
+  // 五条的无下限防御值不会在这里重写；它由上一回合结束时保存。
+  // 这样可以确保“上回合剩余的行动点”持续用于抵挡本回合受到的伤害。
 
   // 处理每个英雄的本回合准备：
   teamHeroes(team).forEach(h => {
@@ -542,10 +536,15 @@ function beginTurn(team, opts = {}) {
 function endTurn() {
   if (state.phase !== "battle") return;
 
-  // 结束当前队伍的回合前，记录残余 AP 供五条防御使用。
+  // 结束当前队伍的回合前，记录残余行动点，并立刻写入五条的无下限防御值。
   const current = state.activeTeam;
   const next = otherTeam(current);
   state.lastUnusedAp[current] = state.ap[current];
+  teamHeroes(current).forEach(h => {
+    if (!h.dead && h.defId === "gojo") {
+      h.gojoBlock = state.lastUnusedAp[current];
+    }
+  });
 
   // 宿傩固定每回合受到 1 点真实伤害
   teamHeroes(current).forEach(h => {
@@ -808,9 +807,9 @@ function resolveDelayedEffect(effect) {
     log(`【${owner.name}】的领域在结算时总共造成 ${totalDamage} 点伤害。`);
     if (totalDamage > 7) {
       state.bonusTurn = { team: owner.team, apBonus: 0, used: false, extra: true };
-      // 额外回合的 AP 上限 4，会在下一个 beginTurn 时处理
+      // 额外回合的 行动点上限 4，会在下一个 beginTurn 时处理
       owner.__bonusTurnGranted = true;
-      log(`${TEAM[owner.team].name} 获得额外一个回合（AP 上限 4）。`);
+      log(`${TEAM[owner.team].name} 获得额外一个回合（行动点上限 4）。`);
     }
   }
 
@@ -977,8 +976,8 @@ function renderHud() {
   $("phaseBadge").textContent = `阶段：${phaseText(state.phase)}`;
   $("turnBadge").textContent = `回合：${state.turn}`;
 
-  $("blueApBadge").textContent = `蓝方 AP：${teamAP("blue")}`;
-  $("redApBadge").textContent = `红方 AP：${teamAP("red")}`;
+  $("blueApBadge").textContent = `蓝方行动点：${teamAP("blue")}`;
+  $("redApBadge").textContent = `红方行动点：${teamAP("red")}`;
 
   $("blueApBar").style.width = `${clamp((teamAP("blue") / 10) * 100, 0, 100)}%`;
   $("redApBar").style.width = `${clamp((teamAP("red") / 10) * 100, 0, 100)}%`;
