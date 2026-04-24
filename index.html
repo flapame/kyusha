@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>9×4 战棋对战</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <!--
+    index.html
+    ==========
+    这一份文件只负责“页面结构”：
+    - 顶部信息栏
+    - 棋盘
+    - 右侧/下方信息面板
+    - 规则/选择/部署/结算弹窗
+
+    真正的游戏逻辑都在 game.js。
+  -->
+
+  <div id="app">
+    <div class="overlay" id="overlay">
+      <div class="modal" id="overlayContent"></div>
+    </div>
+
+    <div class="topbar">
+      <div class="wrap">
+        <div class="row space">
+          <div class="row">
+            <span class="badge gold"><strong>9×4</strong> 战棋对战</span>
+            <span class="badge" id="phaseBadge">阶段：准备中</span>
+            <span class="badge" id="turnBadge">回合：0</span>
+          </div>
+          <div class="row">
+            <span class="badge blue" id="blueApBadge">蓝方 AP：0</span>
+            <span class="badge red" id="redApBadge">红方 AP：0</span>
+          </div>
+        </div>
+
+        <div class="hud">
+          <div class="card">
+            <h3>蓝方</h3>
+            <div class="small" id="blueSummary">等待开始</div>
+            <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
+          </div>
+          <div class="card">
+            <h3>红方</h3>
+            <div class="small" id="redSummary">等待开始</div>
+            <div class="bar ap"><div id="redApBar" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="gridWrap">
+        <div class="grid" id="grid"></div>
+      </div>
+
+      <div class="sidebar">
+        <div class="row space">
+          <div>
+            <span class="pill" id="selectedPill">未选择英雄</span>
+          </div>
+          <div class="row">
+            <button class="btnGhost" id="btnDeselect">取消选择</button>
+            <button class="btnGood" id="btnEndTurn">结束回合</button>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div id="selectedInfo" class="hintText">
+          点击一位已部署的英雄，查看属性、被动与技能。
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="ruleBox">
+          <strong>战斗日志</strong>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="inner">
+        <div class="skillBar" id="skillBar"></div>
+        <div class="btnRow" id="actionRow">
+          <button class="btnGhost" id="btnMoveMode">移动</button>
+          <button class="btnGhost" id="btnAttackMode">攻击</button>
+          <button class="btnGhost" id="btnSkillMode">技能</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./heroes.js"></script>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
