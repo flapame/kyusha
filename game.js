@@ -59,7 +59,7 @@ const state = {
   effects: [],
   barriers: [],
   logs: [],
-  lastUnusedAp: { blue: 0, red: 0 }, // 记录上一回合结束时剩余的 AP（给五条被动用）
+  lastUnusedAp: { blue: 0, red: 0 }, // 记录上一回合结束时剩余的行动点（给五条被动用）
   bonusTurn: null,         // 额外回合用的占位字段
   endSummary: null
 };
@@ -119,12 +119,48 @@ function log(msg) {
   state.logs.unshift(`[T${state.turn}] ${msg}`);
   state.logs = state.logs.slice(0, 60);
   renderLog();
+  renderBattlePanel();
 }
 
 function renderLog() {
   const el = $("log");
+  if (!el) return;
   el.innerHTML = state.logs.map(s => `<div>${escapeHtml(s)}</div>`).join("");
 }
+function renderBattlePanel() {
+  const el = $("battleStatus");
+  if (!el) return;
+
+  const hero = selectedHero();
+  const active = state.activeTeam;
+  const selectedName = hero ? `${hero.name}（${TEAM[hero.team].name}）` : "未选择";
+  const selectedMode = hero ? (state.selectedMode === "move" ? "移动" : state.selectedMode === "attack" ? "攻击" : "技能") : "-";
+  const actionTip = state.phase === "battle" ? `当前轮到 ${TEAM[active].name}。点击己方英雄可切换选择。` : `当前阶段：${phaseText(state.phase)}。`;
+
+  el.innerHTML = `
+    <div class="infoTile">
+      <div class="label">当前玩家</div>
+      <div class="value">${TEAM[active].name}</div>
+      <div class="sub">${actionTip}</div>
+    </div>
+    <div class="infoTile">
+      <div class="label">剩余行动点</div>
+      <div class="value">${teamAP(active)}</div>
+      <div class="sub">先手 / 后手按规则逐回合上涨，上限 10 点</div>
+    </div>
+    <div class="infoTile">
+      <div class="label">当前选择</div>
+      <div class="value">${escapeHtml(selectedName)}</div>
+      <div class="sub">模式：${escapeHtml(selectedMode)}${hero && hero.rootedTurns > 0 ? " · 缠绕中无法放技能" : ""}</div>
+    </div>
+    <div class="infoTile">
+      <div class="label">最近日志</div>
+      <div class="value">${escapeHtml(state.logs[0] || "暂无战斗记录")}</div>
+      <div class="sub">这里显示最新一次操作结果</div>
+    </div>
+  `;
+}
+
 
 function escapeHtml(s) {
   return String(s)
@@ -451,7 +487,7 @@ function startBattle() {
 
   log(`随机决定先手：${TEAM[state.firstTeam].name}。`);
   if (state.bonusTurn.team) {
-    log(`${TEAM[state.bonusTurn.team].name} 获得一张临时行动点卡（+1 AP）。`);
+    log(`${TEAM[state.bonusTurn.team].name} 获得一张临时行动点卡（+1 行动点）。`);
   }
 
   // 进入第一个回合前，先处理开局状态。
@@ -473,20 +509,14 @@ function beginTurn(team, opts = {}) {
   if (!opts.initial && state.bonusTurn && state.bonusTurn.team === team && !state.bonusTurn.used) {
     state.ap[team] = clamp(state.ap[team] + state.bonusTurn.apBonus, 0, 10);
     state.bonusTurn.used = true;
-    log(`${TEAM[team].name} 的临时行动点卡生效：+${state.bonusTurn.apBonus} AP。`);
+    log(`${TEAM[team].name} 的临时行动点卡生效：+${state.bonusTurn.apBonus} 行动点。`);
   }
 
   // 回合开始前：处理所有“在本方回合开始时触发”的效果。
   processStartOfTurnEffects(team);
 
-  // 记录上一回合剩余 AP，用于五条被动防御。
-  const unused = state.lastUnusedAp[team] ?? 0;
-  teamHeroes(team).forEach(h => {
-    if (h.dead) return;
-    if (h.defId === "gojo") {
-      h.gojoBlock = unused;
-    }
-  });
+  // 五条的无下限防御值不会在这里重写；它由上一回合结束时保存。
+  // 这样可以确保“上回合剩余的行动点”持续用于抵挡本回合受到的伤害。
 
   // 处理每个英雄的本回合准备：
   teamHeroes(team).forEach(h => {
@@ -506,10 +536,15 @@ function beginTurn(team, opts = {}) {
 function endTurn() {
   if (state.phase !== "battle") return;
 
-  // 结束当前队伍的回合前，记录残余 AP 供五条防御使用。
+  // 结束当前队伍的回合前，记录残余行动点，并立刻写入五条的无下限防御值。
   const current = state.activeTeam;
   const next = otherTeam(current);
   state.lastUnusedAp[current] = state.ap[current];
+  teamHeroes(current).forEach(h => {
+    if (!h.dead && h.defId === "gojo") {
+      h.gojoBlock = state.lastUnusedAp[current];
+    }
+  });
 
   // 宿傩固定每回合受到 1 点真实伤害
   teamHeroes(current).forEach(h => {
@@ -772,9 +807,9 @@ function resolveDelayedEffect(effect) {
     log(`【${owner.name}】的领域在结算时总共造成 ${totalDamage} 点伤害。`);
     if (totalDamage > 7) {
       state.bonusTurn = { team: owner.team, apBonus: 0, used: false, extra: true };
-      // 额外回合的 AP 上限 4，会在下一个 beginTurn 时处理
+      // 额外回合的 行动点上限 4，会在下一个 beginTurn 时处理
       owner.__bonusTurnGranted = true;
-      log(`${TEAM[owner.team].name} 获得额外一个回合（AP 上限 4）。`);
+      log(`${TEAM[owner.team].name} 获得额外一个回合（行动点上限 4）。`);
     }
   }
 
@@ -930,17 +965,19 @@ function manhattan(a, b) {
 // ----------------------
 function renderAll() {
   renderHud();
+  renderBattlePanel();
   renderGrid();
   renderSelectedPanel(selectedHero());
   renderSkillBar(selectedHero());
 }
 
+
 function renderHud() {
   $("phaseBadge").textContent = `阶段：${phaseText(state.phase)}`;
   $("turnBadge").textContent = `回合：${state.turn}`;
 
-  $("blueApBadge").textContent = `蓝方 AP：${teamAP("blue")}`;
-  $("redApBadge").textContent = `红方 AP：${teamAP("red")}`;
+  $("blueApBadge").textContent = `蓝方行动点：${teamAP("blue")}`;
+  $("redApBadge").textContent = `红方行动点：${teamAP("red")}`;
 
   $("blueApBar").style.width = `${clamp((teamAP("blue") / 10) * 100, 0, 100)}%`;
   $("redApBar").style.width = `${clamp((teamAP("red") / 10) * 100, 0, 100)}%`;
@@ -1041,27 +1078,47 @@ function renderSelectedPanel(hero) {
   const el = $("selectedInfo");
   if (!hero) {
     $("selectedPill").textContent = "未选择英雄";
-    el.innerHTML = "点击一位已部署的英雄，查看属性、被动与技能。";
+    el.innerHTML = `
+      <div class="heroCard">
+        <strong>英雄信息</strong>
+        <div class="small">点击一位已部署的英雄，查看属性、被动与技能。</div>
+      </div>
+    `;
     return;
   }
 
   const def = heroDef(hero);
   $("selectedPill").textContent = `${hero.name} · ${TEAM[hero.team].name}`;
 
+  const avatarMark = escapeHtml(hero.name.slice(0, 2));
   const skillText = def.skills.map(s => `
-    <div class="heroCard">
-      <strong>技能${s.no}：${s.title}</strong>
-      <div class="small">消耗：${escapeHtml(s.costText)}</div>
-      <div class="small">${escapeHtml(s.desc)}</div>
+    <div class="skillCard">
+      <div class="head">
+        <div class="title">技能${s.no} · ${escapeHtml(s.title)}</div>
+        <div class="cost">${escapeHtml(s.costText)}</div>
+      </div>
+      <div class="desc">${escapeHtml(s.desc)}</div>
     </div>
   `).join("");
 
   el.innerHTML = `
-    <div class="heroCard">
-      <strong>${hero.name}</strong>
-      <div class="small">阵营：${TEAM[hero.team].name}</div>
-      <div class="small">生命：${hero.hp}/${hero.maxHp}　攻击：${hero.atk}　普攻范围：${hero.attackRange}　普攻消耗：${hero.attackCost}</div>
-      <div class="small">当前状态：${formatHeroFx(hero) || "无"}</div>
+    <div class="heroHeader">
+      <div class="heroAvatar ${hero.team}"><span class="mark">${avatarMark}</span></div>
+      <div class="heroMeta">
+        <h3>${escapeHtml(hero.name)}</h3>
+        <div class="line">阵营：${TEAM[hero.team].name}</div>
+        <div class="line">站位：${hero.placed ? `(${hero.x}, ${hero.y})` : "未部署"}</div>
+        <div class="line">当前状态：${formatHeroFx(hero) || "无"}</div>
+      </div>
+    </div>
+
+    <div class="statGrid">
+      <div class="statChip"><div class="k">生命</div><div class="v">${hero.hp}/${hero.maxHp}</div></div>
+      <div class="statChip"><div class="k">攻击</div><div class="v">${hero.atk}</div></div>
+      <div class="statChip"><div class="k">普攻消耗</div><div class="v">${hero.attackCost}</div></div>
+      <div class="statChip"><div class="k">普攻范围</div><div class="v">${hero.attackRange}</div></div>
+      <div class="statChip"><div class="k">总伤害</div><div class="v">${hero.stats.dealt}</div></div>
+      <div class="statChip"><div class="k">总减伤</div><div class="v">${hero.stats.reduced}</div></div>
     </div>
 
     <div class="heroCard">
@@ -1070,16 +1127,8 @@ function renderSelectedPanel(hero) {
     </div>
 
     <div class="heroCard">
-      <strong>全部技能说明</strong>
-      ${skillText}
-    </div>
-
-    <div class="heroCard">
-      <strong>当前统计</strong>
-      <div class="small">总造成伤害：${hero.stats.dealt}</div>
-      <div class="small">总承伤：${hero.stats.taken}</div>
-      <div class="small">总减伤：${hero.stats.reduced}</div>
-      <div class="small">标记数量：${hero.marks.length}</div>
+      <strong>技能介绍</strong>
+      <div class="skillCardList">${skillText}</div>
     </div>
   `;
 }
@@ -1094,17 +1143,22 @@ function renderSkillBar(hero) {
   }
 
   const def = heroDef(hero);
-  def.skills.forEach(s => {
-    // 被动技能不放按钮，只展示描述。
-    if (s.costText === "被动") return;
+  const activeSkills = def.skills.filter(s => s.costText !== "被动");
+
+  activeSkills.forEach(s => {
     const btn = document.createElement("button");
-    btn.textContent = `技能${s.no}：${s.title}`;
+    btn.innerHTML = `
+      <span class="skillNo">技能${s.no}</span>
+      <span class="skillName">${escapeHtml(s.title)}</span>
+      <span class="skillCost">${escapeHtml(s.costText)}</span>
+    `;
+    btn.title = s.desc;
     btn.onclick = () => useSkill(hero, s.no);
     btn.disabled = !isSkillAvailable(hero, s.no);
     bar.appendChild(btn);
   });
 
-  if (!def.skills.some(s => s.costText !== "被动")) {
+  if (!activeSkills.length) {
     const btn = document.createElement("button");
     btn.textContent = "该英雄暂无主动技能";
     btn.disabled = true;
