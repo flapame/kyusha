@@ -8,15 +8,14 @@
 </head>
 <body>
   <!--
-    index.html
-    ==========
-    这一份文件只负责“页面结构”：
-    - 顶部信息栏
-    - 棋盘
-    - 右侧/下方信息面板
-    - 规则/选择/部署/结算弹窗
+    页面结构说明：
+    1) 顶部信息栏：显示回合、阵营 AP、当前阶段。
+    2) 顶部操作面板：放玩家操作情况与战斗日志。
+    3) 棋盘：9×4 战斗地图。
+    4) 侧边信息栏：显示被选中英雄的头像、属性、被动和技能说明。
+    5) 底部控制栏：技能按钮、行动模式切换、结束回合。
 
-    真正的游戏逻辑都在 game.js。
+    以后如果你只是想改显示布局，优先改这个文件和 style.css。
   -->
 
   <div id="app">
@@ -53,6 +52,17 @@
       </div>
     </div>
 
+    <div class="battlePanel">
+      <div class="battlePanelCol battleActionCol">
+        <div class="panelTitle">玩家操作情况</div>
+        <div class="actionGrid" id="battleStatus"></div>
+      </div>
+      <div class="battlePanelCol battleLogCol">
+        <div class="panelTitle">战斗日志</div>
+        <div class="log compactLog" id="log"></div>
+      </div>
+    </div>
+
     <div class="wrap">
       <div class="gridWrap">
         <div class="grid" id="grid"></div>
@@ -76,10 +86,9 @@
         </div>
 
         <div class="sep"></div>
-
-        <div class="ruleBox">
-          <strong>战斗日志</strong>
-          <div class="log" id="log"></div>
+        <div class="ruleBox softBox">
+          <strong>操作提示</strong>
+          <div class="small">点击英雄后，可在下方切换移动、攻击、技能模式。技能卡会显示完整消耗与效果说明。</div>
         </div>
       </div>
     </div>
