@@ -269,6 +269,9 @@ function renderDraftOverlay() {
     const disabled = state.draft.picks[team].includes(id);
     return `
       <div class="heroCard heroPick ${disabled ? "disabled" : ""}" data-id="${id}">
+        <div class="pickAvatar">
+          <img src="${escapeHtml(def.avatar)}" alt="${escapeHtml(def.name)}头像" draggable="false">
+        </div>
         <strong>${def.name}</strong>
         <div class="small">${escapeHtml(def.spawnHint)}</div>
         <div class="small" style="margin-top:6px">HP ${def.maxHp} / 攻击 ${def.atk} / 普攻范围 ${def.attackRange}</div>
@@ -362,6 +365,9 @@ function renderDeployOverlay() {
     const selected = state.deploy.selectedDraftHero?.uid === h.uid;
     return `
       <div class="heroCard heroPick ${selected ? "selected" : ""}" data-uid="${h.uid}">
+        <div class="pickAvatar">
+          <img src="${escapeHtml(heroAvatar(h))}" alt="${escapeHtml(h.name)}头像" draggable="false">
+        </div>
         <strong>${h.name}</strong>
         <div class="small">${escapeHtml(def.spawnHint)}</div>
         <div class="small">HP ${h.maxHp} / 攻击 ${h.baseAtk}</div>
@@ -1821,6 +1827,11 @@ function openInfoOverlay() {
 function bindButtons() {
   $("btnDeselect").onclick = deselectHero;
   $("btnEndTurn").onclick = endTurn;
+  const clearBtn = $("clearLogBtn");
+  if (clearBtn) clearBtn.onclick = () => {
+    state.battle.log = [];
+    renderLog();
+  };
   $("btnMoveMode").onclick = () => {
     const hero = selectedHero();
     if (!hero) return;
