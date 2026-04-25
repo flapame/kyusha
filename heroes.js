@@ -11,6 +11,7 @@
   注意：
   1) 这里尽量只放“描述 + 基础数值”，不要写复杂逻辑。
   2) 真正的技能结算逻辑在 game.js。
+  3) avatar 字段指向 avatars/ 文件夹里的头像图片。
 */
 
 window.GAME_RULES = [
@@ -30,12 +31,12 @@ window.HERO_DEFS = {
     id: "sword",
     name: "剑仙",
     teamColor: "blue",
+    avatar: "avatars/sword.png",
     maxHp: 7,
     atk: 2,
     attackRange: 1,
     attackCost: 1,
     spawnHint: "近战突袭型，擅长强化后爆发。",
-    avatar: "./avatars/sword.png",
     passive: "无额外被动。",
     skills: [
       {
@@ -57,12 +58,12 @@ window.HERO_DEFS = {
     id: "sukuna",
     name: "两面宿傩",
     teamColor: "red",
+    avatar: "avatars/sukuna.png",
     maxHp: 20,
     atk: 1,
     attackRange: 1,
     attackCost: 1,
     spawnHint: "行动消耗血量，擅长标记、群体爆发与二阶段变身。",
-    avatar: "./avatars/sukuna.png",
     passive: "每回合开始时固定受到 1 点真实伤害；受到伤害或对敌方造成伤害时会留下标记。血量降至 0 后不会立即死亡，进入二阶段“神武解”，回复至 10 生命、攻击力提升到 2，并解锁领域技能。",
     skills: [
       {
@@ -96,12 +97,12 @@ window.HERO_DEFS = {
     id: "gojo",
     name: "五条悟",
     teamColor: "blue",
+    avatar: "avatars/gojo.png",
     maxHp: 11,
     atk: 3,
     attackRange: 1,
     attackCost: 2,
     spawnHint: "高爆发中距离角色，擅长防御与结界控制。",
-    avatar: "./avatars/gojo.png",
     passive: "若上回合仍有未使用的行动点，则会将这些行动点转化为『无下限防御』。当本回合受到伤害时，先消耗该防御值抵挡伤害；若防御值不足，则剩余伤害扣血。",
     skills: [
       {
@@ -123,12 +124,12 @@ window.HERO_DEFS = {
     id: "archer",
     name: "寂声射手",
     teamColor: "blue",
+    avatar: "avatars/archer.png",
     maxHp: 8,
     atk: 1,
     attackRange: 3,
     attackCost: 2,
     spawnHint: "远程压制与偷点专家，适合打节奏。",
-    avatar: "./avatars/archer.png",
     passive: "攻击敌方角色时，会偷取敌方玩家下回合 1 点行动点。",
     skills: [
       {
@@ -156,12 +157,12 @@ window.HERO_DEFS = {
     id: "mountain",
     name: "山脉之神",
     teamColor: "red",
+    avatar: "avatars/mountain.png",
     maxHp: 15,
     atk: 2,
     attackRange: 1,
     attackCost: 2,
     spawnHint: "偏防守与地形控制，能封路也能减伤。",
-    avatar: "./avatars/mountain.png",
     passive: "无额外被动。",
     skills: [
       {
@@ -183,12 +184,12 @@ window.HERO_DEFS = {
     id: "night",
     name: "烈焰之夜神",
     teamColor: "red",
+    avatar: "avatars/night.png",
     maxHp: 9,
     atk: 1,
     attackRange: 2,
     attackCost: 1,
     spawnHint: "灼烧型法师，擅长持续伤害与范围引爆。",
-    avatar: "./avatars/night.png",
     passive: "无额外被动。",
     skills: [
       {

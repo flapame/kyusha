@@ -145,8 +145,8 @@ function heroDef(hero) {
   return HERO_DEFS[hero.defId];
 }
 
-function heroAvatarSrc(entity) {
-  const def = entity && entity.defId ? heroDef(entity) : entity;
+function heroAvatar(hero) {
+  const def = hero ? heroDef(hero) : null;
   return def && def.avatar ? def.avatar : "";
 }
 
@@ -269,19 +269,9 @@ function renderDraftOverlay() {
     const disabled = state.draft.picks[team].includes(id);
     return `
       <div class="heroCard heroPick ${disabled ? "disabled" : ""}" data-id="${id}">
-        <div class="heroPickLayout">
-          <div class="pickAvatarWrap ${def.teamColor}">
-            <img class="pickAvatar" src="${escapeHtml(def.avatar)}" alt="${escapeHtml(def.name)}">
-          </div>
-          <div class="heroPickBody">
-            <div class="heroPickHead">
-              <strong>${def.name}</strong>
-              <span class="heroPickTag">${TEAM[def.teamColor].name}</span>
-            </div>
-            <div class="small">${escapeHtml(def.spawnHint)}</div>
-            <div class="small" style="margin-top:6px">HP ${def.maxHp} / 攻击 ${def.atk} / 普攻范围 ${def.attackRange}</div>
-          </div>
-        </div>
+        <strong>${def.name}</strong>
+        <div class="small">${escapeHtml(def.spawnHint)}</div>
+        <div class="small" style="margin-top:6px">HP ${def.maxHp} / 攻击 ${def.atk} / 普攻范围 ${def.attackRange}</div>
       </div>
     `;
   }).join("");
@@ -372,19 +362,9 @@ function renderDeployOverlay() {
     const selected = state.deploy.selectedDraftHero?.uid === h.uid;
     return `
       <div class="heroCard heroPick ${selected ? "selected" : ""}" data-uid="${h.uid}">
-        <div class="heroPickLayout">
-          <div class="pickAvatarWrap ${h.team}">
-            <img class="pickAvatar" src="${escapeHtml(heroAvatarSrc(h))}" alt="${escapeHtml(h.name)}">
-          </div>
-          <div class="heroPickBody">
-            <div class="heroPickHead">
-              <strong>${h.name}</strong>
-              <span class="heroPickTag">${TEAM[h.team].name}</span>
-            </div>
-            <div class="small">${escapeHtml(def.spawnHint)}</div>
-            <div class="small">HP ${h.maxHp} / 攻击 ${h.baseAtk}</div>
-          </div>
-        </div>
+        <strong>${h.name}</strong>
+        <div class="small">${escapeHtml(def.spawnHint)}</div>
+        <div class="small">HP ${h.maxHp} / 攻击 ${h.baseAtk}</div>
       </div>
     `;
   }).join("");
@@ -1105,13 +1085,15 @@ function renderGrid() {
         const unit = document.createElement("div");
         unit.className = `unit ${hero.team}`;
         const fx = formatHeroFx(hero);
+        const hpPct = hero.maxHp > 0 ? clamp((hero.hp / hero.maxHp) * 100, 0, 100) : 0;
         unit.innerHTML = `
-          <img class="unitAvatar" src="${escapeHtml(heroAvatarSrc(hero))}" alt="${escapeHtml(hero.name)}">
-          <div class="unitText">
-            <div class="name">${escapeHtml(hero.name)}</div>
-            <div class="hp">HP ${hero.hp}/${hero.maxHp}</div>
-            <div class="fx">${escapeHtml(fx)}</div>
+          <img class="unitPortrait" src="${escapeHtml(heroAvatar(hero))}" alt="${escapeHtml(hero.name)}立绘" draggable="false">
+          <div class="name">${escapeHtml(hero.name)}</div>
+          <div class="unitHpTrack" aria-label="生命值">
+            <div class="unitHpFill ${hero.team}" style="width:${hpPct}%"></div>
           </div>
+          <div class="hp">HP ${hero.hp}/${hero.maxHp}</div>
+          <div class="fx">${escapeHtml(fx)}</div>
         `;
         cell.appendChild(unit);
       }
@@ -1163,7 +1145,11 @@ function renderSelectedPanel(hero) {
   summary.innerHTML = `
     <div class="heroCard">
       <div class="heroBrief">
-        <div class="avatarFrame ${hero.team}"><img class="avatarImg" src="${escapeHtml(heroAvatarSrc(hero))}" alt="${escapeHtml(hero.name)}"></div>
+        <div class="avatar ${hero.team}">
+          ${heroAvatar(hero)
+            ? `<img class="avatarImg" src="${escapeHtml(heroAvatar(hero))}" alt="${escapeHtml(hero.name)}头像" draggable="false">`
+            : escapeHtml(hero.name.slice(0, 1))}
+        </div>
         <div class="heroBriefMain">
           <div class="heroTitle">${escapeHtml(hero.name)}</div>
           <div class="heroMeta">
