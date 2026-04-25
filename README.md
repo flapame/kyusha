@@ -1,21 +1,18 @@
 # 战棋对战
 
+这是一个 9×4 战棋游戏项目。
+
 ## 文件说明
 
-- `index.html`：页面入口
-- `style.css`：界面样式
-- `heroes.js`：英雄数据与规则说明
-- `game.js`：游戏引擎、回合与技能结算
-- `avatars/`：英雄头像图片
-- `icons/`：技能图标预留目录
+- `index.html`：页面结构。
+- `style.css`：UI 样式和棋盘皮肤。
+- `game.js`：游戏逻辑、回合、技能、部署和结算。
+- `heroes.js`：英雄数据、技能描述和规则文本。
+- `avatars/`：英雄头像图片目录。
 
-## 上传到 GitHub Pages
+## 头像替换
 
-把上述文件直接放在仓库根目录，然后在 `Settings -> Pages` 中选择 `main / root`。
-
-## 头像文件
-
-当前默认头像文件名：
+当前六位英雄的头像位已经接好。你以后只需要把图片放进 `avatars/`，并保持文件名一致即可：
 
 - `avatars/sword.png`
 - `avatars/sukuna.png`
@@ -24,6 +21,18 @@
 - `avatars/mountain.png`
 - `avatars/night.png`
 
-## 技能图标
+## 技能图标预留
 
-`icons/` 目录是预留位置。后续只要把技能图标图片放进去，并在代码里引用对应路径即可。
+如果后续你想给技能再补图片，可以在 `heroes.js` 里给技能对象增加 `icon` 字段，例如：
+
+```js
+{
+  no: 1,
+  title: "一式·血刃",
+  costText: "2 行动点",
+  desc: "...",
+  icon: "icons/sword_skill1.png"
+}
+```
+
+前端已经预留了图标槽位，没有图片时会自动显示占位内容。

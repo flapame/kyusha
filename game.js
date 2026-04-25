@@ -270,7 +270,7 @@ function renderDraftOverlay() {
     return `
       <div class="heroCard heroPick ${disabled ? "disabled" : ""}" data-id="${id}">
         <div class="pickAvatar">
-          <img src="${escapeHtml(def.avatar)}" alt="${escapeHtml(def.name)}头像" draggable="false">
+          ${def.avatar ? `<img src="${escapeHtml(def.avatar)}" alt="${escapeHtml(def.name)}头像" draggable="false">` : `<span>${escapeHtml(def.name.slice(0,1))}</span>`}
         </div>
         <strong>${def.name}</strong>
         <div class="small">${escapeHtml(def.spawnHint)}</div>
@@ -297,6 +297,7 @@ function renderDraftOverlay() {
     el.addEventListener("click", () => chooseDraftHero(el.dataset.id));
   });
 }
+
 
 function chooseDraftHero(heroId) {
   const team = state.draft.currentTeam;
@@ -348,7 +349,6 @@ function renderDeployOverlay() {
   const list = undeployedHeroes(team);
 
   if (!list.length) {
-    // 如果当前队伍已经全部部署完成，自动切到下一方。
     const nextTeam = otherTeam(team);
     if (undeployedHeroes(nextTeam).length) {
       state.deploy.currentTeam = nextTeam;
@@ -366,7 +366,7 @@ function renderDeployOverlay() {
     return `
       <div class="heroCard heroPick ${selected ? "selected" : ""}" data-uid="${h.uid}">
         <div class="pickAvatar">
-          <img src="${escapeHtml(heroAvatar(h))}" alt="${escapeHtml(h.name)}头像" draggable="false">
+          ${heroAvatar(h) ? `<img src="${escapeHtml(heroAvatar(h))}" alt="${escapeHtml(h.name)}头像" draggable="false">` : `<span>${escapeHtml(h.name.slice(0,1))}</span>`}
         </div>
         <strong>${h.name}</strong>
         <div class="small">${escapeHtml(def.spawnHint)}</div>
@@ -400,7 +400,7 @@ function renderDeployOverlay() {
       </div>
       <div class="heroCard">
         <strong>出生区（可点击格子）</strong>
-        <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:4px">
+        <div class="grid deployGrid">
           ${spawnCells}
         </div>
       </div>
@@ -460,6 +460,7 @@ function renderDeployOverlay() {
     });
   });
 }
+
 
 function autoDeployCurrentTeam() {
   const team = state.deploy.currentTeam;
@@ -1040,6 +1041,18 @@ function phaseText(phase) {
 
 function renderGrid() {
   const grid = $("grid");
+  if (!grid) return;
+
+  const labelsX = $("boardLabelsX");
+  const labelsY = $("boardLabelsY");
+
+  if (labelsX) {
+    labelsX.innerHTML = Array.from({ length: W }, (_, x) => `<span class="axisMark">${x}</span>`).join("");
+  }
+  if (labelsY) {
+    labelsY.innerHTML = Array.from({ length: H }, (_, y) => `<span class="axisMark">${y}</span>`).join("");
+  }
+
   grid.innerHTML = "";
 
   for (let y = 0; y < H; y++) {
@@ -1056,13 +1069,10 @@ function renderGrid() {
       const hero = heroAt(x, y);
       const selected = selectedHero();
 
-      if (selected) {
-        if (selected.uid === hero?.uid) {
-          cell.classList.add("selected");
-        }
+      if (selected && selected.uid === hero?.uid) {
+        cell.classList.add("selected");
       }
 
-      // 可移动/攻击高亮
       if (state.phase === "battle" && selected && canAct(selected)) {
         if (state.selectedMode === "move") {
           const reach = reachableCells(selected);
@@ -1070,12 +1080,9 @@ function renderGrid() {
         } else if (state.selectedMode === "attack") {
           const targets = attackTargets(selected);
           if (targets.some(t => t.x === x && t.y === y)) cell.classList.add("attackHint");
-        } else if (state.selectedMode === "skill") {
-          // 技能时的高亮主要由 pendingAction 控制，具体在 skillBar 或弹窗里处理
         }
       }
 
-      // 结界/屏障效果的可视化：简单打底
       state.effects.forEach(e => {
         if (e.type === "mountainBarrier" && e.cells.some(c => c.x === x && c.y === y)) {
           cell.classList.add("blockHint");
@@ -1089,17 +1096,14 @@ function renderGrid() {
 
       if (hero) {
         const unit = document.createElement("div");
-        unit.className = `unit ${hero.team}`;
-        const fx = formatHeroFx(hero);
-        const hpPct = hero.maxHp > 0 ? clamp((hero.hp / hero.maxHp) * 100, 0, 100) : 0;
+        unit.className = `unit ${hero.team} ${selected?.uid === hero.uid ? "selected" : ""}`;
+        const avatarSrc = heroAvatar(hero);
         unit.innerHTML = `
-          <img class="unitPortrait" src="${escapeHtml(heroAvatar(hero))}" alt="${escapeHtml(hero.name)}立绘" draggable="false">
-          <div class="name">${escapeHtml(hero.name)}</div>
-          <div class="unitHpTrack" aria-label="生命值">
-            <div class="unitHpFill ${hero.team}" style="width:${hpPct}%"></div>
+          <div class="unitAvatarShell">
+            ${avatarSrc ? `<img class="unitAvatar" src="${escapeHtml(avatarSrc)}" alt="${escapeHtml(hero.name)}头像" draggable="false">` : `<div class="unitAvatarFallback">${escapeHtml(hero.name.slice(0,1))}</div>`}
           </div>
-          <div class="hp">HP ${hero.hp}/${hero.maxHp}</div>
-          <div class="fx">${escapeHtml(fx)}</div>
+          <div class="unitHpBar"><span style="width:${clamp((hero.hp / hero.maxHp) * 100, 0, 100)}%"></span></div>
+          <div class="unitHpText">${hero.hp}/${hero.maxHp}</div>
         `;
         cell.appendChild(unit);
       }
@@ -1109,6 +1113,7 @@ function renderGrid() {
     }
   }
 }
+
 
 function formatHeroFx(hero) {
   const fx = [];
@@ -1128,6 +1133,12 @@ function renderSelectedPanel(hero) {
 
   if (!hero) {
     $("selectedPill").textContent = "未选择英雄";
+    $("selectedState").textContent = "—";
+    const heroAvatarEl = $("heroAvatar");
+    if (heroAvatarEl) {
+      heroAvatarEl.removeAttribute("src");
+      heroAvatarEl.alt = "hero avatar";
+    }
     summary.innerHTML = `<div class="hintText">点击一位已部署的英雄，查看属性、被动与技能。</div>`;
     detail.innerHTML = `<div class="hintText">这里会显示完整技能介绍、战斗统计和状态说明。</div>`;
     return;
@@ -1135,6 +1146,19 @@ function renderSelectedPanel(hero) {
 
   const def = heroDef(hero);
   $("selectedPill").textContent = `${hero.name} · ${TEAM[hero.team].name}`;
+  $("selectedState").textContent = `HP ${hero.hp}/${hero.maxHp} · ${hero.team === "blue" ? "蓝方" : "红方"}`;
+
+  const heroAvatarEl = $("heroAvatar");
+  if (heroAvatarEl) {
+    const src = heroAvatar(hero);
+    if (src) {
+      heroAvatarEl.src = src;
+      heroAvatarEl.alt = `${hero.name}头像`;
+    } else {
+      heroAvatarEl.removeAttribute("src");
+      heroAvatarEl.alt = `${hero.name}头像`;
+    }
+  }
 
   const skillChips = def.skills.map(s => `
     <span class="skillChip">技能${s.no}：${escapeHtml(s.title)}</span>
@@ -1142,8 +1166,13 @@ function renderSelectedPanel(hero) {
 
   const skillCards = def.skills.map(s => `
     <div class="skillDetail">
-      <strong>技能${s.no}：${escapeHtml(s.title)}</strong>
-      <div class="smallCaps">消耗：${escapeHtml(s.costText)}</div>
+      <div class="skillDetailHead">
+        <div class="skillIconSlot">${skillIcon(s)}</div>
+        <div class="skillDetailTitleWrap">
+          <strong>技能${s.no}：${escapeHtml(s.title)}</strong>
+          <div class="smallCaps">消耗：${escapeHtml(s.costText)}</div>
+        </div>
+      </div>
       <div class="heroMeta">${escapeHtml(s.desc)}</div>
     </div>
   `).join("");
@@ -1152,9 +1181,7 @@ function renderSelectedPanel(hero) {
     <div class="heroCard">
       <div class="heroBrief">
         <div class="avatar ${hero.team}">
-          ${heroAvatar(hero)
-            ? `<img class="avatarImg" src="${escapeHtml(heroAvatar(hero))}" alt="${escapeHtml(hero.name)}头像" draggable="false">`
-            : escapeHtml(hero.name.slice(0, 1))}
+          ${heroAvatar(hero) ? `<img class="avatarImg" src="${escapeHtml(heroAvatar(hero))}" alt="${escapeHtml(hero.name)}头像" draggable="false">` : escapeHtml(hero.name.slice(0, 1))}
         </div>
         <div class="heroBriefMain">
           <div class="heroTitle">${escapeHtml(hero.name)}</div>
@@ -1192,6 +1219,7 @@ function renderSelectedPanel(hero) {
   `;
 }
 
+
 function renderSkillBar(hero) {
   const bar = $("skillBar");
   bar.innerHTML = "";
@@ -1203,14 +1231,16 @@ function renderSkillBar(hero) {
 
   const def = heroDef(hero);
   def.skills.forEach(s => {
-    // 被动技能不放按钮，只展示描述。
     if (s.costText === "被动") return;
     const btn = document.createElement("button");
     btn.className = "skillButton";
     btn.innerHTML = `
-      <span class="skillNo">技能${s.no}</span>
-      <span class="skillName">${escapeHtml(s.title)}</span>
-      <span class="skillCost">${escapeHtml(s.costText)}</span>
+      <span class="skillButtonIcon">${skillIcon(s)}</span>
+      <span class="skillButtonText">
+        <span class="skillNo">技能${s.no}</span>
+        <span class="skillName">${escapeHtml(s.title)}</span>
+        <span class="skillCost">${escapeHtml(s.costText)}</span>
+      </span>
     `;
     btn.onclick = () => useSkill(hero, s.no);
     btn.disabled = !isSkillAvailable(hero, s.no);
@@ -1224,6 +1254,7 @@ function renderSkillBar(hero) {
     bar.appendChild(btn);
   }
 }
+
 
 function isSkillAvailable(hero, skillNo) {
   if (!canUseSkills(hero)) return false;
