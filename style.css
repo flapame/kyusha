@@ -98,7 +98,7 @@ button:disabled{opacity:.45}
   padding:10px;
 }
 .logDock .log{
-  height:112px;
+  height:96px;
   overflow-y:auto;
   scroll-behavior:smooth;
   padding-right:2px;
@@ -111,9 +111,23 @@ button:disabled{opacity:.45}
   transition:all .18s ease;
 }
 .card.teamActive{
-  border-color:rgba(255,209,102,.9);
-  box-shadow:0 0 0 1px rgba(255,209,102,.25),0 0 18px rgba(255,209,102,.16);
+  position:relative;
+  border-color:rgba(255,209,102,.98);
+  box-shadow:0 0 0 2px rgba(255,209,102,.35),0 0 26px rgba(255,209,102,.24), inset 0 0 0 1px rgba(255,255,255,.04);
   transform:translateY(-1px);
+  background:linear-gradient(180deg,rgba(255,209,102,.10),rgba(255,255,255,.03));
+}
+.card.teamActive::after{
+  content:"当前回合";
+  position:absolute;
+  top:8px;
+  right:10px;
+  font-size:10px;
+  color:#fff2c3;
+  background:rgba(255,209,102,.18);
+  border:1px solid rgba(255,209,102,.35);
+  border-radius:999px;
+  padding:2px 6px;
 }
 .card h3{margin:0 0 6px 0;font-size:14px}
 .small{font-size:12px;color:var(--muted);line-height:1.45}
@@ -132,11 +146,12 @@ button:disabled{opacity:.45}
 
 .mainArea{
   display:grid;
-  grid-template-columns:minmax(0,1.45fr) minmax(280px,.85fr);
+  grid-template-columns:minmax(0,1.55fr) minmax(300px,.9fr);
   gap:12px;
   padding:12px;
   min-height:0;
   overflow:hidden;
+  align-items:stretch;
 }
 
 .gridWrap{
@@ -146,17 +161,23 @@ button:disabled{opacity:.45}
   border:1px solid rgba(255,255,255,.08);
   border-radius:20px;
   overflow:hidden;
+  display:flex;
+  flex-direction:column;
 }
 .grid{
   display:grid;
   grid-template-columns:repeat(9,minmax(0,1fr));
+  grid-template-rows:repeat(4,minmax(0,1fr));
   gap:4px;
   user-select:none;
+  flex:1;
+  min-height:0;
   height:100%;
 }
 .cell{
   position:relative;
-  aspect-ratio:1;
+  aspect-ratio:auto;
+  min-height:0;
   border-radius:12px;
   border:1px solid rgba(255,255,255,.08);
   background:rgba(255,255,255,.03);
@@ -202,6 +223,7 @@ button:disabled{opacity:.45}
 
 .sidebar{
   min-height:0;
+  height:100%;
   display:flex;
   flex-direction:column;
   gap:0;
@@ -330,6 +352,19 @@ button:disabled{opacity:.45}
   box-shadow:0 20px 70px rgba(0,0,0,.45);
 }
 .modal h2,.modal h3{margin:0 0 10px 0}
+.introBrand{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(255,209,102,.14);
+  color:#fff2c3;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.04em;
+  margin-bottom:10px;
+}
 .modal p,.modal li{color:var(--muted)}
 .modal .heroCard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px;margin-bottom:10px}
 .modal .heroCard strong{display:block;margin-bottom:6px;color:#fff}
