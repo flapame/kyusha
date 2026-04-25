@@ -182,10 +182,6 @@ function teamAP(team) {
   return state.ap?.[team] ?? 0;
 }
 
-function apText(team) {
-  return `${teamAP(team)} / ${state.apMax?.[team] ?? 0}`;
-}
-
 // ----------------------
 // 规则与开始界面
 // ----------------------
@@ -202,7 +198,6 @@ function closeOverlay() {
 function showIntro() {
   state.phase = "intro";
   const rulesHtml = `
-    <div class="introBrand">FLAP 作品</div>
     <h2>游戏规则</h2>
     <div class="ruleBox">
       <strong>基础规则</strong>
@@ -217,7 +212,6 @@ function showIntro() {
         <li>选中英雄后，点击空格移动，点击敌方进行攻击。</li>
         <li>选中英雄后，底部会显示技能按钮与说明。</li>
         <li>如果你看到了“没有这个技能”，通常表示该英雄本身没有对应技能编号。</li>
-        <li>部署阶段可以使用“随机部署当前阵营”按钮，自动帮你摆放当前阵营英雄。</li>
       </ul>
     </div>
     <div class="overlayActions">
@@ -435,7 +429,7 @@ function renderDeployOverlay() {
       hero.y = y;
       hero.placed = true;
       state.deploy.selectedDraftHero = null;
-      log(`【${TEAM[hero.team].name}】部署【${hero.name}】到 (${x},${y})。`);
+      log(`${TEAM[hero.team].name} 部署了【${hero.name}】到 (${x},${y})。`);
 
       if (!undeployedHeroes(state.deploy.currentTeam).length) {
         const nextTeam = otherTeam(state.deploy.currentTeam);
@@ -522,7 +516,7 @@ function beginTurn(team, opts = {}) {
   } else if (isBonusTurn) {
     state.apMax[team] = 4;
     state.ap[team] = 4;
-    log(`【${TEAM[team].name}】额外回合：行动点数 4 / 4。`);
+    log(`${TEAM[team].name} 获得额外一个回合（行动点数上限 4）。`);
     state.bonusTurn.used = true;
   } else {
     state.turnCount[team] += 1;
@@ -553,7 +547,7 @@ function beginTurn(team, opts = {}) {
 
   updateHud();
   renderAll();
-  log(`【${TEAM[team].name}】回合开始，行动点数 ${apText(team)}。`);
+  log(`轮到 ${TEAM[team].name} 行动。`);
   checkGameOver();
 }
 
@@ -1367,7 +1361,7 @@ function performMove(hero, targetX, targetY) {
 
   hero.x = targetX;
   hero.y = targetY;
-  log(`【${TEAM[hero.team].name}】${hero.name} 移动 (${hero.x},${hero.y}) → (${targetX},${targetY})，行动点数 ${apText(hero.team)}。`);
+  log(`${hero.name} 移动到 (${targetX},${targetY})。`);
   renderAll();
 }
 
@@ -1379,7 +1373,7 @@ function performAttack(hero, target) {
 
   // 每位英雄每回合最多普通攻击 2 次
   if (hero.attackTimesThisTurn >= 2) {
-    log(`【${hero.name}】本回合普通攻击已达到上限（2 次）。`);
+    log(`【${hero.name}】本回合普通攻击次数已达到上限。`);
     return;
   }
 
@@ -1388,7 +1382,7 @@ function performAttack(hero, target) {
     // 宿傩：行动改为消耗生命，不消耗行动点
     if (hero.hp < cost) return;
     hero.hp -= cost;
-    log(`【${TEAM[hero.team].name}】${hero.name} 普通攻击以生命代价结算，消耗 ${cost} 点生命。`);
+    log(`${hero.name} 以生命代价释放攻击，消耗 ${cost} 点生命。`);
   } else {
     if (teamAP(hero.team) < cost) return;
     state.ap[hero.team] -= cost;
@@ -1507,7 +1501,7 @@ function showTargetSelection(hero, skillNo, actionKey, title, desc) {
     desc
   };
   renderAll();
-  log(`【${hero.name}】请选择技能目标。`);
+  log(`${hero.name} 进入技能目标选择。`);
 }
 
 function showDirectionPicker(hero) {
