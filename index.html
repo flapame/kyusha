@@ -11,9 +11,10 @@
     index.html
     ==========
     这一份文件只负责“页面结构”：
-    - 顶部信息栏
+    - 顶部状态区（当前回合、行动点数、战斗日志）
     - 棋盘
-    - 右侧/下方信息面板
+    - 右侧简要信息与详细技能区
+    - 底部操作区
     - 规则/选择/部署/结算弹窗
 
     真正的游戏逻辑都在 game.js。
@@ -24,50 +25,48 @@
       <div class="modal" id="overlayContent"></div>
     </div>
 
-    <div class="topbar">
-      <div class="wrap">
-        <div class="row space">
-          <div class="row">
-            <span class="badge gold"><strong>9×4</strong> 战棋对战</span>
-            <span class="badge" id="phaseBadge">阶段：准备中</span>
-            <span class="badge" id="turnBadge">回合：0</span>
-          </div>
-          <div class="row">
-            <span class="badge blue" id="blueApBadge">蓝方行动点数：0</span>
-            <span class="badge red" id="redApBadge">红方行动点数：0</span>
-            <span class="badge turn" id="turnTeamBadge">当前行动：等待开始</span>
-          </div>
+    <header class="topbar">
+      <div class="topRow">
+        <div class="row leftGroup">
+          <span class="badge gold"><strong>9×4</strong> 战棋对战</span>
+          <span class="badge" id="phaseBadge">阶段：准备中</span>
+          <span class="badge" id="turnBadge">回合：0</span>
         </div>
-
-        <div class="hud">
-          <div class="card" id="blueCard">
-            <h3>蓝方</h3>
-            <div class="small" id="blueSummary">等待开始</div>
-            <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
-          </div>
-          <div class="card" id="redCard">
-            <h3>红方</h3>
-            <div class="small" id="redSummary">等待开始</div>
-            <div class="bar ap"><div id="redApBar" style="width:0%"></div></div>
-          </div>
-        </div>
-
-        <div class="logDock">
-          <div class="row space" style="margin-bottom:6px">
-            <strong>战斗日志</strong>
-            <span class="small">可滚动查看最近记录</span>
-          </div>
-          <div class="log" id="log"></div>
+        <div class="row rightGroup">
+          <span class="badge blue" id="blueApBadge">蓝方行动点数：0</span>
+          <span class="badge red" id="redApBadge">红方行动点数：0</span>
+          <span class="badge turn" id="turnTeamBadge">当前行动：等待开始</span>
         </div>
       </div>
-    </div>
 
-    <div class="wrap">
-      <div class="gridWrap">
+      <div class="logDock">
+        <div class="row space" style="margin-bottom:6px">
+          <strong>战斗日志</strong>
+          <span class="small">可滚动查看最近记录</span>
+        </div>
+        <div class="log" id="log"></div>
+      </div>
+
+      <div class="hud">
+        <div class="card" id="blueCard">
+          <h3>蓝方</h3>
+          <div class="small" id="blueSummary">等待开始</div>
+          <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
+        </div>
+        <div class="card" id="redCard">
+          <h3>红方</h3>
+          <div class="small" id="redSummary">等待开始</div>
+          <div class="bar ap"><div id="redApBar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="mainArea">
+      <section class="gridWrap">
         <div class="grid" id="grid"></div>
-      </div>
+      </section>
 
-      <div class="sidebar">
+      <aside class="sidebar">
         <div class="row space">
           <div>
             <span class="pill" id="selectedPill">未选择英雄</span>
@@ -86,16 +85,28 @@
 
         <div class="sep"></div>
 
+        <div class="heroDetailShell">
+          <div class="row space" style="margin-bottom:8px">
+            <strong>详细技能说明</strong>
+            <span class="small">可上下滚动阅读</span>
+          </div>
+          <div id="heroDetail" class="heroDetailScroll">
+            <div class="hintText">选择英雄后，这里会显示完整技能介绍、战斗统计和状态说明。</div>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
         <div class="ruleBox">
           <strong>操作提示</strong>
           <div class="hintText" id="operationHint">
             选择英雄后，可切换移动 / 攻击 / 技能模式。上方黑色区域显示战斗日志。
           </div>
         </div>
-      </div>
-    </div>
+      </aside>
+    </main>
 
-    <div class="controls">
+    <footer class="controls">
       <div class="inner">
         <div class="skillBar" id="skillBar"></div>
         <div class="btnRow" id="actionRow">
@@ -104,7 +115,7 @@
           <button class="btnGhost" id="btnSkillMode">技能</button>
         </div>
       </div>
-    </div>
+    </footer>
   </div>
 
   <script src="./heroes.js"></script>

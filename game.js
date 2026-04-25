@@ -390,6 +390,7 @@ function renderDeployOverlay() {
     </div>
 
     <div class="overlayActions">
+      <button class="btnWarn" id="randomDeployBtn">随机部署当前阵营</button>
       <button class="btnGhost" id="switchDeployBtn">切换到另一方</button>
     </div>
   `);
@@ -398,6 +399,10 @@ function renderDeployOverlay() {
     state.deploy.currentTeam = otherTeam(state.deploy.currentTeam);
     state.deploy.selectedDraftHero = null;
     renderDeployOverlay();
+  };
+
+  $("randomDeployBtn").onclick = () => {
+    autoDeployCurrentTeam();
   };
 
   document.querySelectorAll("[data-uid]").forEach(el => {
@@ -426,7 +431,6 @@ function renderDeployOverlay() {
       state.deploy.selectedDraftHero = null;
       log(`${TEAM[hero.team].name} 部署了【${hero.name}】到 (${x},${y})。`);
 
-      // 如果当前阵营已经部署完，则切到另一阵营。
       if (!undeployedHeroes(state.deploy.currentTeam).length) {
         const nextTeam = otherTeam(state.deploy.currentTeam);
         if (undeployedHeroes(nextTeam).length) {
@@ -440,9 +444,42 @@ function renderDeployOverlay() {
   });
 }
 
-// ----------------------
-// 开战
-// ----------------------
+function autoDeployCurrentTeam() {
+  const team = state.deploy.currentTeam;
+  const pool = undeployedHeroes(team);
+  if (!pool.length) {
+    renderDeployOverlay();
+    return;
+  }
+
+  const spawnList = Array.from(team === "blue" ? BLUE_SPAWN : RED_SPAWN)
+    .map(k => {
+      const [x, y] = k.split(",").map(Number);
+      return { x, y };
+    })
+    .filter(c => !heroAt(c.x, c.y));
+
+  for (let i = spawnList.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [spawnList[i], spawnList[j]] = [spawnList[j], spawnList[i]];
+  }
+
+  pool.forEach((hero, idx) => {
+    const cell = spawnList[idx];
+    if (!cell) return;
+    hero.x = cell.x;
+    hero.y = cell.y;
+    hero.placed = true;
+    log(`${TEAM[hero.team].name} 随机部署了【${hero.name}】到 (${cell.x},${cell.y})。`);
+  });
+
+  state.deploy.selectedDraftHero = null;
+  state.deploy.currentTeam = otherTeam(team);
+
+  renderDeployOverlay();
+  renderAll();
+}
+
 function startBattle() {
   state.phase = "battle";
   state.turn = 1;
@@ -466,30 +503,25 @@ function beginTurn(team, opts = {}) {
   /*
     行动点数规则：
     1) 每个阵营只在自己的回合开始时自动回复行动点数。
-    2) 行动点数会随着该阵营自己的回合逐步上涨，最高 10 点。
-    3) 为了保持你原始设定的观感，首回合统一显示为 2 点。
+    2) 行动点数会随着该阵营自己的常规回合逐步上涨，最高 10 点。
+    3) 首回合统一显示为 2 点。
+    4) 五条悟的额外回合不抬高永久上限，只临时给 4 点行动点数。
   */
-  const firstTurnForTeam = state.turnCount[team] === 0;
-  state.turnCount[team] += 1;
+  const isBonusTurn = !!(state.bonusTurn && state.bonusTurn.team === team && !state.bonusTurn.used && state.bonusTurn.extra);
 
-  // 该阵营本回合的理论上限：从 2 起步，之后每次自己回合 +1，最高 10。
-  state.apMax[team] = clamp(state.turnCount[team] + 1, 2, 10);
-  state.ap[team] = state.apMax[team];
-
-  // 首回合统一显示/使用 2 点。
-  if (firstTurnForTeam) {
-    state.ap[team] = 2;
+  if (opts.initial) {
+    state.turnCount[team] = 1;
     state.apMax[team] = 2;
-  }
-
-  // 如果这个回合被五条悟的额外回合效果覆盖，则把行动点数上限压到 4 点。
-  if (state.bonusTurn && state.bonusTurn.team === team && !state.bonusTurn.used) {
-    if (state.bonusTurn.extra) {
-      state.apMax[team] = 4;
-      state.ap[team] = 4;
-      log(`${TEAM[team].name} 获得额外一个回合（行动点数上限 4）。`);
-    }
+    state.ap[team] = 2;
+  } else if (isBonusTurn) {
+    state.apMax[team] = 4;
+    state.ap[team] = 4;
+    log(`${TEAM[team].name} 获得额外一个回合（行动点数上限 4）。`);
     state.bonusTurn.used = true;
+  } else {
+    state.turnCount[team] += 1;
+    state.apMax[team] = clamp(state.turnCount[team] + 1, 2, 10);
+    state.ap[team] = state.apMax[team];
   }
 
   // 回合开始前：处理所有“在本方回合开始时触发”的效果。
@@ -1068,20 +1100,22 @@ function formatHeroFx(hero) {
 }
 
 function renderSelectedPanel(hero) {
-  const el = $("selectedInfo");
+  const summary = $("selectedInfo");
+  const detail = $("heroDetail");
+  if (!summary || !detail) return;
+
   if (!hero) {
     $("selectedPill").textContent = "未选择英雄";
-    el.innerHTML = `
-      <div class="hintText">点击一位已部署的英雄，查看属性、被动与技能。</div>
-    `;
+    summary.innerHTML = `<div class="hintText">点击一位已部署的英雄，查看属性、被动与技能。</div>`;
+    detail.innerHTML = `<div class="hintText">这里会显示完整技能介绍、战斗统计和状态说明。</div>`;
     return;
   }
 
   const def = heroDef(hero);
   $("selectedPill").textContent = `${hero.name} · ${TEAM[hero.team].name}`;
 
-  const briefSkills = def.skills.map(s => `
-    <div class="skillChip">技能${s.no}：${escapeHtml(s.title)}</div>
+  const skillChips = def.skills.map(s => `
+    <span class="skillChip">技能${s.no}：${escapeHtml(s.title)}</span>
   `).join("");
 
   const skillCards = def.skills.map(s => `
@@ -1092,41 +1126,41 @@ function renderSelectedPanel(hero) {
     </div>
   `).join("");
 
-  el.innerHTML = `
+  summary.innerHTML = `
     <div class="heroCard">
       <div class="heroBrief">
-        <div class="avatar ${hero.team}">${escapeHtml(hero.name.slice(0,1))}</div>
+        <div class="avatar ${hero.team}">${escapeHtml(hero.name.slice(0, 1))}</div>
         <div class="heroBriefMain">
           <div class="heroTitle">${escapeHtml(hero.name)}</div>
           <div class="heroMeta">
             阵营：${TEAM[hero.team].name}<br>
             生命：${hero.hp}/${hero.maxHp}　攻击：${hero.atk}　普攻范围：${hero.attackRange}<br>
-            普攻消耗：${hero.attackCost}　状态：${escapeHtml(formatHeroFx(hero) || "无")}
+            普攻消耗：${hero.attackCost}　普通攻击次数：${hero.attackTimesThisTurn}/2
           </div>
         </div>
       </div>
     </div>
-
     <div class="heroCard">
-      <strong>被动技能</strong>
-      <div class="heroMeta">${escapeHtml(def.passive)}</div>
+      <strong>被动与状态</strong>
+      <div class="heroMeta">被动：${escapeHtml(def.passive)}<br>当前状态：${escapeHtml(formatHeroFx(hero) || "无")}</div>
     </div>
-
     <div class="heroCard">
       <strong>技能速览</strong>
-      <div class="skillChipRow">${briefSkills}</div>
+      <div class="skillChipRow">${skillChips}</div>
     </div>
+  `;
 
+  detail.innerHTML = `
     <div class="heroCard">
-      <strong>技能介绍</strong>
+      <strong>详细技能说明</strong>
       <div class="skillDetailGrid">${skillCards}</div>
     </div>
-
     <div class="heroCard">
-      <strong>当前统计</strong>
+      <strong>战斗统计</strong>
       <div class="heroMeta">总造成伤害：${hero.stats.dealt}</div>
       <div class="heroMeta">总承伤：${hero.stats.taken}</div>
       <div class="heroMeta">总减伤：${hero.stats.reduced}</div>
+      <div class="heroMeta">当前回合普通攻击次数：${hero.attackTimesThisTurn}/2</div>
       <div class="heroMeta">标记数量：${hero.marks.length}</div>
     </div>
   `;
