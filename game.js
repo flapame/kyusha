@@ -128,7 +128,9 @@ function log(msg) {
 
 function renderLog() {
   const el = $("log");
+  if (!el) return;
   el.innerHTML = state.logs.map(s => `<div>${escapeHtml(s)}</div>`).join("");
+  el.scrollTop = 0;
 }
 
 function escapeHtml(s) {
@@ -957,6 +959,19 @@ function renderHud() {
   $("blueApBadge").textContent = `蓝方行动点数：${teamAP("blue")} / ${state.apMax.blue || 0}`;
   $("redApBadge").textContent = `红方行动点数：${teamAP("red")} / ${state.apMax.red || 0}`;
 
+  const turnBadge = $("turnTeamBadge");
+  if (turnBadge) {
+    turnBadge.textContent = `当前行动：${TEAM[state.activeTeam].name}`;
+    turnBadge.className = `badge turn ${state.activeTeam}`;
+  }
+
+  const blueCard = $("blueCard");
+  const redCard = $("redCard");
+  if (blueCard && redCard) {
+    blueCard.classList.toggle("teamActive", state.activeTeam === "blue");
+    redCard.classList.toggle("teamActive", state.activeTeam === "red");
+  }
+
   $("blueApBar").style.width = `${clamp((teamAP("blue") / Math.max(state.apMax.blue, 1)) * 100, 0, 100)}%`;
   $("redApBar").style.width = `${clamp((teamAP("red") / Math.max(state.apMax.red, 1)) * 100, 0, 100)}%`;
 
@@ -1056,45 +1071,63 @@ function renderSelectedPanel(hero) {
   const el = $("selectedInfo");
   if (!hero) {
     $("selectedPill").textContent = "未选择英雄";
-    el.innerHTML = "点击一位已部署的英雄，查看属性、被动与技能。";
+    el.innerHTML = `
+      <div class="hintText">点击一位已部署的英雄，查看属性、被动与技能。</div>
+    `;
     return;
   }
 
   const def = heroDef(hero);
   $("selectedPill").textContent = `${hero.name} · ${TEAM[hero.team].name}`;
 
-  const skillText = def.skills.map(s => `
-    <div class="heroCard">
-      <strong>技能${s.no}：${s.title}</strong>
-      <div class="small">消耗：${escapeHtml(s.costText)}</div>
-      <div class="small">${escapeHtml(s.desc)}</div>
+  const briefSkills = def.skills.map(s => `
+    <div class="skillChip">技能${s.no}：${escapeHtml(s.title)}</div>
+  `).join("");
+
+  const skillCards = def.skills.map(s => `
+    <div class="skillDetail">
+      <strong>技能${s.no}：${escapeHtml(s.title)}</strong>
+      <div class="smallCaps">消耗：${escapeHtml(s.costText)}</div>
+      <div class="heroMeta">${escapeHtml(s.desc)}</div>
     </div>
   `).join("");
 
   el.innerHTML = `
     <div class="heroCard">
-      <strong>${hero.name}</strong>
-      <div class="small">阵营：${TEAM[hero.team].name}</div>
-      <div class="small">生命：${hero.hp}/${hero.maxHp}　攻击：${hero.atk}　普攻范围：${hero.attackRange}　普攻消耗：${hero.attackCost}</div>
-      <div class="small">当前状态：${formatHeroFx(hero) || "无"}</div>
+      <div class="heroBrief">
+        <div class="avatar ${hero.team}">${escapeHtml(hero.name.slice(0,1))}</div>
+        <div class="heroBriefMain">
+          <div class="heroTitle">${escapeHtml(hero.name)}</div>
+          <div class="heroMeta">
+            阵营：${TEAM[hero.team].name}<br>
+            生命：${hero.hp}/${hero.maxHp}　攻击：${hero.atk}　普攻范围：${hero.attackRange}<br>
+            普攻消耗：${hero.attackCost}　状态：${escapeHtml(formatHeroFx(hero) || "无")}
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="heroCard">
       <strong>被动技能</strong>
-      <div class="small">${escapeHtml(def.passive)}</div>
+      <div class="heroMeta">${escapeHtml(def.passive)}</div>
     </div>
 
     <div class="heroCard">
-      <strong>全部技能说明</strong>
-      ${skillText}
+      <strong>技能速览</strong>
+      <div class="skillChipRow">${briefSkills}</div>
+    </div>
+
+    <div class="heroCard">
+      <strong>技能介绍</strong>
+      <div class="skillDetailGrid">${skillCards}</div>
     </div>
 
     <div class="heroCard">
       <strong>当前统计</strong>
-      <div class="small">总造成伤害：${hero.stats.dealt}</div>
-      <div class="small">总承伤：${hero.stats.taken}</div>
-      <div class="small">总减伤：${hero.stats.reduced}</div>
-      <div class="small">标记数量：${hero.marks.length}</div>
+      <div class="heroMeta">总造成伤害：${hero.stats.dealt}</div>
+      <div class="heroMeta">总承伤：${hero.stats.taken}</div>
+      <div class="heroMeta">总减伤：${hero.stats.reduced}</div>
+      <div class="heroMeta">标记数量：${hero.marks.length}</div>
     </div>
   `;
 }
@@ -1113,7 +1146,12 @@ function renderSkillBar(hero) {
     // 被动技能不放按钮，只展示描述。
     if (s.costText === "被动") return;
     const btn = document.createElement("button");
-    btn.textContent = `技能${s.no}：${s.title}`;
+    btn.className = "skillButton";
+    btn.innerHTML = `
+      <span class="skillNo">技能${s.no}</span>
+      <span class="skillName">${escapeHtml(s.title)}</span>
+      <span class="skillCost">${escapeHtml(s.costText)}</span>
+    `;
     btn.onclick = () => useSkill(hero, s.no);
     btn.disabled = !isSkillAvailable(hero, s.no);
     bar.appendChild(btn);
@@ -1298,6 +1336,12 @@ function performAttack(hero, target) {
   if (!canAct(hero)) return;
   if (!target || target.team === hero.team) return;
   if (manhattan(hero, target) > hero.attackRange) return;
+
+  // 每位英雄每回合最多普通攻击 2 次
+  if (hero.attackTimesThisTurn >= 2) {
+    log(`【${hero.name}】本回合普通攻击次数已达到上限。`);
+    return;
+  }
 
   const cost = attackCost(hero);
   if (hero.defId === "sukuna") {

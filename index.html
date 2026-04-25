@@ -35,20 +35,29 @@
           <div class="row">
             <span class="badge blue" id="blueApBadge">蓝方行动点数：0</span>
             <span class="badge red" id="redApBadge">红方行动点数：0</span>
+            <span class="badge turn" id="turnTeamBadge">当前行动：等待开始</span>
           </div>
         </div>
 
         <div class="hud">
-          <div class="card">
+          <div class="card" id="blueCard">
             <h3>蓝方</h3>
             <div class="small" id="blueSummary">等待开始</div>
             <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
           </div>
-          <div class="card">
+          <div class="card" id="redCard">
             <h3>红方</h3>
             <div class="small" id="redSummary">等待开始</div>
             <div class="bar ap"><div id="redApBar" style="width:0%"></div></div>
           </div>
+        </div>
+
+        <div class="logDock">
+          <div class="row space" style="margin-bottom:6px">
+            <strong>战斗日志</strong>
+            <span class="small">可滚动查看最近记录</span>
+          </div>
+          <div class="log" id="log"></div>
         </div>
       </div>
     </div>
@@ -78,8 +87,10 @@
         <div class="sep"></div>
 
         <div class="ruleBox">
-          <strong>战斗日志</strong>
-          <div class="log" id="log"></div>
+          <strong>操作提示</strong>
+          <div class="hintText" id="operationHint">
+            选择英雄后，可切换移动 / 攻击 / 技能模式。上方黑色区域显示战斗日志。
+          </div>
         </div>
       </div>
     </div>

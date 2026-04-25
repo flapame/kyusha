@@ -73,6 +73,9 @@ button:disabled{
 .badge.blue{background:rgba(78,161,255,.17);color:#dbeeff}
 .badge.red{background:rgba(255,107,122,.17);color:#ffe0e5}
 .badge.gold{background:rgba(255,209,102,.16);color:#fff2c3}
+.badge.turn{background:rgba(255,255,255,.09);color:#d8defc;border:1px solid rgba(255,255,255,.08)}
+.badge.turn.blue{background:rgba(78,161,255,.18);color:#e8f4ff;border-color:rgba(78,161,255,.25)}
+.badge.turn.red{background:rgba(255,107,122,.18);color:#ffe4e8;border-color:rgba(255,107,122,.25)}
 
 .hud{
   margin-top:10px;
@@ -80,11 +83,29 @@ button:disabled{
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:8px;
 }
+.logDock{
+  margin-top:10px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  padding:10px;
+}
+.logDock .log{
+  height:128px;
+  overflow-y:auto;
+  scroll-behavior:smooth;
+}
 .card{
   background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
   border:1px solid rgba(255,255,255,.08);
   border-radius:16px;
   padding:10px;
+  transition:all .18s ease;
+}
+.card.teamActive{
+  border-color:rgba(255,209,102,.85);
+  box-shadow:0 0 0 1px rgba(255,209,102,.25),0 0 18px rgba(255,209,102,.12);
+  transform:translateY(-1px);
 }
 .card h3{margin:0 0 6px 0;font-size:14px}
 .small{font-size:12px;color:var(--muted);line-height:1.45}
@@ -219,6 +240,45 @@ button:disabled{
   flex-wrap:wrap;
 }
 .btnRow button{flex:1 1 auto; min-width:104px;}
+.skillButton{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.08);text-align:left;min-height:58px}
+.skillButton .skillNo{font-size:11px;color:var(--gold);font-weight:700}
+.skillButton .skillName{font-size:14px;font-weight:800;color:#fff}
+.skillButton .skillCost{font-size:11px;color:var(--muted)}
+.skillButton:disabled{opacity:.45}
+
+.heroBrief{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.avatar{
+  width:56px;
+  height:56px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:900;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.05));
+  border:1px solid rgba(255,255,255,.1);
+  flex:0 0 auto;
+}
+.avatar.blue{
+  background:linear-gradient(180deg,rgba(78,161,255,.5),rgba(39,107,205,.35));
+}
+.avatar.red{
+  background:linear-gradient(180deg,rgba(255,107,122,.5),rgba(204,48,72,.35));
+}
+.heroBriefMain{flex:1;min-width:0}
+.heroTitle{font-size:18px;font-weight:900;margin-bottom:4px}
+.heroMeta{font-size:12px;color:var(--muted);line-height:1.5}
+.skillChipRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.skillChip{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:12px;color:#fff}
+.skillDetailGrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+.skillDetail{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px}
+.skillDetail strong{display:block;margin-bottom:4px}
+.smallCaps{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .btnGood{background:linear-gradient(180deg,#1e6f59,#134737)}
 .btnDanger{background:linear-gradient(180deg,#7d1f30,#561525)}
 .btnWarn{background:linear-gradient(180deg,#7c5c12,#553d0f)}
