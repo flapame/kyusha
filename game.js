@@ -198,7 +198,6 @@ function closeOverlay() {
 function showIntro() {
   state.phase = "intro";
   const rulesHtml = `
-    <div class="introBrand">FLAP 作品</div>
     <h2>游戏规则</h2>
     <div class="ruleBox">
       <strong>基础规则</strong>
@@ -213,7 +212,6 @@ function showIntro() {
         <li>选中英雄后，点击空格移动，点击敌方进行攻击。</li>
         <li>选中英雄后，底部会显示技能按钮与说明。</li>
         <li>如果你看到了“没有这个技能”，通常表示该英雄本身没有对应技能编号。</li>
-        <li>部署阶段可以使用“随机部署当前阵营”按钮，自动帮你摆放当前阵营英雄。</li>
       </ul>
     </div>
     <div class="overlayActions">
