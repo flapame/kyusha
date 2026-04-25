@@ -35,6 +35,7 @@ window.HERO_DEFS = {
     attackRange: 1,
     attackCost: 1,
     spawnHint: "近战突袭型，擅长强化后爆发。",
+    avatar: "./avatars/sword.png",
     passive: "无额外被动。",
     skills: [
       {
@@ -61,6 +62,7 @@ window.HERO_DEFS = {
     attackRange: 1,
     attackCost: 1,
     spawnHint: "行动消耗血量，擅长标记、群体爆发与二阶段变身。",
+    avatar: "./avatars/sukuna.png",
     passive: "每回合开始时固定受到 1 点真实伤害；受到伤害或对敌方造成伤害时会留下标记。血量降至 0 后不会立即死亡，进入二阶段“神武解”，回复至 10 生命、攻击力提升到 2，并解锁领域技能。",
     skills: [
       {
@@ -99,6 +101,7 @@ window.HERO_DEFS = {
     attackRange: 1,
     attackCost: 2,
     spawnHint: "高爆发中距离角色，擅长防御与结界控制。",
+    avatar: "./avatars/gojo.png",
     passive: "若上回合仍有未使用的行动点，则会将这些行动点转化为『无下限防御』。当本回合受到伤害时，先消耗该防御值抵挡伤害；若防御值不足，则剩余伤害扣血。",
     skills: [
       {
@@ -125,6 +128,7 @@ window.HERO_DEFS = {
     attackRange: 3,
     attackCost: 2,
     spawnHint: "远程压制与偷点专家，适合打节奏。",
+    avatar: "./avatars/archer.png",
     passive: "攻击敌方角色时，会偷取敌方玩家下回合 1 点行动点。",
     skills: [
       {
@@ -157,6 +161,7 @@ window.HERO_DEFS = {
     attackRange: 1,
     attackCost: 2,
     spawnHint: "偏防守与地形控制，能封路也能减伤。",
+    avatar: "./avatars/mountain.png",
     passive: "无额外被动。",
     skills: [
       {
@@ -183,6 +188,7 @@ window.HERO_DEFS = {
     attackRange: 2,
     attackCost: 1,
     spawnHint: "灼烧型法师，擅长持续伤害与范围引爆。",
+    avatar: "./avatars/night.png",
     passive: "无额外被动。",
     skills: [
       {
