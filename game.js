@@ -1090,14 +1090,11 @@ function renderGrid() {
         cell.classList.add("selected");
       }
 
-      if (state.phase === "battle" && selected && canAct(selected)) {
-        if (state.selectedMode === "move") {
-          const reach = reachableCells(selected);
-          if (reach.some(c => c.x === x && c.y === y)) cell.classList.add("moveHint");
-        } else if (state.selectedMode === "attack") {
-          const targets = attackTargets(selected);
-          if (targets.some(t => t.x === x && t.y === y)) cell.classList.add("attackHint");
-        }
+      if (state.phase === "battle" && selected && canAct(selected) && !state.pendingAction) {
+        const reach = reachableCells(selected);
+        const targets = attackTargets(selected);
+        if (reach.some(c => c.x === x && c.y === y)) cell.classList.add("moveHint");
+        if (targets.some(t => t.x === x && t.y === y)) cell.classList.add("attackHint");
       }
 
       state.effects.forEach(e => {
@@ -1272,7 +1269,7 @@ function renderSelectedPanel(hero) {
   if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
     const panel = $("actionDock");
     if (panel && typeof panel.scrollIntoView === "function") {
-      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "start" }));
+      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "nearest" }));
     }
   }
 }
@@ -1415,19 +1412,15 @@ function onCellTap(x, y) {
     }
   }
 
-  // 未进入某个特殊选择状态时，按当前模式处理
-  if (state.selectedMode === "move") {
-    if (!target) {
-      performMove(hero, x, y);
-      return;
-    }
-  }
+  // 未进入某个特殊选择状态时：
+  // 1) 点击攻击范围内的敌方英雄 -> 直接攻击
+  // 2) 点击空地 -> 移动
+  // 3) 点击己方英雄 -> 切换选择
+  const canAttackTarget = target && target.team !== hero.team && attackTargets(hero).some(t => t.uid === target.uid);
 
-  if (state.selectedMode === "attack") {
-    if (target && target.team !== hero.team) {
-      performAttack(hero, target);
-      return;
-    }
+  if (canAttackTarget) {
+    performAttack(hero, target);
+    return;
   }
 
   if (state.selectedMode === "skill") {
@@ -1435,8 +1428,12 @@ function onCellTap(x, y) {
     return;
   }
 
-  // 默认：如果点的是己方英雄，切换选择；否则不处理
-  if (target && target.team === state.activeTeam) {
+  if (!target) {
+    performMove(hero, x, y);
+    return;
+  }
+
+  if (target.team === state.activeTeam) {
     selectHero(target.uid);
   }
 }
@@ -1453,7 +1450,7 @@ function selectHero(uid) {
   if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
     const panel = $("actionDock");
     if (panel && typeof panel.scrollIntoView === "function") {
-      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "start" }));
+      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "nearest" }));
     }
   }
 }
