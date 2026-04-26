@@ -551,6 +551,74 @@ img{max-width:100%;display:block}
 .modal .overlayActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .overlayActions button{min-width:120px}
 
+/* =========================
+   详情/技能区：避免与底部技能栏重叠
+   ========================= */
+.actionDock{
+  margin:0 12px 12px;
+  padding:12px;
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.actionDockGrid{
+  display:grid;
+  grid-template-columns:minmax(260px,.92fr) minmax(0,1.08fr);
+  gap:10px;
+  align-items:start;
+  min-height:0;
+}
+
+.actionDockPane{
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.actionDockHero .heroCard{margin-bottom:0}
+.actionDockSkills .heroDetailScroll{
+  max-height:min(34vh, 260px);
+  overflow-y:auto;
+  padding-right:6px;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
+  overscroll-behavior:contain;
+}
+
+/* 底部操作栏：固定在视野底端，避免被上方内容挤出屏幕 */
+.controls{
+  position:sticky;
+  bottom:0;
+  z-index:30;
+  background:rgba(7,10,18,.98);
+  border-top:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(12px);
+}
+
+.controls .inner{
+  max-width:980px;
+  margin:0 auto;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+}
+
+.skillBar{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+  align-items:stretch;
+}
+
+.skillBar button{
+  flex:1 1 auto;
+  min-width:100px;
+}
 .pickAvatar{
   width:84px;
   height:84px;
