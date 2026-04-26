@@ -219,7 +219,7 @@ function showIntro() {
       <strong>操作说明</strong>
       <ul class="ruleList">
         <li>点击英雄进行选择。</li>
-        <li>选中英雄后，点击空格移动，点击敌方进行攻击。</li>
+        <li>选中英雄后，点击空地移动，点击敌方进行普通攻击。</li>
         <li>选中英雄后，底部会显示技能按钮与说明。</li>
         <li>如果你看到了“没有这个技能”，通常表示该英雄本身没有对应技能编号。</li>
         <li>部署阶段可以使用“随机部署当前阵营”按钮，自动帮你摆放当前阵营英雄。</li>
@@ -733,7 +733,7 @@ function renderGameOverOverlay(winner) {
 // ----------------------
 // 伤害与状态处理
 // ----------------------
-// 统一伤害入口：普攻、技能、结界、灼烧都尽量走这里，方便统计总伤害 / 承伤 / 减伤。
+// 统一伤害入口：普攻、技能、领域、灼烧都尽量走这里，方便统计总伤害 / 承伤 / 减伤。
 function applyDamage(source, target, rawDamage, reason = "伤害") {
   if (!target || target.dead) return { dealt: 0, reduced: 0, final: 0 };
 
@@ -861,7 +861,7 @@ function resolveDelayedEffect(effect) {
       if (h.team === owner.team) return;
       const d = Math.abs(h.x - effect.x) + Math.abs(h.y - effect.y);
       if (d <= effect.radius) {
-        applyDamage(owner, h, 3, "赤夜结界");
+        applyDamage(owner, h, 3, "赤夜领域");
         h.burnTurns = Math.max(h.burnTurns, 2);
       }
     });
@@ -1084,8 +1084,26 @@ function renderGrid() {
       }
 
       state.effects.forEach(e => {
-        if (e.type === "mountainBarrier" && e.cells.some(c => c.x === x && c.y === y)) {
-          cell.classList.add("blockHint");
+        const within = (() => {
+          if (e.type === "mountainBarrier") {
+            return Array.isArray(e.cells) && e.cells.some(c => c.x === x && c.y === y);
+          }
+          const radius = typeof e.radius === "number" ? e.radius : 0;
+          return Math.abs(x - e.x) + Math.abs(y - e.y) <= radius;
+        })();
+
+        if (!within) return;
+
+        if (e.type === "gojoDomain") {
+          cell.classList.add("domainHint", "domainGojo", "domainPulse");
+        } else if (e.type === "sukunaDomain") {
+          cell.classList.add("domainHint", "domainSukuna", "domainPulse");
+        } else if (e.type === "nightDomain") {
+          cell.classList.add("domainHint", "domainNight", "domainPulse");
+        } else if (e.type === "mountainBarrier") {
+          cell.classList.add("blockHint", "barrierHint");
+        } else if (e.type === "mountainShield") {
+          cell.classList.add("shieldHint");
         }
       });
 
@@ -1139,8 +1157,17 @@ function renderSelectedPanel(hero) {
       heroAvatarEl.removeAttribute("src");
       heroAvatarEl.alt = "hero avatar";
     }
-    summary.innerHTML = `<div class="hintText">点击一位已部署的英雄，查看属性、被动与技能。</div>`;
-    detail.innerHTML = `<div class="hintText">这里会显示完整技能介绍、战斗统计和状态说明。</div>`;
+    summary.innerHTML = `
+      <div class="heroCard">
+        <div class="hintText">点击一位已部署英雄，查看属性、被动、主动技能与当前状态。</div>
+      </div>
+    `;
+    detail.innerHTML = `
+      <div class="heroCard">
+        <strong>详细说明</strong>
+        <div class="hintText">这里会显示完整技能介绍、技能消耗、战斗统计、领域范围与状态说明。</div>
+      </div>
+    `;
     return;
   }
 
@@ -1161,7 +1188,7 @@ function renderSelectedPanel(hero) {
   }
 
   const skillChips = def.skills.map(s => `
-    <span class="skillChip">技能${s.no}：${escapeHtml(s.title)}</span>
+    <span class="skillChip">${s.costText === "被动" ? "被动" : "主动"} · ${escapeHtml(s.title)}</span>
   `).join("");
 
   const skillCards = def.skills.map(s => `
@@ -1170,12 +1197,14 @@ function renderSelectedPanel(hero) {
         <div class="skillIconSlot">${skillIcon(s)}</div>
         <div class="skillDetailTitleWrap">
           <strong>技能${s.no}：${escapeHtml(s.title)}</strong>
-          <div class="smallCaps">消耗：${escapeHtml(s.costText)}</div>
+          <div class="smallCaps">${s.costText === "被动" ? "类型：被动" : `类型：主动 · 消耗：${escapeHtml(s.costText)}`}</div>
         </div>
       </div>
       <div class="heroMeta">${escapeHtml(s.desc)}</div>
     </div>
   `).join("");
+
+  const statusText = formatHeroFx(hero) || "无";
 
   summary.innerHTML = `
     <div class="heroCard">
@@ -1193,10 +1222,15 @@ function renderSelectedPanel(hero) {
         </div>
       </div>
     </div>
+
     <div class="heroCard">
       <strong>被动与状态</strong>
-      <div class="heroMeta">被动：${escapeHtml(def.passive)}<br>当前状态：${escapeHtml(formatHeroFx(hero) || "无")}</div>
+      <div class="heroMeta">
+        <div><strong style="color:#fff">被动：</strong>${escapeHtml(def.passive)}</div>
+        <div style="margin-top:6px"><strong style="color:#fff">当前状态：</strong>${escapeHtml(statusText)}</div>
+      </div>
     </div>
+
     <div class="heroCard">
       <strong>技能速览</strong>
       <div class="skillChipRow">${skillChips}</div>
@@ -1217,6 +1251,13 @@ function renderSelectedPanel(hero) {
       <div class="heroMeta">标记数量：${hero.marks.length}</div>
     </div>
   `;
+
+  if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
+    const panel = $("selectedInfo");
+    if (panel && typeof panel.scrollIntoView === "function") {
+      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }
 }
 
 
@@ -1385,6 +1426,13 @@ function selectHero(uid) {
   state.selectedMode = "move";
   state.pendingAction = null;
   renderAll();
+
+  if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
+    const panel = $("selectedInfo");
+    if (panel && typeof panel.scrollIntoView === "function") {
+      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }
 }
 
 function deselectHero() {
@@ -1840,7 +1888,7 @@ function resolveNightSkill3(hero) {
     triggerTurn: state.turn + 1
   });
 
-  log(`【${hero.name}】展开赤夜结界：下回合开始时生效。`);
+  log(`【${hero.name}】展开赤夜领域：下回合开始时生效。`);
   renderAll();
 }
 
@@ -1860,26 +1908,8 @@ function bindButtons() {
   $("btnEndTurn").onclick = endTurn;
   const clearBtn = $("clearLogBtn");
   if (clearBtn) clearBtn.onclick = () => {
-    state.battle.log = [];
+    state.logs = [];
     renderLog();
-  };
-  $("btnMoveMode").onclick = () => {
-    const hero = selectedHero();
-    if (!hero) return;
-    state.selectedMode = "move";
-    renderAll();
-  };
-  $("btnAttackMode").onclick = () => {
-    const hero = selectedHero();
-    if (!hero) return;
-    state.selectedMode = "attack";
-    renderAll();
-  };
-  $("btnSkillMode").onclick = () => {
-    const hero = selectedHero();
-    if (!hero) return;
-    state.selectedMode = "skill";
-    renderAll();
   };
 }
 

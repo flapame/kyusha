@@ -384,7 +384,7 @@ img{max-width:100%;display:block}
 }
 .sep{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
 .hintText{font-size:12px;color:var(--muted);line-height:1.55}
-.heroDetailShell{flex:1;min-height:0;display:flex;flex-direction:column}
+.heroDetailShell{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
 .heroDetailScroll{flex:1;min-height:0;overflow-y:auto;padding-right:4px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .skillDetailGrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
 .skillDetail{
@@ -644,195 +644,17 @@ img{max-width:100%;display:block}
   .btnRow{display:grid;grid-template-columns:1fr 1fr}
 }
 
-.hero-avatar-slot{width:92px;height:92px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0d111a;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.hero-avatar-slot{width:92px;height:78px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0d111a;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .hero-avatar-slot img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 
-/* =========================================================
-   Portrait / mobile tuning
-   目标：让 9×4 棋盘在竖屏里完整显示，压缩顶部红蓝信息条和底部按钮区。
-   ========================================================= */
-@media (orientation: portrait), (max-width: 860px) {
-  body {
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
 
-  #app {
-    height: auto;
-    min-height: 100dvh;
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
-  }
-
-  .topbar {
-    position: static;
-    padding: 8px 10px 6px;
-  }
-
-  .topRow {
-    gap: 6px;
-    margin-bottom: 6px;
-    align-items: flex-start;
-  }
-
-  .brandName {
-    font-size: 16px;
-    line-height: 1.05;
-  }
-
-  .gameTitle {
-    font-size: 15px;
-  }
-
-  .gameSubtitle {
-    font-size: 10px;
-    line-height: 1.2;
-  }
-
-  .badge {
-    padding: 4px 8px;
-    font-size: 11px;
-  }
-
-  .hud {
-    gap: 6px;
-  }
-
-  .hud .card {
-    padding: 8px;
-    border-radius: 14px;
-  }
-
-  .hud .card h3 {
-    font-size: 12px;
-    margin-bottom: 4px;
-  }
-
-  .hud .small {
-    font-size: 10px;
-    line-height: 1.25;
-  }
-
-  .bar {
-    height: 6px;
-    margin-top: 4px;
-  }
-
-  .bar.shield {
-    display: none;
-  }
-
-  .gridWrap {
-    margin-top: 8px;
-    padding: 8px;
-    max-width: 100%;
-    border-radius: 16px;
-  }
-
-  .grid {
-    gap: 3px;
-    align-content: start;
-    grid-template-rows: repeat(4, auto);
-  }
-
-  .cell {
-    aspect-ratio: 1;
-    border-radius: 10px;
-  }
-
-  .cell .coord {
-    font-size: 8px;
-  }
-
-  .unit {
-    padding: 1px;
-    gap: 2px;
-  }
-
-  .unitPortrait {
-    width: 26px;
-    height: 26px;
-  }
-
-  .unit .name {
-    font-size: 9px;
-  }
-
-  .unit .hp {
-    font-size: 8px;
-  }
-
-  .unit .fx {
-    font-size: 8px;
-    line-height: 1.05;
-  }
-
-  .sidebar {
-    margin-top: 8px;
-    padding: 8px;
-    border-radius: 16px;
-    display: grid;
-    gap: 8px;
-  }
-
-  #selectedInfo,
-  #heroDetail {
-    max-height: 24dvh;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .log {
-    max-height: 60px;
-    font-size: 11px;
-    padding: 7px;
-  }
-
-  .controls {
-    position: static;
-    margin-top: 8px;
-  }
-
-  .controls .inner {
-    padding: 8px 10px 10px;
-  }
-
-  .btnRow {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-  }
-
-  .btnRow button {
-    min-width: 0;
-    padding: 8px 8px;
-    font-size: 12px;
-    min-height: 40px;
-  }
-
-  .skillButton {
-    min-height: 46px;
-    padding: 8px 10px;
-  }
-
-  .modal {
-    max-height: 86vh;
-    padding: 12px;
-  }
-
-  .modal .grid2 {
-    grid-template-columns: 1fr;
-  }
-
-  .heroPick .desc {
-    min-height: 0;
-  }
-}
-
-@media (max-width: 400px) {
-  .brandName { font-size: 15px; }
-  .gameTitle { font-size: 14px; }
-  .badge { font-size: 10px; padding: 4px 7px; }
-  .hud .card { padding: 7px; }
-  .gridWrap { padding: 6px; }
-  .sidebar { padding: 7px; }
-}
+/* 强化领域 / 封路视觉 */
+.domainHint{position:relative;}
+.domainHint::after{content:"领域";position:absolute;right:6px;top:4px;font-size:9px;line-height:1;padding:3px 6px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;opacity:.92;z-index:2;}
+.domainGojo{background:rgba(82,164,255,.14)!important; outline:2px solid rgba(82,164,255,.42)}
+.domainSukuna{background:rgba(255,107,122,.14)!important; outline:2px solid rgba(255,107,122,.42)}
+.domainNight{background:rgba(180,107,255,.14)!important; outline:2px solid rgba(180,107,255,.42)}
+.shieldHint{background:rgba(255,209,102,.12)!important; outline:2px solid rgba(255,209,102,.34)}
+.barrierHint{background:rgba(148,163,184,.24)!important; outline:2px dashed rgba(226,232,240,.45)}
+.domainPulse{animation: domainPulse 1.2s ease-in-out infinite}
+@keyframes domainPulse{0%,100%{filter:saturate(.95) brightness(1)}50%{filter:saturate(1.15) brightness(1.08)}}
