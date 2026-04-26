@@ -1,122 +1,2170 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <meta name="theme-color" content="#0b1020" />
-  <title>FLAP 作品 · 战棋对战</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>9x4 战棋对战</title>
+<style>
+  :root{
+    --bg:#0f1220;
+    --panel:#181d33;
+    --panel2:#1f2644;
+    --text:#eef2ff;
+    --muted:#aab3d6;
+    --blue:#4ea1ff;
+    --blue2:#276bcd;
+    --red:#ff6b7a;
+    --red2:#cc3048;
+    --grid:#313a62;
+    --accent:#ffd166;
+    --green:#5dd39e;
+    --danger:#ff6b7a;
+    --warn:#ffb703;
+    --good:#4dd4ac;
+  }
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,#090b15 0%, #10152a 100%);
+    color:var(--text);
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overflow:hidden;
+  }
+  *{box-sizing:border-box}
+  button{
+    border:none;
+    border-radius:12px;
+    padding:10px 12px;
+    background:#2a335b;
+    color:var(--text);
+    font-size:14px;
+    cursor:pointer;
+  }
+  button:disabled{opacity:.35;cursor:not-allowed}
+  .wrap{max-width:900px;margin:0 auto;padding-bottom:188px}
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:rgba(10,13,25,.96);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    padding:8px 12px;
+  }
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .space{justify-content:space-between}
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 9px;border-radius:999px;
+    background:rgba(255,255,255,.08);
+    font-size:12px;color:var(--muted);
+    white-space:nowrap;
+  }
+  .badge strong{color:#fff}
+  .badge.blue{background:rgba(78,161,255,.17);color:#dcecff}
+  .badge.red{background:rgba(255,107,122,.17);color:#ffe2e6}
+  .badge.gold{background:rgba(255,209,102,.16);color:#fff1c5}
+  .hud{
+    margin-top:8px;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+  }
+  .card{
+    background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;
+    padding:8px 10px;
+  }
+  .card h3{margin:0 0 5px 0;font-size:13px}
+  .small{font-size:11px;color:var(--muted);line-height:1.35}
+  .bar{
+    margin-top:6px;
+    height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden
+  }
+  .bar>div{height:100%;border-radius:999px}
+  .bar.ap>div{background:linear-gradient(90deg,#ffd166,#ff9f1c)}
+  .bar.hp>div{background:linear-gradient(90deg,#6ee7b7,#22c55e)}
+  .bar.shield>div{background:linear-gradient(90deg,#93c5fd,#3b82f6)}
+  .gridWrap{
+    margin:10px auto 0;
+    padding:8px;
+    max-width:760px;
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(9,minmax(0,1fr));
+    gap:4px;
+    user-select:none;
+  }
+  .cell{
+    position:relative;
+    aspect-ratio:1;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.03);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .cell.blueSpawn{background:rgba(78,161,255,.08)}
+  .cell.redSpawn{background:rgba(255,107,122,.08)}
+  .cell.moveHint{outline:2px solid rgba(93,211,158,.7);background:rgba(93,211,158,.12)}
+  .cell.attackHint{outline:2px solid rgba(255,107,122,.7);background:rgba(255,107,122,.11)}
+  .cell.skillHint{outline:2px solid rgba(255,209,102,.7);background:rgba(255,209,102,.11)}
+  .cell.blockHint{background:rgba(148,163,184,.18)}
+  .cell.selected{outline:3px solid var(--accent)}
+  .cell.barrier{box-shadow:inset 0 0 0 2px rgba(255,255,255,.22)}
+  .cell .coord{
+    position:absolute;left:4px;top:4px;font-size:9px;color:rgba(255,255,255,.22)
+  }
+  .unit{
+    width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    border-radius:12px;padding:2px;text-align:center;
+    color:#fff;font-weight:700;line-height:1.05
+  }
+  .unit.blue{background:linear-gradient(180deg,rgba(78,161,255,.95),rgba(39,107,205,.96))}
+  .unit.red{background:linear-gradient(180deg,rgba(255,107,122,.95),rgba(204,48,72,.96))}
+  .unit .name{font-size:11px;white-space:nowrap}
+  .unit .hp{font-size:10px;opacity:.96;font-weight:600}
+  .unit .fx{font-size:9px;opacity:.95;margin-top:2px;white-space:nowrap}
+  .sidebar{
+    margin-top:10px;
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:10px;
+  }
+  .controls{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:rgba(9,11,21,.98);
+    border-top:1px solid rgba(255,255,255,.08);
+    backdrop-filter:blur(10px);
+    box-shadow:0 -10px 30px rgba(0,0,0,.24);
+  }
+  .controls .inner{
+    max-width:900px;margin:0 auto;padding:8px 12px 10px;
+  }
+  .skillDockHead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .skillDockHero{font-size:13px;font-weight:800;color:#fff}
+  .skillDockDesc{font-size:11px;color:var(--muted);line-height:1.35;flex:1;min-width:180px}
+  .btnRow{display:flex;gap:8px;flex-wrap:wrap}
+  .btnRow button{flex:1 1 auto;min-width:84px;padding:9px 10px;font-size:13px;min-height:40px}
+  .btnPrimary{background:linear-gradient(180deg,#3a4c86,#28355f)}
+  .btnWarn{background:linear-gradient(180deg,#7c5c12,#553d0f)}
+  .btnDanger{background:linear-gradient(180deg,#7d1f30,#561525)}
+  .btnGood{background:linear-gradient(180deg,#1e6f59,#134737)}
+  .btnGhost{background:rgba(255,255,255,.08)}
+  .skillDetail{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px;line-height:1.45;margin-top:8px}
+  .skillDetail strong{display:block;margin:2px 0 4px}
+  .skillKind{font-size:10px;color:var(--accent);font-weight:800;letter-spacing:.04em;margin-bottom:4px;text-transform:uppercase}
+  .muted{color:var(--muted)}
+  .log{
+    height:92px;overflow:auto;background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:8px;font-size:12px;line-height:1.35
+  }
+  .log div{margin-bottom:4px}
+  .overlay{
+    position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.72);
+    display:none;align-items:center;justify-content:center;padding:16px;
+  }
+  .overlay.show{display:flex}
+  .modal{
+    width:min(720px,100%);
+    max-height:90vh;
+    overflow:auto;
+    background:linear-gradient(180deg,#161b32,#11162a);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:20px;
+    padding:16px;
+    box-shadow:0 20px 70px rgba(0,0,0,.45);
+  }
+  .modal h2,.modal h3{margin:0 0 10px 0}
+  .heroPool{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:10px;
+  }
+  .heroPick{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;
+    padding:12px;
+    text-align:left;
+  }
+  .heroPick .title{font-size:15px;font-weight:800;margin-bottom:6px}
+  .heroPick .desc{font-size:12px;color:var(--muted);line-height:1.5;min-height:120px}
+  .heroPick .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .heroPick .meta span{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.08)}
+  .pickActions{display:flex;gap:8px;margin-top:10px}
+  .pickActions button{flex:1}
+  .draftLine{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+  .draftSlot{flex:1 1 160px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:8px;min-height:60px}
+  .draftSlot .slotTitle{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .draftSlot .slotHero{font-size:14px;font-weight:700}
+  .dirPad{display:grid;grid-template-columns:repeat(3,60px);gap:8px;justify-content:center;margin-top:8px}
+  .dirPad button{height:56px}
+  .center{text-align:center}
+  .hide{display:none !important}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px}
+  .sep{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
+  .hintText{font-size:12px;color:var(--muted);line-height:1.45}
+  .dangerText{color:#fecaca}
+  .okText{color:#bbf7d0}
+  @media (max-width: 700px){
+    .wrap{padding-bottom:230px}
+    .hud{grid-template-columns:1fr;gap:6px}
+    .controls .inner{padding:8px 10px 10px}
+    .skillDockHead{margin-bottom:6px}
+    .skillDockDesc{min-width:0}
+    .btnRow button{min-width:calc(50% - 4px);flex:1 1 calc(50% - 4px)}
+    .btnRow{gap:6px}
+    .log{height:84px}
+  }
+</style>
 </head>
 <body>
-  <div id="app">
-    <header class="topbar">
-      <div class="topRow">
-        <div class="brandBlock">
-          <div class="brandName">FLAP 作品</div>
-          <div class="titleWrap">
-            <div class="gameTitle">战棋对战</div>
-            <div class="gameSubtitle">经典棋盘皮肤 · 点击英雄查看详细信息</div>
-          </div>
-        </div>
-
-        <div class="topRightBadges">
-          <span id="phaseBadge" class="badge gold">阶段：—</span>
-          <span id="turnBadge" class="badge">回合：—</span>
-          <span id="turnTeamBadge" class="badge turn">当前行动：—</span>
-          <span id="matchBadge" class="badge">本地双人</span>
-        </div>
+<div class="wrap">
+  <div class="topbar">
+    <div class="row space">
+      <div class="row">
+        <span class="badge gold"><strong>9×4</strong> 战棋</span>
+        <span id="phaseBadge" class="badge">准备中</span>
+        <span id="turnBadge" class="badge">回合：—</span>
       </div>
-
-      <div class="topDeck">
-        <section class="logDock card">
-          <div class="panelHeader">
-            <h3>战斗日志</h3>
-            <button id="clearLogBtn" class="textBtn">清空</button>
-          </div>
-          <div id="log" class="log"></div>
-        </section>
-
-        <section id="blueCard" class="card teamCard compact">
-          <h3>蓝方</h3>
-          <div id="blueHud" class="small teamHudLine">—</div>
-          <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
-          <div id="blueSummary" class="teamSummary">—</div>
-        </section>
-
-        <section id="redCard" class="card teamCard compact">
-          <h3>红方</h3>
-          <div id="redHud" class="small teamHudLine">—</div>
-          <div class="bar ap"><div id="redApBar" style="width:0%"></div></div>
-          <div id="redSummary" class="teamSummary">—</div>
-        </section>
+      <div class="row">
+        <span id="matchBadge" class="badge">本地双人</span>
       </div>
-    </header>
-
-    <main class="mainArea">
-      <section class="gridWrap">
-        <div class="boardHeader">
-          <div class="boardAxisX" id="boardLabelsX"></div>
-        </div>
-        <div class="boardMain">
-          <div class="boardAxisY" id="boardLabelsY"></div>
-          <div id="grid" class="grid"></div>
-        </div>
-      </section>
-
-      <aside class="sidebar">
-        <div class="row space">
-          <div id="selectedPill" class="pill">未选择英雄</div>
-          <div id="selectedState" class="pill">—</div>
-        </div>
-
-        <div class="sep"></div>
-
-        <div class="heroCard">
-          <strong>点击提示</strong>
-          <div class="hintText">点击棋盘上的英雄后，下方会显示该英雄的头像、被动、主动技能与可执行操作。</div>
-        </div>
-      </aside>
-    </main>
-
-    <section class="actionDock card" id="actionDock">
-      <div class="panelHeader">
-        <h3>英雄信息与技能</h3>
-        <div class="small">点选英雄后显示详细内容</div>
+    </div>
+    <div class="hud">
+      <div class="card">
+        <h3>蓝方</h3>
+        <div class="small" id="blueHud"></div>
+        <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
+        <div class="bar hp"><div id="blueHpBar" style="width:0%"></div></div>
+        <div class="bar shield"><div id="blueShieldBar" style="width:0%"></div></div>
       </div>
-
-      <div class="actionDockGrid">
-        <div class="actionDockPane actionDockHero">
-          <div id="selectedInfo" class="heroCard">
-            <div class="hintText">点击棋盘上的英雄查看属性、被动与当前状态。</div>
-          </div>
-        </div>
-
-        <div class="actionDockPane actionDockSkills">
-          <div id="heroDetail" class="heroDetailScroll hintText">
-            点击棋盘上的英雄查看可行动作。
-          </div>
-        </div>
+      <div class="card">
+        <h3>红方</h3>
+        <div class="small" id="redHud"></div>
+        <div class="bar ap"><div id="redApBar" style="width:0%"></div></div>
+        <div class="bar hp"><div id="redHpBar" style="width:0%"></div></div>
+        <div class="bar shield"><div id="redShieldBar" style="width:0%"></div></div>
       </div>
-    </section>
-
-    <footer class="controls">
-      <div class="inner">
-        <div id="skillBar" class="skillBar footerSkillBar"></div>
-        <div class="btnRow">
-          <button id="btnDeselect" class="btnGhost">取消选择</button>
-          <button id="btnEndTurn" class="btnGood">结束回合</button>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <div id="overlay" class="overlay">
-    <div class="modal">
-      <div id="overlayContent"></div>
     </div>
   </div>
 
-  <script src="heroes.js"></script>
-  <script src="game.js"></script>
+  <div class="gridWrap">
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <div class="sidebar">
+    <div class="row space">
+      <div>
+        <div class="pill" id="selectedInfo">未选择英雄</div>
+      </div>
+      <div class="pill" id="selectedState">—</div>
+    </div>
+    <div class="sep"></div>
+    <div id="heroDetail" class="hintText">点击棋盘上的英雄查看可行动作。</div>
+    <div class="sep"></div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="inner">
+    <div class="skillDockHead">
+      <div id="skillDockHero" class="skillDockHero">未选择英雄</div>
+      <div id="skillDockDesc" class="skillDockDesc">点击己方英雄后，在这里释放技能；点击敌方英雄可直接攻击。</div>
+    </div>
+    <div class="btnRow" id="actionRow">
+      <button class="btnGhost" id="btnSelect">选择/取消</button>
+      <button class="btnPrimary" id="btnAttack">普通攻击</button>
+      <button class="btnWarn" id="btnSkill1">技能1</button>
+      <button class="btnWarn" id="btnSkill2">技能2</button>
+      <button class="btnWarn" id="btnSkill3">技能3</button>
+      <button class="btnDanger" id="btnEndTurn">结束回合</button>
+    </div>
+  </div>
+</div>
+
+<div id="overlay" class="overlay">
+  <div class="modal">
+    <h2 id="overlayTitle">操作</h2>
+    <div id="overlayBody"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const BOARD_W = 9;
+  const BOARD_H = 4;
+  const MAX_BOARD_CELLS = BOARD_W * BOARD_H;
+
+  const TEAMS = {
+    blue: { id:'blue', name:'蓝方', color:'var(--blue)', color2:'var(--blue2)' },
+    red: { id:'red', name:'红方', color:'var(--red)', color2:'var(--red2)' }
+  };
+
+  const HERO_DEFS = {
+    sword: {
+      id:'sword', name:'剑仙', hp:7, atk:2, range:1, moveType:'any', passive:'无额外被动。',
+      skills: [
+        { id:'s1', name:'剑意·燃血', cost:2, desc:'本回合攻击力+1；消耗1点生命。'},
+        { id:'s2', name:'剑影突刺', cost:5, desc:'选择2格内敌方，突刺至目标身后并造成4点伤害；自身两回合无法行动。'}
+      ]
+    },
+    sukuna: {
+      id:'sukuna', name:'两面宿傩', hp:20, atk:1, range:1, moveType:'any', passive:'每回合开始时固定受到1点真实伤害；受到伤害或造成伤害时会留下标记。生命降至0后进入二阶段神武解，回复到10并提升攻击力到2。',
+      skills: [
+        { id:'s2', name:'伏魔·连印', cost:0, desc:'至少5个标记后可用；沿标记连线的所有格造成4点伤害（敌我不分，含自身）。'},
+        { id:'s4', name:'神魔领域', cost:9, desc:'自身周围3格领域，下回合开始自动释放，对区域内所有角色（不含自身）造成9点伤害。'}
+      ]
+    },
+    gojo: {
+      id:'gojo', name:'五条悟', hp:11, atk:3, range:1, moveType:'any', passive:'若上回合仍有未使用的行动点，则转化为无下限防御，优先抵挡本回合受到的伤害。',
+      skills: [
+        { id:'s2', name:'无量空处', cost:10, desc:'自身周围2格结界，限制离开；下回合开始冻结区域内除自身外所有角色1回合并造成2点伤害。若总伤害>7，额外获得1回合（该回合AP上限4）。'}
+      ]
+    },
+    archer: {
+      id:'archer', name:'寂声射手', hp:8, atk:1, range:3, moveType:'any', passive:'攻击敌方角色时，会偷取敌方玩家下回合1点行动点。',
+      skills: [
+        { id:'s2', name:'疾走回声', cost:6, desc:'下两回合移动不耗AP；每回合最多移动2次，每次最多2格。'},
+        { id:'s3', name:'缠绕箭', cost:6, desc:'选择1格内敌方，造成3点伤害并缠绕1回合（只能移动或普攻，不能放技能）。'}
+      ]
+    },
+    mountain: {
+      id:'mountain', name:'山脉之神', hp:15, atk:2, range:1, moveType:'any', passive:'无额外被动。',
+      skills: [
+        { id:'s1', name:'封山断路', cost:4, desc:'指定方向直线3格封路至下回合开始；若路径中有敌方则造成2点伤害，有我方则回复2点生命，且本次不生成封路。'},
+        { id:'s2', name:'山岳护壁', cost:8, desc:'自身周围1格结界，下回合开始前结界内所有友方（含自身）受到的伤害-1。'}
+      ]
+    },
+    night: {
+      id:'night', name:'烈焰之夜神', hp:9, atk:1, range:2, moveType:'any', passive:'无额外被动。',
+      skills: [
+        { id:'s1', name:'夜火', cost:2, desc:'选择2格内敌方，造成2点伤害并附加灼烧2回合。'},
+        { id:'s2', name:'引燃', cost:6, desc:'若场上有2个及以上被灼烧角色，对所有被灼烧角色造成2点伤害。'},
+        { id:'s3', name:'炽焰结界', cost:9, desc:'自身周围2格结界，下回合开始对区域内所有敌方造成3点伤害并附加灼烧。'}
+      ]
+    }
+  };
+
+  const HERO_ORDER = ['sword','sukuna','gojo','archer','mountain','night'];
+
+  const state = {
+    phase: 'draft', // draft -> deploy -> battle -> gameover
+    draft: {
+      turn: 'blue', // blue picks first by default; randomized in init
+      picks: { blue: [], red: [] },
+      pool: HERO_ORDER.map(id => HERO_DEFS[id]),
+      firstDraftTeam: 'blue'
+    },
+    deploy: {
+      order: ['blue', 'red'],
+      phaseIndex: 0,
+      selectedTeam: 'blue',
+      blueSlots: [],
+      redSlots: []
+    },
+    battle: {
+      currentTeam: 'blue',
+      firstTeam: 'blue',
+      bonusTurnQueue: [], // [{team, apCapOverride, reason}]
+      pendingAPPenalty: { blue: 0, red: 0 },
+      baseAP: { blue: 2, red: 2 },
+      currentAP: { blue: 0, red: 0 },
+      bonusCardAvailable: { blue: false, red: false },
+      turnNo: 1,
+      selectedHeroId: null,
+      selectedAction: null, // null | {type, heroId, skillId}
+      awaitingDirection: null, // {heroId, skillId}
+      awaitingTarget: null, // {heroId, action, skillId, validIds}
+      selectedCell: null,
+      log: [],
+      effects: [],
+      heroes: [],
+      playerTeamByHeroId: {},
+      lastActionText: ''
+    },
+    extra: {
+      turnAPCapOverride: null,
+      tempAttackBonus: {}
+    }
+  };
+
+  const els = {
+    grid: document.getElementById('grid'),
+    log: document.getElementById('log'),
+    phaseBadge: document.getElementById('phaseBadge'),
+    turnBadge: document.getElementById('turnBadge'),
+    selectedInfo: document.getElementById('selectedInfo'),
+    selectedState: document.getElementById('selectedState'),
+    heroDetail: document.getElementById('heroDetail'),
+    blueHud: document.getElementById('blueHud'),
+    redHud: document.getElementById('redHud'),
+    blueApBar: document.getElementById('blueApBar'),
+    redApBar: document.getElementById('redApBar'),
+    blueHpBar: document.getElementById('blueHpBar'),
+    redHpBar: document.getElementById('redHpBar'),
+    blueShieldBar: document.getElementById('blueShieldBar'),
+    redShieldBar: document.getElementById('redShieldBar'),
+    overlay: document.getElementById('overlay'),
+    overlayTitle: document.getElementById('overlayTitle'),
+    overlayBody: document.getElementById('overlayBody'),
+    btnSelect: document.getElementById('btnSelect'),
+    btnAttack: document.getElementById('btnAttack'),
+    btnSkill1: document.getElementById('btnSkill1'),
+    btnSkill2: document.getElementById('btnSkill2'),
+    btnSkill3: document.getElementById('btnSkill3'),
+    btnEndTurn: document.getElementById('btnEndTurn')
+  };
+
+  function log(msg, cls='') {
+    state.battle.log.push({ msg, cls });
+    if (state.battle.log.length > 80) state.battle.log.shift();
+    renderLog();
+  }
+
+  function renderLog() {
+    els.log.innerHTML = state.battle.log.map(item => `<div class="${item.cls||''}">${escapeHtml(item.msg)}</div>`).join('');
+    els.log.scrollTop = els.log.scrollHeight;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
+  }
+
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
+
+  function randPick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function posKey(x, y) {
+    return `${x},${y}`;
+  }
+
+  function inBounds(x, y) {
+    return x >= 0 && x < BOARD_W && y >= 0 && y < BOARD_H;
+  }
+
+  function manhattan(a, b) {
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+  }
+
+  function getSpawnCells(team) {
+    // 左右各 3x2 生出生点：蓝方左侧，红方右侧
+    // 为了保持对称，采用中间两行
+    const cells = [];
+    const xs = team === 'blue' ? [0,1,2] : [6,7,8];
+    const ys = [1,2];
+    ys.forEach(y => xs.forEach(x => cells.push({ x, y })));
+    return cells;
+  }
+
+  function heroDefById(id) {
+    return HERO_DEFS[id];
+  }
+
+  function makeHero(defId, team, idSuffix) {
+    const def = heroDefById(defId);
+    return {
+      uid: `${team}_${defId}_${idSuffix}`,
+      defId,
+      team,
+      name: def.name,
+      x: null,
+      y: null,
+      hp: def.hp,
+      maxHp: def.hp,
+      atk: def.atk,
+      baseAtk: def.atk,
+      attackRange: def.range,
+      attackCount: 0,
+      dead: false,
+
+      // action control
+      actionLockTurns: 0,   // 不能任何行动
+      skillLockTurns: 0,    // 只能普攻/移动
+      burnTurns: 0,
+      freezeTurns: 0,       // 与 actionLock 同步使用
+      rootTurns: 0,         // 不能使用技能
+      temporaryAttackBonusTurns: 0,
+      temporaryAttackBonus: 0,
+
+      // special statuses
+      storedShield: 0,      // 五条：上一回合剩余AP护盾
+      marks: new Set(),     // 宿傩标记：格子 key
+      phase2: false,        // 宿傩二阶段
+      moveBoostTurns: 0,    // 射手：下两回合移动强化
+      freeMoveCharges: 0,   // 射手：每回合2次免费移动
+      freeMovesUsed: 0,
+      domainTurns: 0,       // 宿傩领域类定时效果计数，可扩展
+      damageTakenThisTurn: 0,
+      canMoveThroughBlocked: false,
+      pendingAPPenalty: 0,   // 被射手偷走的下回合AP
+      tempNoActionReason: '',
+      lastTurnApLeft: 0,
+      // 山神/五条等主动 zone 相关记在全局 effects
+      // 内建技能标识
+      skillCooldowns: {}
+    };
+  }
+
+  function heroByUid(uid) {
+    return state.battle.heroes.find(h => h.uid === uid && !h.dead);
+  }
+
+  function heroAt(x, y) {
+    return state.battle.heroes.find(h => !h.dead && h.x === x && h.y === y);
+  }
+
+  function heroInTeam(team) {
+    return state.battle.heroes.filter(h => !h.dead && h.team === team);
+  }
+
+  function enemyTeam(team) {
+    return team === 'blue' ? 'red' : 'blue';
+  }
+
+  function isCurrentTeamHero(hero) {
+    return hero && hero.team === state.battle.currentTeam;
+  }
+
+  function zoneHasCell(zone, x, y) {
+    return zone.cells.some(c => c.x === x && c.y === y);
+  }
+
+  function cellInActiveBarrier(x, y) {
+    return state.battle.effects.some(e => e.active && e.type === 'block' && zoneHasCell(e.zone, x, y));
+  }
+
+  function cellInZone(e, x, y) {
+    return e.zone.cells.some(c => c.x === x && c.y === y);
+  }
+
+  function getActiveDamageReduction(target) {
+    let reduction = 0;
+    for (const e of state.battle.effects) {
+      if (!e.active) continue;
+      if (e.type !== 'damageReduction') continue;
+      if (!cellInZone(e, target.x, target.y)) continue;
+      const source = heroByUid(e.sourceUid);
+      if (!source) continue;
+      if (target.team === source.team) reduction += e.amount;
+    }
+    return reduction;
+  }
+
+  function getEffectiveAP(team) {
+    return state.battle.currentAP[team];
+  }
+
+  function spendAP(hero, amount) {
+    const team = hero.team;
+    if (hero.defId === 'sukuna') {
+      hero.hp -= amount;
+      if (hero.hp <= 0) handleHeroMaybePhase2(hero, null, amount);
+      log(`【${hero.name}】消耗 ${amount} 点生命代替行动点。`, 'muted');
+      if (hero.hp <= 0 && !hero.phase2) return false;
+      return true;
+    }
+    if (state.battle.currentAP[team] < amount) return false;
+    state.battle.currentAP[team] -= amount;
+    return true;
+  }
+
+  function spendAPForBasicAttack(hero, cost) {
+    return spendAP(hero, cost);
+  }
+
+  function addMark(hero, x, y) {
+    if (hero.defId !== 'sukuna') return;
+    hero.marks.add(posKey(x, y));
+    log(`【宿傩】在 (${x+1},${y+1}) 留下标记。`, 'muted');
+  }
+
+  function applyDamage(source, target, amount, reason='伤害') {
+    if (!target || target.dead || amount <= 0) return 0;
+
+    let dmg = amount;
+
+    // 五条：储存的上一回合剩余AP抵挡
+    if (target.defId === 'gojo' && target.storedShield > 0) {
+      const blocked = Math.min(target.storedShield, dmg);
+      target.storedShield -= blocked;
+      dmg -= blocked;
+      if (blocked > 0) log(`【五条悟】以储备AP抵挡 ${blocked} 点伤害。`, 'okText');
+    }
+
+    // 山神护壁：友军减伤1
+    const reduction = getActiveDamageReduction(target);
+    if (reduction > 0) {
+      const reduced = Math.min(reduction, dmg);
+      dmg -= reduced;
+      if (reduced > 0) log(`【山岳护壁】为【${target.name}】减伤 ${reduced} 点。`, 'okText');
+    }
+
+    if (dmg <= 0) return 0;
+
+    target.hp -= dmg;
+    target.damageTakenThisTurn += dmg;
+
+    if (source && source.defId === 'sukuna') addMark(source, target.x, target.y);
+    if (source && source.defId === 'sukuna') addMark(target, source.x, source.y);
+
+    if (source && source.defId === 'archer' && target.team !== source.team) {
+      state.battle.pendingAPPenalty[target.team] = Math.min(10, state.battle.pendingAPPenalty[target.team] + 1);
+      log(`【寂声射手】偷走【${target.team === 'blue' ? '蓝方' : '红方'}】下回合 1 点行动点。`, 'warn');
+    }
+
+    if (source && source.defId === 'sukuna') {
+      addMark(source, target.x, target.y);
+    }
+
+    if (target.hp <= 0) {
+      if (handleHeroMaybePhase2(target, source, dmg)) {
+        return dmg;
+      }
+      target.dead = true;
+      log(`【${target.name}】被击倒！`, 'dangerText');
+    } else {
+      log(`【${source ? source.name : '效果'}】对【${target.name}】造成 ${dmg} 点${reason}。`, 'muted');
+    }
+    return dmg;
+  }
+
+  function handleHeroMaybePhase2(hero, source, dmg) {
+    if (hero.defId === 'sukuna' && !hero.phase2) {
+      hero.phase2 = true;
+      hero.hp = 10;
+      hero.atk = 2;
+      hero.baseAtk = 2;
+      hero.attackRange = 1;
+      log('【两面宿傩】触发二阶段「神武解」：生命回到10，攻击力提升至2，并解锁技能4。', 'okText');
+      return true;
+    }
+    return false;
+  }
+
+  function applyBurnStart(hero) {
+    if (hero.burnTurns > 0 && !hero.dead) {
+      hero.burnTurns -= 1;
+      log(`【${hero.name}】受到灼烧1点。`, 'dangerText');
+      applyDamage(null, hero, 1, '灼烧');
+    }
+  }
+
+  function resetTurnResources(team, isBonus=false, apCapOverride=null) {
+    const base = state.battle.baseAP[team];
+    let ap = base;
+
+    if (!isBonus && state.battle.bonusCardAvailable[team]) {
+      ap += 1;
+      state.battle.bonusCardAvailable[team] = false;
+      log(`【${TEAMS[team].name}】的首回合行动卡生效，本回合 +1 行动点。`, 'okText');
+    }
+
+    for (const e of state.battle.effects) {
+      if (!e.active && e.type === 'apAura' && e.team === team) {
+        // currently unused
+      }
+    }
+
+    if (state.battle.pendingAPPenalty[team] > 0) {
+      const pen = state.battle.pendingAPPenalty[team];
+      ap = Math.max(0, ap - pen);
+      state.battle.pendingAPPenalty[team] = 0;
+      log(`【${TEAMS[team].name}】下回合被偷走的行动点生效，减少 ${pen} 点。`, 'warn');
+    }
+
+    if (apCapOverride != null) ap = Math.min(ap, apCapOverride);
+    else ap = Math.min(ap, 10);
+
+    state.battle.currentAP[team] = ap;
+  }
+
+  function turnStart(team, options={}) {
+    const isBonus = !!options.isBonus;
+    state.battle.currentTeam = team;
+    state.phase = 'battle';
+    state.battle.selectedHeroId = null;
+    state.battle.selectedAction = null;
+    state.battle.awaitingDirection = null;
+    state.battle.awaitingTarget = null;
+    state.battle.selectedCell = null;
+    state.extra.turnAPCapOverride = options.apCapOverride ?? null;
+
+    // round effects trigger at start of any turn; on existing active effects
+    // first, hero turn-start statuses and delayed effects that trigger now
+    for (const hero of heroInTeam(team)) {
+      hero.attackCount = 0;
+      hero.damageTakenThisTurn = 0;
+
+      if (hero.temporaryAttackBonusTurns > 0) {
+        hero.temporaryAttackBonusTurns -= 1;
+        if (hero.temporaryAttackBonusTurns <= 0) {
+          hero.temporaryAttackBonus = 0;
+        }
+      }
+
+      if (hero.moveBoostTurns > 0) {
+        hero.moveBoostTurns -= 1;
+        hero.freeMoveCharges = 2;
+        hero.freeMovesUsed = 0;
+      } else {
+        hero.freeMoveCharges = 0;
+        hero.freeMovesUsed = 0;
+      }
+
+      if (hero.actionLockTurns > 0) hero.actionLockTurns -= 1;
+      if (hero.skillLockTurns > 0) hero.skillLockTurns -= 1;
+      if (hero.freezeTurns > 0) hero.freezeTurns -= 1;
+      if (hero.rootTurns > 0) hero.rootTurns -= 1;
+
+      applyBurnStart(hero);
+
+      // 宿傩：每回合固定受到1点伤害（在其自己的回合开始时）
+      if (hero.defId === 'sukuna' && !hero.dead) {
+        log('【两面宿傩】固定承受1点回合伤害。', 'warn');
+        applyDamage(null, hero, 1, '回合固定伤害');
+      }
+    }
+
+    // trigger delayed effects now
+    triggerStartOfTurnEffects(team, options);
+
+    // After effects may queue bonus turn(s)
+    resetTurnResources(team, isBonus, options.apCapOverride ?? null);
+    renderAll();
+    updateTurnBadge(isBonus);
+    if (!options.silent) {
+      log(`${TEAMS[team].name} 回合开始${isBonus ? '（额外回合）' : ''}。`, 'okText');
+    }
+  }
+
+  function updateTurnBadge(isBonus=false) {
+    const t = state.battle.currentTeam;
+    const apCap = state.extra.turnAPCapOverride ?? 10;
+    els.turnBadge.innerHTML = `回合：<strong>${state.battle.turnNo}</strong> / ${TEAMS[t].name}${isBonus ? '（额外）' : ''} / AP ${state.battle.currentAP[t]}/${apCap}`;
+  }
+
+  function queueBonusTurn(team, apCapOverride=4, reason='额外回合') {
+    state.battle.bonusTurnQueue.push({ team, apCapOverride, reason });
+    log(`【${TEAMS[team].name}】获得1个额外回合。`, 'gold');
+  }
+
+  function triggerStartOfTurnEffects(team, options) {
+    const newlyTriggered = [];
+    for (const e of state.battle.effects) {
+      if (e.done) continue;
+      if (e.startDelay > 0) {
+        e.startDelay -= 1;
+        if (e.startDelay > 0) continue;
+      }
+      if (e.triggered) continue;
+
+      if (e.type === 'gojoBarrier') {
+        const source = heroByUid(e.sourceUid);
+        if (!source || source.dead) { e.done = true; continue; }
+        const affected = heroInTeam('blue').concat(heroInTeam('red')).filter(h => h.uid !== source.uid && cellInZone(e, h.x, h.y));
+        let totalDamage = 0;
+        for (const h of affected) {
+          const dealt = applyDamage(source, h, 2, '结界冻结伤害');
+          totalDamage += dealt;
+          h.freezeTurns = Math.max(h.freezeTurns, 1);
+          h.actionLockTurns = Math.max(h.actionLockTurns, 1);
+          log(`【五条悟】冻结【${h.name}】1回合。`, 'warn');
+        }
+        e.triggered = true;
+        e.done = true;
+        log('【五条悟】无量空处已展开完成。', 'gold');
+        if (totalDamage > 7) {
+          queueBonusTurn(source.team, 4, '五条悟额外回合');
+        }
+      }
+
+      if (e.type === 'sukunaDomain') {
+        const source = heroByUid(e.sourceUid);
+        if (!source || source.dead) { e.done = true; continue; }
+        const affected = heroInTeam('blue').concat(heroInTeam('red')).filter(h => h.uid !== source.uid && cellInZone(e, h.x, h.y));
+        for (const h of affected) {
+          applyDamage(source, h, 9, '领域伤害');
+        }
+        e.triggered = true;
+        e.done = true;
+        log('【两面宿傩】神魔领域已自动释放。', 'gold');
+      }
+
+      if (e.type === 'nightBarrier') {
+        const source = heroByUid(e.sourceUid);
+        if (!source || source.dead) { e.done = true; continue; }
+        const affected = heroInTeam('blue').concat(heroInTeam('red')).filter(h => h.team !== source.team && cellInZone(e, h.x, h.y));
+        for (const h of affected) {
+          applyDamage(source, h, 3, '灼焰伤害');
+          h.burnTurns = Math.max(h.burnTurns, 2);
+          log(`【${h.name}】被附加灼烧2回合。`, 'dangerText');
+        }
+        e.triggered = true;
+        e.done = true;
+        log('【烈焰之夜神】炽焰结界触发。', 'gold');
+      }
+
+      if (e.type === 'mountainBlock') {
+        const source = heroByUid(e.sourceUid);
+        if (!source || source.dead) { e.done = true; continue; }
+        e.active = true; // now blocks for this turn
+        e.turnsLeft = 1;
+        log('【山脉之神】封路生效。', 'gold');
+        newlyTriggered.push(e);
+      }
+
+      if (e.type === 'mountainDR') {
+        const source = heroByUid(e.sourceUid);
+        if (!source || source.dead) { e.done = true; continue; }
+        e.active = true;
+        e.turnsLeft = 1;
+        log('【山脉之神】山岳护壁生效。', 'gold');
+        newlyTriggered.push(e);
+      }
+    }
+    return newlyTriggered;
+  }
+
+  function endTurn() {
+    if (state.phase !== 'battle') return;
+    resetSelection();
+    const team = state.battle.currentTeam;
+
+    // 保存五条的上一回合剩余行动点作为护盾
+    for (const h of heroInTeam(team)) {
+      if (h.defId === 'gojo') {
+        h.storedShield = state.battle.currentAP[team];
+      }
+    }
+
+    // 清理 active effects durations at end turn
+    for (const e of state.battle.effects) {
+      if (e.active && e.turnsLeft != null) {
+        e.turnsLeft -= 1;
+        if (e.turnsLeft <= 0) e.done = true;
+      }
+    }
+    state.battle.effects = state.battle.effects.filter(e => !e.done);
+
+    // 普通回合推进
+    if (!state.extra.currentTurnIsBonus) {
+      state.battle.baseAP[team] = Math.min(10, state.battle.baseAP[team] + 1);
+    } else {
+      state.battle.baseAP[team] = Math.min(10, state.battle.baseAP[team] + 1);
+    }
+
+    // check win
+    if (checkGameOver()) return;
+
+    state.battle.turnNo += 1;
+
+    // bonus turn queue first
+    const nextQueued = state.battle.bonusTurnQueue.shift();
+    if (nextQueued) {
+      state.extra.currentTurnIsBonus = true;
+      state.extra.turnAPCapOverride = nextQueued.apCapOverride;
+      turnStart(nextQueued.team, { isBonus:true, apCapOverride: nextQueued.apCapOverride });
+      return;
+    }
+
+    state.extra.currentTurnIsBonus = false;
+    state.extra.turnAPCapOverride = null;
+    const nextTeam = team === 'blue' ? 'red' : 'blue';
+    turnStart(nextTeam, { isBonus:false });
+  }
+
+  function checkGameOver() {
+    const blueAlive = heroInTeam('blue').length;
+    const redAlive = heroInTeam('red').length;
+    if (blueAlive === 0 || redAlive === 0) {
+      state.phase = 'gameover';
+      const winner = blueAlive > 0 ? '蓝方' : '红方';
+      log(`游戏结束：${winner} 胜利！`, 'gold');
+      renderAll();
+      return true;
+    }
+    return false;
+  }
+
+  function renderLogAndHud() {
+    const blueHeroes = heroInTeam('blue');
+    const redHeroes = heroInTeam('red');
+    const blueHp = blueHeroes.reduce((s,h)=>s + Math.max(0,h.hp), 0);
+    const redHp = redHeroes.reduce((s,h)=>s + Math.max(0,h.hp), 0);
+    const blueMaxHp = blueHeroes.reduce((s,h)=>s + h.maxHp, 0) || 1;
+    const redMaxHp = redHeroes.reduce((s,h)=>s + h.maxHp, 0) || 1;
+    const blueShield = blueHeroes.reduce((s,h)=>s + (h.storedShield||0), 0);
+    const redShield = redHeroes.reduce((s,h)=>s + (h.storedShield||0), 0);
+
+    els.blueHud.innerHTML = `
+      <div>英雄：${blueHeroes.map(h=>h.name).join('、') || '—'}</div>
+      <div>当前AP：<strong>${state.battle.currentAP.blue}</strong> / 基础：${state.battle.baseAP.blue} ${state.battle.bonusCardAvailable.blue ? ' / 行动卡：1' : ''}</div>
+      <div>状态：${formatTeamStatuses('blue')}</div>
+    `;
+    els.redHud.innerHTML = `
+      <div>英雄：${redHeroes.map(h=>h.name).join('、') || '—'}</div>
+      <div>当前AP：<strong>${state.battle.currentAP.red}</strong> / 基础：${state.battle.baseAP.red} ${state.battle.bonusCardAvailable.red ? ' / 行动卡：1' : ''}</div>
+      <div>状态：${formatTeamStatuses('red')}</div>
+    `;
+    els.blueApBar.style.width = `${Math.round((state.battle.currentAP.blue / 10) * 100)}%`;
+    els.redApBar.style.width = `${Math.round((state.battle.currentAP.red / 10) * 100)}%`;
+    els.blueHpBar.style.width = `${Math.round((blueHp / blueMaxHp) * 100)}%`;
+    els.redHpBar.style.width = `${Math.round((redHp / redMaxHp) * 100)}%`;
+    els.blueShieldBar.style.width = `${Math.min(100, blueShield * 20)}%`;
+    els.redShieldBar.style.width = `${Math.min(100, redShield * 20)}%`;
+    els.phaseBadge.textContent = state.phase === 'draft' ? '英雄选择' : state.phase === 'deploy' ? '布阵' : state.phase === 'battle' ? '对战中' : '已结束';
+    updateTurnBadge(state.extra.currentTurnIsBonus || false);
+  }
+
+  function formatTeamStatuses(team) {
+    const arr = heroInTeam(team).map(h => {
+      const tags = [];
+      if (h.burnTurns > 0) tags.push(`灼烧${h.burnTurns}`);
+      if (h.freezeTurns > 0 || h.actionLockTurns > 0) tags.push(`冻结${Math.max(h.freezeTurns,h.actionLockTurns)}`);
+      if (h.rootTurns > 0 || h.skillLockTurns > 0) tags.push(`缠绕${Math.max(h.rootTurns,h.skillLockTurns)}`);
+      if (h.moveBoostTurns > 0) tags.push(`疾走${h.moveBoostTurns}`);
+      if (h.storedShield > 0 && h.defId === 'gojo') tags.push(`护盾${h.storedShield}`);
+      if (h.defId === 'sukuna' && h.phase2) tags.push('神武解');
+      return `${h.name}${tags.length ? `(${tags.join('/')})` : ''}`;
+    });
+    return arr.join('、') || '无';
+  }
+
+  function updateSelectedPanel(hero) {
+    if (!hero) {
+      els.selectedInfo.textContent = '未选择英雄';
+      els.selectedState.textContent = '—';
+      els.heroDetail.innerHTML = '点击己方英雄进行操作。可攻击、移动或释放技能。';
+      const dockHero = document.getElementById('skillDockHero');
+      const dockDesc = document.getElementById('skillDockDesc');
+      if (dockHero) dockHero.textContent = '未选择英雄';
+      if (dockDesc) dockDesc.textContent = '点击己方英雄后，在这里释放技能；点击敌方英雄可直接攻击。';
+      setActionButtonsDisabled(true);
+      return;
+    }
+    els.selectedInfo.innerHTML = `<strong>${hero.name}</strong> · ${TEAMS[hero.team].name}`;
+    const dockHero = document.getElementById('skillDockHero');
+    const dockDesc = document.getElementById('skillDockDesc');
+    if (dockHero) dockHero.textContent = `${hero.name} · ${TEAMS[hero.team].name}`;
+    if (dockDesc) dockDesc.textContent = `被动：${heroDefById(hero.defId).passive || '无'}｜点击空格移动，点击红色敌方格直接攻击。`;
+    const st = [];
+    if (hero.dead) st.push('已阵亡');
+    if (hero.actionLockTurns > 0 || hero.freezeTurns > 0) st.push(`冻结 ${Math.max(hero.actionLockTurns,hero.freezeTurns)} 回合`);
+    if (hero.skillLockTurns > 0 || hero.rootTurns > 0) st.push(`缠绕 ${Math.max(hero.skillLockTurns,hero.rootTurns)} 回合`);
+    if (hero.burnTurns > 0) st.push(`灼烧 ${hero.burnTurns}`);
+    if (hero.moveBoostTurns > 0) st.push(`疾走 ${hero.moveBoostTurns}`);
+    if (hero.defId === 'gojo' && hero.storedShield > 0) st.push(`储备AP护盾 ${hero.storedShield}`);
+    if (hero.defId === 'sukuna' && hero.phase2) st.push('神武解');
+    els.selectedState.textContent = st.join(' / ') || '正常';
+    const passiveText = def.passive || '无额外被动';
+    let skillHtml = def.skills.map((s,i)=>`<div class="skillDetail"><div class="skillKind">主动技能${i+1}</div><strong>${s.name}</strong><div class="small">消耗 ${s.cost === 0 ? '—' : s.cost + ' 行动点'}</div><div class="small">${s.desc}</div></div>`).join('');
+    els.heroDetail.innerHTML = `
+      <div>位置：(${hero.x+1}, ${hero.y+1})</div>
+      <div>生命：${hero.hp}/${hero.maxHp} ｜ 攻击：${hero.atk}${hero.temporaryAttackBonus ? ` +${hero.temporaryAttackBonus}` : ''} ｜ 普攻范围：${hero.attackRange}</div>
+      <div>普攻次数：${hero.attackCount}/2${hero.defId === 'sukuna' ? '（消耗生命代替AP）' : ''}</div>
+      <div>移动：${hero.defId === 'archer' && hero.moveBoostTurns > 0 ? `疾走中（免费移动 ${Math.max(0,2-hero.freeMovesUsed)} 次 / 每次最多2格）` : '正常'}</div>
+      <div class="sep"></div>
+      <div><strong>被动技能</strong></div>
+      <div class="small">${passiveText}</div>
+      <div class="sep"></div>
+      ${skillHtml || '<div>暂无主动技能。</div>'}
+    `;
+    setActionButtonsDisabled(false);
+    refreshActionButtons(hero);
+  }
+
+  function setActionButtonsDisabled(force) {
+    els.btnSelect.disabled = force;
+    els.btnAttack.disabled = force;
+    els.btnSkill1.disabled = force;
+    els.btnSkill2.disabled = force;
+    els.btnSkill3.disabled = force;
+    els.btnEndTurn.disabled = false;
+  }
+
+  function refreshActionButtons(hero) {
+    const myTurn = state.phase === 'battle' && hero && hero.team === state.battle.currentTeam;
+    const canAnyAction = hero && !hero.dead && myTurn && hero.actionLockTurns <= 0 && hero.freezeTurns <= 0;
+    els.btnAttack.disabled = !canAnyAction;
+    els.btnSkill1.disabled = !canAnyAction;
+    els.btnSkill2.disabled = !canAnyAction;
+    els.btnSkill3.disabled = !canAnyAction;
+    // adapt to hero availability
+    els.btnSkill1.textContent = getSkillLabel(hero, 1);
+    els.btnSkill2.textContent = getSkillLabel(hero, 2);
+    els.btnSkill3.textContent = getSkillLabel(hero, 3);
+  }
+
+  function getSkillLabel(hero, idx) {
+    if (!hero) return `技能${idx}`;
+    const def = heroDefById(hero.defId);
+    const s = def.skills[idx - 1];
+    if (!s) return idx === 1 ? '技能1(无)' : idx === 2 ? '技能2(无)' : '技能3(无)';
+    return `技能${idx}:${s.name}`;
+  }
+
+  function resetSelection() {
+    state.battle.selectedHeroId = null;
+    state.battle.selectedAction = null;
+    state.battle.awaitingDirection = null;
+    state.battle.awaitingTarget = null;
+    state.battle.selectedCell = null;
+  }
+
+  function setSelectedHero(uid) {
+    state.battle.selectedHeroId = uid;
+    const hero = heroByUid(uid);
+    if (!hero) return;
+    updateSelectedPanel(hero);
+    renderAll();
+  }
+
+  function getSelectedHero() {
+    return heroByUid(state.battle.selectedHeroId);
+  }
+
+  function canHeroAct(hero) {
+    if (!hero || hero.dead) return false;
+    if (hero.team !== state.battle.currentTeam) return false;
+    if (hero.actionLockTurns > 0 || hero.freezeTurns > 0) return false;
+    return true;
+  }
+
+  function canUseSkills(hero) {
+    return canHeroAct(hero) && hero.skillLockTurns <= 0 && hero.rootTurns <= 0;
+  }
+
+  function isSpawnCell(team, x, y) {
+    return getSpawnCells(team).some(c => c.x === x && c.y === y);
+  }
+
+  function occupiedByEnemyOrAlly(x, y) {
+    return !!heroAt(x, y);
+  }
+
+  function pathExists(hero, x, y, maxSteps=999, ignoreBlockedForHeroId=null) {
+    const start = { x: hero.x, y: hero.y };
+    const target = { x, y };
+
+    if (!inBounds(x, y)) return null;
+    if (x === hero.x && y === hero.y) return [start];
+
+    const queue = [{ x: start.x, y: start.y, path: [{ x: start.x, y: start.y }] }];
+    const visited = new Set([posKey(start.x, start.y)]);
+    const dirs = [
+      [1,0],[-1,0],[0,1],[0,-1]
+    ];
+
+    while (queue.length) {
+      const cur = queue.shift();
+      if (cur.path.length - 1 > maxSteps) continue;
+      if (cur.x === target.x && cur.y === target.y) return cur.path;
+
+      for (const [dx,dy] of dirs) {
+        const nx = cur.x + dx, ny = cur.y + dy;
+        if (!inBounds(nx,ny)) continue;
+        const key = posKey(nx,ny);
+        if (visited.has(key)) continue;
+
+        const blocker = heroAt(nx,ny);
+        if (blocker && blocker.uid !== hero.uid) continue;
+
+        // mountain block effects
+        let blocked = false;
+        for (const e of state.battle.effects) {
+          if (!e.active || e.type !== 'mountainBlock') continue;
+          const src = heroByUid(e.sourceUid);
+          if (!src) continue;
+          if (hero.uid === src.uid) continue; // source can pass
+          if (zoneHasCell(e.zone, nx, ny)) { blocked = true; break; }
+        }
+        if (blocked) continue;
+
+        visited.add(key);
+        queue.push({ x:nx, y:ny, path: cur.path.concat([{ x:nx, y:ny }]) });
+      }
+    }
+    return null;
+  }
+
+  function reachableCells(hero) {
+    const cells = [];
+    const maxSteps = hero.defId === 'archer' && hero.moveBoostTurns > 0 ? 2 : 99;
+    const freeMove = hero.defId === 'archer' && hero.moveBoostTurns > 0;
+    const maxCost = freeMove ? 2 : state.battle.currentAP[hero.team];
+    // BFS all cells
+    const queue = [{ x: hero.x, y: hero.y, cost: 0, path:[{x:hero.x, y:hero.y}] }];
+    const seen = new Map([[posKey(hero.x, hero.y),0]]);
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    while (queue.length) {
+      const cur = queue.shift();
+      for (const [dx,dy] of dirs) {
+        const nx = cur.x + dx, ny = cur.y + dy;
+        if (!inBounds(nx,ny)) continue;
+
+        const ncost = cur.cost + 1;
+        if (freeMove && ncost > 2) continue;
+        if (!freeMove && ncost > maxCost) continue;
+
+        const key = posKey(nx,ny);
+        const blocker = heroAt(nx,ny);
+        if (blocker && blocker.uid !== hero.uid) continue;
+
+        let blocked = false;
+        for (const e of state.battle.effects) {
+          if (!e.active || e.type !== 'mountainBlock') continue;
+          const src = heroByUid(e.sourceUid);
+          if (!src || src.uid === hero.uid) continue;
+          if (zoneHasCell(e.zone, nx, ny)) { blocked = true; break; }
+        }
+        if (blocked) continue;
+
+        if (!seen.has(key) || seen.get(key) > ncost) {
+          seen.set(key, ncost);
+          queue.push({ x:nx, y:ny, cost:ncost, path:[] });
+          if (!(nx===hero.x && ny===hero.y)) cells.push({ x:nx, y:ny, cost:ncost });
+        }
+      }
+    }
+    return cells;
+  }
+
+  function attackTargets(hero) {
+    const list = [];
+    for (const h of state.battle.heroes) {
+      if (h.dead || h.team === hero.team) continue;
+      if (manhattan(hero, h) <= hero.attackRange) list.push(h);
+    }
+    return list;
+  }
+
+  function validSkillTargets(hero, skillNo) {
+    const def = heroDefById(hero.defId);
+    if (!def.skills[skillNo - 1]) return [];
+    if (hero.defId === 'night' && skillNo === 1) {
+      return state.battle.heroes.filter(h => !h.dead && h.team !== hero.team && manhattan(hero, h) <= 2);
+    }
+    if (hero.defId === 'archer' && skillNo === 3) {
+      return state.battle.heroes.filter(h => !h.dead && h.team !== hero.team && manhattan(hero, h) <= 1);
+    }
+    if (hero.defId === 'sword' && skillNo === 2) {
+      return state.battle.heroes.filter(h => !h.dead && h.team !== hero.team && manhattan(hero, h) <= 2);
+    }
+    return [];
+  }
+
+  function openOverlay(title, bodyHtml) {
+    els.overlayTitle.textContent = title;
+    els.overlayBody.innerHTML = bodyHtml;
+    els.overlay.classList.add('show');
+  }
+
+  function closeOverlay() {
+    els.overlay.classList.remove('show');
+    els.overlayBody.innerHTML = '';
+    els.overlayTitle.textContent = '';
+  }
+
+  function showDirectionPicker(hero, callback) {
+    openOverlay('选择方向', `
+      <div class="center hintText">选择技能方向（仅用于山脉之神技能1）</div>
+      <div class="dirPad">
+        <button data-dir="up">↑</button>
+        <button disabled style="visibility:hidden">·</button>
+        <button data-dir="right">→</button>
+        <button data-dir="left">←</button>
+        <button disabled style="visibility:hidden">·</button>
+        <button data-dir="down">↓</button>
+        <button data-dir="up-left">↖</button>
+        <button data-dir="up-right">↗</button>
+        <button data-dir="down-left">↙</button>
+        <button data-dir="down-right">↘</button>
+      </div>
+      <div class="center" style="margin-top:12px"><button id="cancelDir">取消</button></div>
+    `);
+    const map = {
+      up:[0,-1], down:[0,1], left:[-1,0], right:[1,0],
+      'up-left':[-1,-1], 'up-right':[1,-1], 'down-left':[-1,1], 'down-right':[1,1]
+    };
+    els.overlayBody.querySelectorAll('button[data-dir]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const d = btn.dataset.dir;
+        closeOverlay();
+        callback(map[d]);
+      });
+    });
+    els.overlayBody.querySelector('#cancelDir').addEventListener('click', () => closeOverlay());
+  }
+
+  function performMove(hero, targetX, targetY) {
+    if (!canHeroAct(hero)) return;
+    if (hero.actionLockTurns > 0) { log('该英雄无法行动。', 'dangerText'); return; }
+
+    const path = pathExists(hero, targetX, targetY, hero.defId === 'archer' && hero.moveBoostTurns > 0 ? 2 : 99);
+    if (!path) { log('无法到达该位置。', 'dangerText'); return; }
+    const steps = path.length - 1;
+    if (steps <= 0) return;
+
+    const freeMove = hero.defId === 'archer' && hero.moveBoostTurns > 0;
+    if (freeMove) {
+      if (hero.freeMovesUsed >= 2) { log('免费移动次数已用尽。', 'dangerText'); return; }
+      if (steps > 2) { log('免费移动每次不能超过2格。', 'dangerText'); return; }
+      hero.freeMovesUsed += 1;
+      log(`【${hero.name}】免费移动 ${steps} 格。`, 'okText');
+    } else {
+      const cost = steps;
+      if (state.battle.currentAP[hero.team] < cost) {
+        log('行动点不足。', 'dangerText'); return;
+      }
+      state.battle.currentAP[hero.team] -= cost;
+      log(`【${hero.name}】移动 ${steps} 格，消耗 ${cost} 点行动点。`, 'muted');
+    }
+
+    hero.x = targetX;
+    hero.y = targetY;
+    state.battle.selectedCell = null;
+    renderAll();
+  }
+
+  function performBasicAttack(hero, target) {
+    if (!canHeroAct(hero)) return;
+    if (!target || target.team === hero.team) return;
+    if (hero.actionLockTurns > 0) return;
+
+    if (manhattan(hero, target) > hero.attackRange) {
+      log('目标不在攻击范围内。', 'dangerText');
+      return;
+    }
+
+    if (hero.attackCount >= 2) {
+      log('该英雄本回合普攻次数已达上限。', 'dangerText');
+      return;
+    }
+
+    const baseCost = hero.defId === 'sukuna' ? 1 : (hero.defId === 'gojo' ? 2 : hero.defId === 'mountain' ? 2 : hero.defId === 'archer' ? 2 : hero.defId === 'night' ? 1 : 1);
+    const cost = hero.attackCount === 0 ? baseCost : baseCost + 1;
+    if (hero.defId !== 'sukuna' && state.battle.currentAP[hero.team] < cost) {
+      log('行动点不足。', 'dangerText');
+      return;
+    }
+
+    if (hero.defId !== 'sukuna') {
+      state.battle.currentAP[hero.team] -= cost;
+      log(`【${hero.name}】普攻消耗 ${cost} 点行动点。`, 'muted');
+    } else {
+      hero.hp -= cost; // 宿傩用血量替代行动点
+      if (hero.hp <= 0) handleHeroMaybePhase2(hero, target, cost);
+      log(`【${hero.name}】普攻消耗 ${cost} 点生命。`, 'muted');
+    }
+
+    hero.attackCount += 1;
+
+    const atk = hero.atk + (hero.temporaryAttackBonus || 0);
+    const dealt = applyDamage(hero, target, atk, '普通攻击');
+    if (dealt > 0 && hero.defId === 'sukuna') {
+      addMark(hero, target.x, target.y);
+    }
+    if (hero.defId === 'archer' && target.team !== hero.team) {
+      // passive already handled in applyDamage
+    }
+    renderAll();
+  }
+
+  function resolveSwordSkill1(hero) {
+    if (hero.hp <= 1) { log('生命不足，无法发动。', 'dangerText'); return; }
+    if (state.battle.currentAP[hero.team] < 2) { log('行动点不足。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 2;
+    hero.hp -= 1;
+    hero.temporaryAttackBonus += 1;
+    hero.temporaryAttackBonusTurns = 1;
+    log(`【${hero.name}】发动技能1：本回合攻击力+1，消耗1点生命。`, 'okText');
+    renderAll();
+  }
+
+  function resolveSwordSkill2(hero, target) {
+    if (state.battle.currentAP[hero.team] < 5) { log('行动点不足。', 'dangerText'); return; }
+    if (!target || target.team === hero.team) { log('请指定2格内的敌方角色。', 'dangerText'); return; }
+    if (manhattan(hero, target) > 2) { log('目标超出技能范围。', 'dangerText'); return; }
+
+    state.battle.currentAP[hero.team] -= 5;
+    const dx = Math.sign(target.x - hero.x);
+    const dy = Math.sign(target.y - hero.y);
+
+    let bx = target.x + dx;
+    let by = target.y + dy;
+
+    if (!inBounds(bx, by) || heroAt(bx, by)) {
+      // fallback: try orthogonal behind
+      const candidates = [];
+      if (dx !== 0) candidates.push({ x: target.x + dx, y: target.y });
+      if (dy !== 0) candidates.push({ x: target.x, y: target.y + dy });
+      for (const c of candidates) {
+        if (inBounds(c.x, c.y) && !heroAt(c.x, c.y)) { bx = c.x; by = c.y; break; }
+      }
+    }
+
+    applyDamage(hero, target, 4, '剑影突刺');
+    if (inBounds(bx, by) && !heroAt(bx, by)) {
+      hero.x = bx; hero.y = by;
+    }
+    hero.actionLockTurns = Math.max(hero.actionLockTurns, 2);
+    hero.freezeTurns = Math.max(hero.freezeTurns, 2);
+    log(`【剑仙】突刺后两回合无法行动。`, 'warn');
+    renderAll();
+  }
+
+  function resolveSukunaSkill2(hero) {
+    if (hero.marks.size < 5) { log('标记不足5个，无法释放。', 'dangerText'); return; }
+
+    const cells = new Set();
+    const marks = [...hero.marks].map(k => {
+      const [x,y] = k.split(',').map(Number);
+      return {x,y};
+    });
+
+    for (let i=0;i<marks.length;i++) {
+      for (let j=i+1;j<marks.length;j++) {
+        const line = bresenhamLine(marks[i].x, marks[i].y, marks[j].x, marks[j].y);
+        for (const c of line) cells.add(posKey(c.x, c.y));
+      }
+    }
+
+    let affected = 0;
+    for (const h of state.battle.heroes) {
+      if (h.dead) continue;
+      if (cells.has(posKey(h.x, h.y))) {
+        applyDamage(hero, h, 4, '连印伤害');
+        affected++;
+      }
+    }
+    log(`【两面宿傩】伏魔·连印命中 ${affected} 个目标。`, 'gold');
+    renderAll();
+  }
+
+  function resolveSukunaSkill4(hero) {
+    if (state.battle.currentAP[hero.team] < 9 && hero.defId !== 'sukuna') { log('行动点不足。', 'dangerText'); return; }
+    if (hero.defId !== 'sukuna') return;
+    if (state.battle.currentAP[hero.team] < 9) { log('行动点不足。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 9;
+    if (hero.hp <= 0) handleHeroMaybePhase2(hero, null, 2);
+    const zone = circleCells(hero.x, hero.y, 3);
+    state.battle.effects.push({
+      id: uid(),
+      type: 'sukunaDomain',
+      sourceUid: hero.uid,
+      zone,
+      startDelay: 1,
+      done: false,
+      triggered: false,
+      active: false
+    });
+    log('【两面宿傩】已展开神魔领域。', 'gold');
+    renderAll();
+  }
+
+  function resolveGojoSkill2(hero) {
+    if (state.battle.currentAP[hero.team] < 10) { log('行动点不足。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 10;
+    const zone = circleCells(hero.x, hero.y, 2);
+    state.battle.effects.push({
+      id: uid(),
+      type: 'gojoBarrier',
+      sourceUid: hero.uid,
+      zone,
+      startDelay: 1,
+      done: false,
+      triggered: false,
+      active: false
+    });
+    log('【五条悟】已展开无量空处。', 'gold');
+    renderAll();
+  }
+
+  function resolveArcherSkill2(hero) {
+    if (state.battle.currentAP[hero.team] < 6) { log('行动点不足。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 6;
+    hero.moveBoostTurns = 2;
+    hero.freeMoveCharges = 2;
+    hero.freeMovesUsed = 0;
+    log('【寂声射手】获得两回合疾走效果。', 'okText');
+    renderAll();
+  }
+
+  function resolveArcherSkill3(hero, target) {
+    if (state.battle.currentAP[hero.team] < 6) { log('行动点不足。', 'dangerText'); return; }
+    if (!target || target.team === hero.team || manhattan(hero, target) > 1) { log('请指定1格内敌方。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 6;
+    applyDamage(hero, target, 3, '缠绕箭');
+    target.rootTurns = Math.max(target.rootTurns, 1);
+    target.skillLockTurns = Math.max(target.skillLockTurns, 1);
+    log(`【${target.name}】被缠绕1回合。`, 'warn');
+    renderAll();
+  }
+
+  function resolveMountainSkill1(hero, dirVec) {
+    if (state.battle.currentAP[hero.team] < 4) { log('行动点不足。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 4;
+    const path = [];
+    let x = hero.x, y = hero.y;
+    let hitAlly = false;
+    let hitEnemy = false;
+    let hitAny = false;
+    for (let i=0;i<3;i++) {
+      x += dirVec[0]; y += dirVec[1];
+      if (!inBounds(x, y)) break;
+      path.push({x,y});
+      const u = heroAt(x, y);
+      if (u) {
+        hitAny = true;
+        if (u.team === hero.team) {
+          u.hp = Math.min(u.maxHp, u.hp + 2);
+          hitAlly = true;
+          log(`【山脉之神】为【${u.name}】回复2点生命。`, 'okText');
+        } else {
+          applyDamage(hero, u, 2, '封路伤害');
+          hitEnemy = true;
+        }
+      }
+    }
+    if (hitAny) {
+      log('封路被单位触发，效果不会生成。', 'warn');
+      renderAll();
+      return;
+    }
+    state.battle.effects.push({
+      id: uid(),
+      type: 'mountainBlock',
+      sourceUid: hero.uid,
+      zone: { cells: path },
+      startDelay: 1,
+      done: false,
+      triggered: false,
+      active: false,
+      turnsLeft: 1
+    });
+    log('【山脉之神】封山断路已设置。', 'gold');
+    renderAll();
+  }
+
+  function resolveMountainSkill2(hero) {
+    if (state.battle.currentAP[hero.team] < 8) { log('行动点不足。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 8;
+    const zone = circleCells(hero.x, hero.y, 1);
+    state.battle.effects.push({
+      id: uid(),
+      type: 'mountainDR',
+      sourceUid: hero.uid,
+      zone,
+      startDelay: 1,
+      done: false,
+      triggered: false,
+      active: false,
+      turnsLeft: 1,
+      amount: 1
+    });
+    log('【山脉之神】山岳护壁已展开。', 'gold');
+    renderAll();
+  }
+
+  function resolveNightSkill1(hero, target) {
+    if (state.battle.currentAP[hero.team] < 2) { log('行动点不足。', 'dangerText'); return; }
+    if (!target || target.team === hero.team || manhattan(hero, target) > 2) { log('请指定2格内敌方。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 2;
+    applyDamage(hero, target, 2, '夜火');
+    target.burnTurns = Math.max(target.burnTurns, 2);
+    log(`【${target.name}】被附加灼烧2回合。`, 'dangerText');
+    renderAll();
+  }
+
+  function resolveNightSkill2(hero) {
+    if (state.battle.currentAP[hero.team] < 6) { log('行动点不足。', 'dangerText'); return; }
+    const burned = state.battle.heroes.filter(h => !h.dead && h.burnTurns > 0);
+    if (burned.length < 2) { log('场上被灼烧角色不足2个。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 6;
+    burned.forEach(h => applyDamage(hero, h, 2, '引燃伤害'));
+    log(`【烈焰之夜神】引燃了 ${burned.length} 名被灼烧角色。`, 'gold');
+    renderAll();
+  }
+
+  function resolveNightSkill3(hero) {
+    if (state.battle.currentAP[hero.team] < 9) { log('行动点不足。', 'dangerText'); return; }
+    state.battle.currentAP[hero.team] -= 9;
+    const zone = circleCells(hero.x, hero.y, 2);
+    state.battle.effects.push({
+      id: uid(),
+      type: 'nightBarrier',
+      sourceUid: hero.uid,
+      zone,
+      startDelay: 1,
+      done: false,
+      triggered: false,
+      active: false
+    });
+    log('【烈焰之夜神】炽焰结界已布下。', 'gold');
+    renderAll();
+  }
+
+  function bresenhamLine(x0,y0,x1,y1) {
+    const points = [];
+    const dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    const dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy;
+    let x = x0, y = y0;
+    while (true) {
+      points.push({x,y});
+      if (x === x1 && y === y1) break;
+      const e2 = 2 * err;
+      if (e2 >= dy) { err += dy; x += sx; }
+      if (e2 <= dx) { err += dx; y += sy; }
+    }
+    return points;
+  }
+
+  function circleCells(cx, cy, radius) {
+    const cells = [];
+    for (let y=0;y<BOARD_H;y++) {
+      for (let x=0;x<BOARD_W;x++) {
+        if (Math.abs(x-cx) + Math.abs(y-cy) <= radius) cells.push({x,y});
+      }
+    }
+    return cells;
+  }
+
+  function uid() {
+    return Math.random().toString(36).slice(2,10);
+  }
+
+  function renderGrid() {
+    els.grid.innerHTML = '';
+    const selectedHero = getSelectedHero();
+
+    let moveHints = [];
+    let attackHints = [];
+    let skillHints = [];
+    let blockHints = new Set();
+
+    if (state.phase === 'battle' && selectedHero) {
+      if (canHeroAct(selectedHero)) {
+        moveHints = reachableCells(selectedHero);
+        attackHints = attackTargets(selectedHero).map(h => ({ x:h.x, y:h.y, uid:h.uid }));
+        if (state.battle.selectedAction && state.battle.selectedAction.type === 'skillTarget') {
+          const skillNo = state.battle.selectedAction.skillNo;
+          skillHints = validSkillTargets(selectedHero, skillNo).map(h => ({ x:h.x, y:h.y, uid:h.uid }));
+        }
+        for (const e of state.battle.effects) {
+          if (e.active && e.type === 'mountainBlock') {
+            for (const c of e.zone.cells) blockHints.add(posKey(c.x,c.y));
+          }
+        }
+      }
+    }
+
+    for (let y=0;y<BOARD_H;y++) {
+      for (let x=0;x<BOARD_W;x++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (x < 3 && y >= 1 && y <= 2) cell.classList.add('blueSpawn');
+        if (x >= 6 && y >= 1 && y <= 2) cell.classList.add('redSpawn');
+        if (blockHints.has(posKey(x,y))) cell.classList.add('blockHint');
+        const unit = heroAt(x,y);
+        const isSel = selectedHero && selectedHero.x === x && selectedHero.y === y;
+        if (isSel) cell.classList.add('selected');
+
+        if (moveHints.some(c => c.x === x && c.y === y)) cell.classList.add('moveHint');
+        if (attackHints.some(c => c.x === x && c.y === y)) cell.classList.add('attackHint');
+        if (skillHints.some(c => c.x === x && c.y === y)) cell.classList.add('skillHint');
+
+        if (state.battle.effects.some(e => e.active && e.zone && cellInZone(e, x, y))) {
+          cell.classList.add('barrier');
+        }
+
+        const coord = document.createElement('div');
+        coord.className = 'coord';
+        coord.textContent = `${x+1},${y+1}`;
+        cell.appendChild(coord);
+
+        if (unit) {
+          const u = document.createElement('div');
+          u.className = `unit ${unit.team}`;
+          const tmpAtk = unit.temporaryAttackBonus || 0;
+          const fx = [];
+          if (unit.burnTurns > 0) fx.push(`🔥${unit.burnTurns}`);
+          if (unit.actionLockTurns > 0 || unit.freezeTurns > 0) fx.push(`❄${Math.max(unit.actionLockTurns,unit.freezeTurns)}`);
+          if (unit.rootTurns > 0 || unit.skillLockTurns > 0) fx.push(`🌿${Math.max(unit.rootTurns,unit.skillLockTurns)}`);
+          if (unit.moveBoostTurns > 0) fx.push(`🏃${unit.moveBoostTurns}`);
+          if (unit.defId === 'gojo' && unit.storedShield > 0) fx.push(`🛡${unit.storedShield}`);
+          if (unit.defId === 'sukuna' && unit.phase2) fx.push(`2P`);
+          if (unit.freeMoveCharges > 0 && unit.defId === 'archer') fx.push(`∞步`);
+          u.innerHTML = `
+            <div class="name">${escapeHtml(unit.name)}</div>
+            <div class="hp">${unit.hp}${tmpAtk ? ` | +${tmpAtk}` : ''}</div>
+            <div class="fx">${fx.join(' ')}</div>
+          `;
+          cell.appendChild(u);
+        }
+
+        cell.addEventListener('click', () => onCellTap(x,y));
+        els.grid.appendChild(cell);
+      }
+    }
+  }
+
+  function renderAll() {
+    renderGrid();
+    renderLogAndHud();
+    const hero = getSelectedHero();
+    updateSelectedPanel(hero);
+    refreshActionButtons(hero);
+    if (state.phase === 'draft') {
+      els.selectedInfo.textContent = '英雄选择阶段';
+      els.heroDetail.innerHTML = '请选择双方各3名英雄。';
+    }
+    if (state.phase === 'deploy') {
+      els.heroDetail.innerHTML = '布阵阶段：系统会将双方选定英雄自动放入出生点。';
+    }
+  }
+
+  function onCellTap(x, y) {
+    if (state.phase !== 'battle') return;
+
+    const clickedUnit = heroAt(x, y);
+    const selectedHero = getSelectedHero();
+
+    if (state.battle.awaitingDirection) {
+      return;
+    }
+
+    if (state.battle.awaitingTarget) {
+      const pending = state.battle.awaitingTarget;
+      if (clickedUnit && pending.validIds.includes(clickedUnit.uid)) {
+        executePendingTargetAction(pending, clickedUnit);
+      } else {
+        log('请选择高亮的有效目标。', 'dangerText');
+      }
+      return;
+    }
+
+    if (!selectedHero) {
+      if (clickedUnit && clickedUnit.team === state.battle.currentTeam) {
+        setSelectedHero(clickedUnit.uid);
+      }
+      return;
+    }
+
+    if (clickedUnit && clickedUnit.uid === selectedHero.uid) {
+      resetSelection();
+      renderAll();
+      return;
+    }
+
+    if (clickedUnit && clickedUnit.team === selectedHero.team) {
+      setSelectedHero(clickedUnit.uid);
+      return;
+    }
+
+    if (clickedUnit && clickedUnit.team !== selectedHero.team) {
+      // If currently in skill mode targeting, handled above
+      performBasicAttack(selectedHero, clickedUnit);
+      return;
+    }
+
+    // empty cell = move
+    performMove(selectedHero, x, y);
+  }
+
+  function executePendingTargetAction(pending, targetHero) {
+    const hero = heroByUid(pending.heroId);
+    if (!hero) return;
+    if (pending.action === 'sword2') {
+      resolveSwordSkill2(hero, targetHero);
+    } else if (pending.action === 'night1') {
+      resolveNightSkill1(hero, targetHero);
+    } else if (pending.action === 'archer3') {
+      resolveArcherSkill3(hero, targetHero);
+    }
+    state.battle.awaitingTarget = null;
+    state.battle.selectedAction = null;
+    closeOverlay();
+    renderAll();
+  }
+
+  function showTargetsAndAwait(hero, skillNo, actionKey) {
+    const valid = validSkillTargets(hero, skillNo);
+    if (!valid.length) {
+      log('没有可选目标。', 'dangerText');
+      return;
+    }
+    state.battle.awaitingTarget = {
+      heroId: hero.uid,
+      action: actionKey,
+      skillNo,
+      validIds: valid.map(h => h.uid)
+    };
+    state.battle.selectedAction = { type:'skillTarget', heroId: hero.uid, skillNo };
+    openOverlay('选择目标', `
+      <div class="hintText">点击棋盘上高亮的目标。<br>当前可选：${valid.map(h=>`${h.name}(${h.hp})`).join('、')}</div>
+      <div style="margin-top:10px" class="center"><button id="cancelTarget">取消</button></div>
+    `);
+    els.overlayBody.querySelector('#cancelTarget').addEventListener('click', () => {
+      state.battle.awaitingTarget = null;
+      state.battle.selectedAction = null;
+      closeOverlay();
+      renderAll();
+    });
+    renderAll();
+  }
+
+  function useSkill(hero, skillNo) {
+    if (!canUseSkills(hero)) {
+      log('当前无法使用技能。', 'dangerText');
+      return;
+    }
+
+    if (hero.defId === 'sword' && skillNo === 1) {
+      resolveSwordSkill1(hero);
+      return;
+    }
+
+    if (hero.defId === 'sword' && skillNo === 2) {
+      showTargetsAndAwait(hero, 2, 'sword2');
+      return;
+    }
+
+    if (hero.defId === 'sukuna' && skillNo === 2) {
+      if (hero.marks.size < 5) {
+        log('宿傩标记不足5个。', 'dangerText');
+        return;
+      }
+      resolveSukunaSkill2(hero);
+      return;
+    }
+
+    if (hero.defId === 'sukuna' && skillNo === 3) {
+      log('宿傩当前未配置技能3。', 'muted');
+      return;
+    }
+
+    if (hero.defId === 'sukuna' && skillNo === 4) {
+      resolveSukunaSkill4(hero);
+      return;
+    }
+
+    if (hero.defId === 'gojo' && skillNo === 2) {
+      resolveGojoSkill2(hero);
+      return;
+    }
+
+    if (hero.defId === 'archer' && skillNo === 2) {
+      resolveArcherSkill2(hero);
+      return;
+    }
+
+    if (hero.defId === 'archer' && skillNo === 3) {
+      showTargetsAndAwait(hero, 3, 'archer3');
+      return;
+    }
+
+    if (hero.defId === 'mountain' && skillNo === 1) {
+      showDirectionPicker(hero, (dirVec) => resolveMountainSkill1(hero, dirVec));
+      return;
+    }
+
+    if (hero.defId === 'mountain' && skillNo === 2) {
+      resolveMountainSkill2(hero);
+      return;
+    }
+
+    if (hero.defId === 'night' && skillNo === 1) {
+      showTargetsAndAwait(hero, 1, 'night1');
+      return;
+    }
+
+    if (hero.defId === 'night' && skillNo === 2) {
+      resolveNightSkill2(hero);
+      return;
+    }
+
+    if (hero.defId === 'night' && skillNo === 3) {
+      resolveNightSkill3(hero);
+      return;
+    }
+
+    log('该英雄没有这个技能。', 'dangerText');
+  }
+
+  function startBattle() {
+    state.phase = 'battle';
+    state.battle.turnNo = 1;
+    state.battle.currentTeam = state.draft.firstDraftTeam === 'blue' ? 'blue' : 'red';
+    state.battle.baseAP = { blue: 2, red: 2 };
+    state.battle.currentAP = { blue: 0, red: 0 };
+    state.battle.pendingAPPenalty = { blue: 0, red: 0 };
+    state.battle.bonusCardAvailable = { blue: false, red: false };
+    state.battle.bonusTurnQueue = [];
+    state.battle.effects = [];
+    state.extra.currentTurnIsBonus = false;
+
+    // first player gets 2 AP, second player gets a one-time card +1 AP on first turn
+    const first = state.battle.currentTeam;
+    const second = enemyTeam(first);
+    state.battle.bonusCardAvailable[second] = true;
+
+    // initialize heroes from draft and deploy
+    deployHeroesFromDraft();
+    // reset effects for deployed heroes
+    state.battle.heroes.forEach(h => {
+      h.actionLockTurns = 0;
+      h.skillLockTurns = 0;
+      h.freezeTurns = 0;
+      h.rootTurns = 0;
+      h.burnTurns = 0;
+      h.storedShield = 0;
+      h.phase2 = false;
+      h.attackCount = 0;
+      h.dead = false;
+      h.temporaryAttackBonus = 0;
+      h.temporaryAttackBonusTurns = 0;
+      h.moveBoostTurns = 0;
+      h.freeMoveCharges = 0;
+      h.freeMovesUsed = 0;
+      h.marks = new Set();
+    });
+
+    turnStart(first, { silent:false });
+    renderAll();
+  }
+
+  function deployHeroesFromDraft() {
+    state.battle.heroes = [];
+    const blueIds = state.draft.picks.blue.slice();
+    const redIds = state.draft.picks.red.slice();
+    const blueCells = getSpawnCells('blue');
+    const redCells = getSpawnCells('red');
+    blueIds.forEach((id, idx) => {
+      const h = makeHero(id, 'blue', idx);
+      const c = blueCells[idx];
+      h.x = c.x; h.y = c.y;
+      state.battle.heroes.push(h);
+    });
+    redIds.forEach((id, idx) => {
+      const h = makeHero(id, 'red', idx);
+      const c = redCells[idx];
+      h.x = c.x; h.y = c.y;
+      state.battle.heroes.push(h);
+    });
+    log('双方英雄已布置到出生点。', 'okText');
+  }
+
+  function initDraft() {
+    state.phase = 'draft';
+    state.draft.firstDraftTeam = Math.random() < 0.5 ? 'blue' : 'red';
+    state.draft.turn = state.draft.firstDraftTeam;
+    state.draft.picks = { blue: [], red: [] };
+    renderDraft();
+    renderAll();
+  }
+
+  function renderDraft() {
+    openOverlay('英雄选择', `
+      <div class="hintText">随机先手：<strong>${TEAMS[state.draft.firstDraftTeam].name}</strong> 先选。双方轮流选择 3 名英雄，不能重复。</div>
+      <div class="draftLine">
+        <div class="draftSlot"><div class="slotTitle">蓝方已选</div><div class="slotHero">${state.draft.picks.blue.map(id=>HERO_DEFS[id].name).join('、') || '—'}</div></div>
+        <div class="draftSlot"><div class="slotTitle">红方已选</div><div class="slotHero">${state.draft.picks.red.map(id=>HERO_DEFS[id].name).join('、') || '—'}</div></div>
+      </div>
+      <div class="heroPool">
+        ${state.draft.pool.map(def => {
+          const taken = state.draft.picks.blue.includes(def.id) || state.draft.picks.red.includes(def.id);
+          return `
+            <div class="heroPick">
+              <div class="title">${def.name}${taken ? ' · 已选' : ''}</div>
+              <div class="desc">
+                生命 ${def.hp}｜攻击 ${def.atk}｜普攻范围 ${def.range}<br>
+                ${def.skills.map((s,i)=>`技能${i+1}：${s.name}`).join('<br>')}
+              </div>
+              <div class="meta">
+                <span>${def.id}</span>
+                <span>${taken ? '不可重复' : '可选'}</span>
+              </div>
+              <div class="pickActions">
+                <button ${taken ? 'disabled' : ''} data-pick="${def.id}">选择</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div class="sep"></div>
+      <div class="center">
+        <button id="startBattleBtn" class="btnGood" ${state.draft.picks.blue.length===3 && state.draft.picks.red.length===3 ? '' : 'disabled'}>确认阵容并开始对战</button>
+      </div>
+    `);
+
+    els.overlayBody.querySelectorAll('button[data-pick]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.pick;
+        const team = state.draft.turn;
+        if (state.draft.picks.blue.length >= 3 && state.draft.picks.red.length >= 3) return;
+        if (state.draft.picks.blue.includes(id) || state.draft.picks.red.includes(id)) return;
+        state.draft.picks[team].push(id);
+        log(`【${TEAMS[team].name}】选择了【${HERO_DEFS[id].name}】。`, 'okText');
+        // alternate drafting
+        state.draft.turn = enemyTeam(team);
+        if (state.draft.picks.blue.length === 3 && state.draft.picks.red.length === 3) {
+          renderDraft();
+        } else {
+          renderDraft();
+        }
+      });
+    });
+
+    const startBtn = els.overlayBody.querySelector('#startBattleBtn');
+    if (startBtn) {
+      startBtn.addEventListener('click', () => {
+        closeOverlay();
+        startBattle();
+      });
+    }
+  }
+
+  function init() {
+    // buttons
+    els.btnSelect.addEventListener('click', () => {
+      const hero = getSelectedHero();
+      if (hero) {
+        resetSelection();
+      } else {
+        // no-op
+      }
+      renderAll();
+    });
+    els.btnAttack.addEventListener('click', () => {
+      const hero = getSelectedHero();
+      if (!hero) return;
+      const targets = attackTargets(hero);
+      if (!targets.length) { log('没有可攻击目标。', 'dangerText'); return; }
+      showTargetsAndAwait(hero, 0, 'basicAttack');
+      openOverlay('选择攻击目标', `
+        <div class="hintText">点击棋盘上高亮的敌方目标。</div>
+        <div style="margin-top:10px" class="center"><button id="cancelAtk">取消</button></div>
+      `);
+      els.overlayBody.querySelector('#cancelAtk').addEventListener('click', () => {
+        state.battle.awaitingTarget = null;
+        state.battle.selectedAction = null;
+        closeOverlay();
+        renderAll();
+      });
+    });
+
+    els.btnSkill1.addEventListener('click', () => {
+      const hero = getSelectedHero();
+      if (!hero) return;
+      useSkill(hero, 1);
+    });
+    els.btnSkill2.addEventListener('click', () => {
+      const hero = getSelectedHero();
+      if (!hero) return;
+      useSkill(hero, 2);
+    });
+    els.btnSkill3.addEventListener('click', () => {
+      const hero = getSelectedHero();
+      if (!hero) return;
+      useSkill(hero, 3);
+    });
+    els.btnEndTurn.addEventListener('click', () => {
+      if (state.phase !== 'battle') return;
+      state.extra.currentTurnIsBonus = false;
+      endTurn();
+    });
+    els.overlay.addEventListener('click', (e) => {
+      if (e.target === els.overlay) {
+        closeOverlay();
+      }
+    });
+
+    // keyboard escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeOverlay();
+    });
+
+    log('游戏已加载。先完成英雄选择。', 'okText');
+    initDraft();
+    renderAll();
+  }
+
+  // overwrite basic attack button target flow
+  function showTargetsAndAwait(hero, skillNo, actionKey) {
+    const valid = actionKey === 'basicAttack' ? attackTargets(hero) : validSkillTargets(hero, skillNo);
+    if (!valid.length) {
+      log('没有可选目标。', 'dangerText');
+      return;
+    }
+    state.battle.awaitingTarget = {
+      heroId: hero.uid,
+      action: actionKey,
+      skillNo,
+      validIds: valid.map(h => h.uid)
+    };
+    state.battle.selectedAction = { type:'skillTarget', heroId: hero.uid, skillNo };
+    openOverlay('选择目标', `
+      <div class="hintText">点击棋盘上高亮的目标。<br>当前可选：${valid.map(h=>`${h.name}(${h.hp})`).join('、')}</div>
+      <div style="margin-top:10px" class="center"><button id="cancelTarget">取消</button></div>
+    `);
+    els.overlayBody.querySelector('#cancelTarget').addEventListener('click', () => {
+      state.battle.awaitingTarget = null;
+      state.battle.selectedAction = null;
+      closeOverlay();
+      renderAll();
+    });
+    renderAll();
+  }
+
+  function executePendingTargetAction(pending, targetHero) {
+    const hero = heroByUid(pending.heroId);
+    if (!hero) return;
+    if (pending.action === 'basicAttack') {
+      if (!canHeroAct(hero)) return;
+      if (hero.attackCount >= 2) { log('该英雄本回合普攻次数已达上限。', 'dangerText'); return; }
+      const baseCost = hero.defId === 'sukuna' ? 1 : (hero.defId === 'gojo' ? 2 : hero.defId === 'mountain' ? 2 : hero.defId === 'archer' ? 2 : hero.defId === 'night' ? 1 : 1);
+      const cost = hero.attackCount === 0 ? baseCost : baseCost + 1;
+      if (hero.defId !== 'sukuna' && state.battle.currentAP[hero.team] < cost) {
+        log('行动点不足。', 'dangerText');
+        return;
+      }
+      if (hero.defId !== 'sukuna') {
+        state.battle.currentAP[hero.team] -= cost;
+        log(`【${hero.name}】普攻消耗 ${cost} 点行动点。`, 'muted');
+      } else {
+        hero.hp -= cost;
+        log(`【${hero.name}】普攻消耗 ${cost} 点生命。`, 'muted');
+      }
+      hero.attackCount += 1;
+      applyDamage(hero, targetHero, hero.atk + (hero.temporaryAttackBonus || 0), '普通攻击');
+      if (hero.defId === 'sukuna') addMark(hero, targetHero.x, targetHero.y);
+      renderAll();
+    } else {
+      executeTargetedSkill(hero, pending.action, targetHero);
+    }
+    state.battle.awaitingTarget = null;
+    state.battle.selectedAction = null;
+    closeOverlay();
+    renderAll();
+  }
+
+  function executeTargetedSkill(hero, actionKey, targetHero) {
+    if (actionKey === 'sword2') resolveSwordSkill2(hero, targetHero);
+    if (actionKey === 'night1') resolveNightSkill1(hero, targetHero);
+    if (actionKey === 'archer3') resolveArcherSkill3(hero, targetHero);
+  }
+
+  // patch: basic attack target overlay should be handled as actionKey basicAttack
+  const originalShowTargetsAndAwait = showTargetsAndAwait;
+  showTargetsAndAwait = function(hero, skillNo, actionKey) {
+    if (actionKey === 'basicAttack') {
+      const valid = attackTargets(hero);
+      if (!valid.length) {
+        log('没有可攻击目标。', 'dangerText');
+        return;
+      }
+      state.battle.awaitingTarget = {
+        heroId: hero.uid,
+        action: actionKey,
+        skillNo,
+        validIds: valid.map(h => h.uid)
+      };
+      state.battle.selectedAction = { type:'skillTarget', heroId: hero.uid, skillNo };
+      openOverlay('选择攻击目标', `
+        <div class="hintText">点击棋盘上高亮的敌方目标。</div>
+        <div style="margin-top:10px" class="center"><button id="cancelTarget">取消</button></div>
+      `);
+      els.overlayBody.querySelector('#cancelTarget').addEventListener('click', () => {
+        state.battle.awaitingTarget = null;
+        state.battle.selectedAction = null;
+        closeOverlay();
+        renderAll();
+      });
+      renderAll();
+      return;
+    }
+    return originalShowTargetsAndAwait(hero, skillNo, actionKey);
+  };
+
+  // because we overwrote showTargetsAndAwait after init definitions, ensure button call uses it.
+  init();
+
+  // make selected target action work on tap
+  const oldOnCellTap = onCellTap;
+  onCellTap = function(x, y) {
+    if (state.phase !== 'battle') return;
+    const clickedUnit = heroAt(x, y);
+    const selectedHero = getSelectedHero();
+
+    if (state.battle.awaitingTarget) {
+      const pending = state.battle.awaitingTarget;
+      if (clickedUnit && pending.validIds.includes(clickedUnit.uid)) {
+        executePendingTargetAction(pending, clickedUnit);
+      } else {
+        log('请选择高亮的有效目标。', 'dangerText');
+      }
+      return;
+    }
+
+    if (!selectedHero) {
+      if (clickedUnit && clickedUnit.team === state.battle.currentTeam) {
+        setSelectedHero(clickedUnit.uid);
+      }
+      return;
+    }
+
+    if (clickedUnit && clickedUnit.uid === selectedHero.uid) {
+      resetSelection();
+      renderAll();
+      return;
+    }
+
+    if (clickedUnit && clickedUnit.team === selectedHero.team) {
+      setSelectedHero(clickedUnit.uid);
+      return;
+    }
+
+    if (clickedUnit && clickedUnit.team !== selectedHero.team) {
+      performBasicAttack(selectedHero, clickedUnit);
+      return;
+    }
+
+    performMove(selectedHero, x, y);
+  };
+
+  // Ensure overlay closes when entering battle
+  closeOverlay();
+  initDraft();
+  renderAll();
+
+})();
+</script>
 </body>
 </html>
