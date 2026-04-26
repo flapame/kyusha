@@ -99,7 +99,7 @@ img{max-width:100%;display:block}
 
 .topDeck{
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  grid-template-columns:minmax(280px,1.4fr) minmax(170px,.3fr) minmax(170px,.3fr);
   gap:8px;
   align-items:stretch;
   padding-bottom:8px;
@@ -132,7 +132,6 @@ img{max-width:100%;display:block}
   position:relative;
   padding:10px;
   min-height:120px;
-  grid-column:1;
 }
 .panelHeader{
   display:flex;
@@ -158,17 +157,6 @@ img{max-width:100%;display:block}
   padding-right:4px;
 }
 .log div{margin-bottom:4px;color:#dbe5ff}
-
-.turnDock{
-  padding:10px;
-  min-height:120px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:8px;
-}
-.turnDock .panelHeader{margin-bottom:0}
-.turnDock .btnGood{width:100%;}
 
 .teamCard{position:relative;padding:10px;min-height:0}
 .teamCard h3{margin:0 0 4px 0;font-size:14px}
@@ -774,6 +762,7 @@ img{max-width:100%;display:block}
 .actionDock{
   margin:0 12px 12px;
   padding:12px;
+  max-height:36vh;
   background:rgba(255,255,255,.03);
   border:1px solid rgba(255,255,255,.08);
   border-radius:18px;
@@ -789,7 +778,6 @@ img{max-width:100%;display:block}
   align-items:start;
   min-height:0;
 }
-.actionDockSkills .skillBar{margin-bottom:0}
 .actionDockPane{min-height:0;display:flex;flex-direction:column}
 .actionDockHero .heroCard{margin-bottom:0}
 .teamCard.compact{padding:10px;min-height:0}
@@ -866,27 +854,4 @@ img{max-width:100%;display:block}
   .btnRow{grid-template-columns:1fr}
   .topRightBadges{gap:6px}
   .badge{padding:5px 8px}
-}
-
-
-.cellTextFx{
-  position:absolute;
-  left:50%;
-  top:4px;
-  transform:translateX(-50%);
-  z-index:4;
-  font-size:10px;
-  line-height:1;
-  color:rgba(255,255,255,.72);
-  text-shadow:0 1px 2px rgba(0,0,0,.8);
-  opacity:.7;
-  pointer-events:none;
-  animation: domainTextFloat 2s ease-out forwards;
-  white-space:nowrap;
-}
-@keyframes domainTextFloat{
-  0%{opacity:0;transform:translateX(-50%) translateY(8px) scale(.96)}
-  15%{opacity:.75}
-  75%{opacity:.55}
-  100%{opacity:0;transform:translateX(-50%) translateY(-14px) scale(1)}
 }

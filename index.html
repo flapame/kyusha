@@ -36,14 +36,6 @@
           <div id="log" class="log"></div>
         </section>
 
-        <section class="turnDock card">
-          <div class="panelHeader">
-            <h3>回合操作</h3>
-            <div class="small">结束当前回合</div>
-          </div>
-          <button id="btnEndTurn" class="btnGood" style="width:100%">结束回合</button>
-        </section>
-
         <section id="blueCard" class="card teamCard compact">
           <h3>蓝方</h3>
           <div id="blueHud" class="small teamHudLine">—</div>
@@ -93,9 +85,6 @@
       </div>
 
       <div class="actionDockGrid">
-        <div class="actionDockPane actionDockSkills">
-          <div id="skillBar" class="skillBar footerSkillBar"></div>
-        </div>
         <div class="actionDockPane actionDockHero">
           <div id="selectedInfo" class="heroCard">
             <div class="hintText">点击棋盘上的英雄查看属性、被动、技能与当前状态。</div>
@@ -106,8 +95,10 @@
 
     <footer class="controls">
       <div class="inner">
+        <div id="skillBar" class="skillBar footerSkillBar"></div>
         <div class="btnRow">
           <button id="btnDeselect" class="btnGhost">取消选择</button>
+          <button id="btnEndTurn" class="btnGood">结束回合</button>
         </div>
       </div>
     </footer>
