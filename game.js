@@ -58,6 +58,7 @@ const state = {
   heroes: [],
   effects: [],
   fx: [],
+  textFx: [],
   barriers: [],
   logs: [],
   // 记录上一回合结束时剩余的行动点数（给五条悟的无下限防御使用）
@@ -168,14 +169,28 @@ function spawnFx(x, y, src, ttl = 560) {
   }, ttl);
 }
 
-function spawnCombatFx(source, target) {
+function spawnAttackFx(source, ttl = 620) {
+  if (!source) return;
+  const src = heroEffectAsset(source, 'attack');
+  if (!src) return;
+  spawnFx(source.x, source.y, src, ttl);
+}
+
+function spawnHitFx(source, target, ttl = 620) {
   if (!source || !target) return;
-  const attackSrc = heroEffectAsset(source, 'attack');
-  const hitSrc = heroEffectAsset(source, 'hit');
-  const sx = source.x, sy = source.y;
-  const tx = target.x, ty = target.y;
-  if (attackSrc) spawnFx(sx, sy, attackSrc, 620);
-  if (hitSrc) spawnFx(tx, ty, hitSrc, 620);
+  const src = heroEffectAsset(source, 'hit');
+  if (!src) return;
+  spawnFx(target.x, target.y, src, ttl);
+}
+
+function spawnFloatingText(x, y, text, ttl = 2000) {
+  const id = `txt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  state.textFx.push({ id, x, y, text });
+  renderAll();
+  window.setTimeout(() => {
+    state.textFx = state.textFx.filter(t => t.id !== id);
+    renderAll();
+  }, ttl);
 }
 
 function heroByUid(uid) {
@@ -288,6 +303,7 @@ function startDraft() {
   state.pendingAction = null;
   state.effects = [];
   state.fx = [];
+  state.textFx = [];
   state.barriers = [];
   state.bonusTurn = null;
   state.logs = [];
@@ -800,7 +816,7 @@ function applyDamage(source, target, rawDamage, reason = "伤害") {
     target.hp -= finalDamage;
     target.stats.taken += finalDamage;
     if (source) source.stats.dealt += finalDamage;
-    if (source) spawnCombatFx(source, target);
+    if (source) spawnHitFx(source, target);
     log(`${source ? source.name : "系统"} 对 ${target.name} 造成 ${finalDamage} 点${reason === "伤害" ? "伤害" : reason}。`);
   } else {
     log(`${target.name} 完全抵挡了这次${reason}。`);
@@ -1185,6 +1201,14 @@ function renderGrid() {
         cell.appendChild(unit);
       }
 
+      const textItems = state.textFx.filter(t => t.x === x && t.y === y);
+      textItems.forEach(t => {
+        const textEl = document.createElement("div");
+        textEl.className = "cellTextFx";
+        textEl.textContent = t.text;
+        cell.appendChild(textEl);
+      });
+
       const fxItems = state.fx.filter(f => f.x === x && f.y === y);
       fxItems.forEach(fx => {
         const fxEl = document.createElement("div");
@@ -1311,12 +1335,6 @@ function renderSelectedPanel(hero) {
     </div>
   `;
 
-  if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
-    const panel = $("actionDock");
-    if (panel && typeof panel.scrollIntoView === "function") {
-      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "nearest" }));
-    }
-  }
 }
 
 
@@ -1492,12 +1510,6 @@ function selectHero(uid) {
   state.pendingAction = null;
   renderAll();
 
-  if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
-    const panel = $("actionDock");
-    if (panel && typeof panel.scrollIntoView === "function") {
-      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "nearest" }));
-    }
-  }
 }
 
 function deselectHero() {
@@ -1562,6 +1574,7 @@ function performAttack(hero, target) {
 
   hero.attackTimesThisTurn += 1;
   const damage = hero.atk + hero.tempAtkBonus;
+  spawnAttackFx(hero);
   applyDamage(hero, target, damage, "普攻");
 
   // 射手被动：攻击敌方会偷取敌方下回合 1 点行动点
@@ -1790,6 +1803,7 @@ function resolveSukunaSkill4(hero) {
     triggerTurn: state.turn + 2
   });
 
+  spawnFloatingText(hero.x, hero.y, "领域展开！");
   log(`【${hero.name}】展开神魔领域（消耗 9 行动点）：两回合后结算。`);
   renderAll();
 }
@@ -1808,6 +1822,7 @@ function resolveGojoSkill2(hero) {
     triggerTurn: state.turn + 2
   });
 
+  spawnFloatingText(hero.x, hero.y, "领域展开！");
   log(`【${hero.name}】展开无量空处：两回合后开始结算，领域期间除自身外无法离开。`);
   renderAll();
 }
@@ -1909,6 +1924,7 @@ function resolveMountainSkill2(hero) {
     triggerTurn: state.turn + 1
   });
 
+  spawnFloatingText(hero.x, hero.y, "领域展开！");
   log(`【${hero.name}】展开山体庇护：下回合开始前，我方受到伤害减少 1。`);
   renderAll();
 }
@@ -1955,6 +1971,7 @@ function resolveNightSkill3(hero) {
     triggerTurn: state.turn + 2
   });
 
+  spawnFloatingText(hero.x, hero.y, "领域展开！");
   log(`【${hero.name}】展开赤夜领域：两回合后结算。`);
   renderAll();
 }
