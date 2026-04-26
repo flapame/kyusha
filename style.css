@@ -579,7 +579,7 @@ img{max-width:100%;display:block}
 }
 
 .controls{
-  position:fixed;
+  position:sticky;
   left:0;
   right:0;
   bottom:0;
@@ -588,6 +588,8 @@ img{max-width:100%;display:block}
   border-top:1px solid rgba(255,255,255,.08);
   backdrop-filter:blur(12px);
   box-shadow:0 -10px 24px rgba(0,0,0,.28);
+  margin-top:12px;
+  padding-bottom:env(safe-area-inset-bottom);
 }
 .controls .inner{
   max-width:1200px;
@@ -598,7 +600,7 @@ img{max-width:100%;display:block}
   gap:8px;
 }
 .footerSkillBar{margin-bottom:0}
-.skillBar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0}
+.skillBar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;align-items:stretch}
 .skillBar button{flex:1 1 auto; min-width:100px;}
 .btnRow{display:flex;gap:8px;flex-wrap:wrap}
 .btnRow button{flex:1 1 auto; min-width:104px}
@@ -673,7 +675,7 @@ img{max-width:100%;display:block}
 @keyframes domainPulse{0%,100%{filter:saturate(.95) brightness(1)}50%{filter:saturate(1.15) brightness(1.08)}}
 
 @media (max-width: 960px){
-  #app{padding-bottom:210px;}
+  #app{padding-bottom:0;}
   .topbar{padding:10px 10px 0}
   .brandName{font-size:18px}
   .gameTitle{font-size:16px}
@@ -713,7 +715,7 @@ img{max-width:100%;display:block}
 }
 
 @media (max-width: 560px){
-  #app{padding-bottom:220px;}
+  #app{padding-bottom:0;}
   .topDeck{grid-template-columns:1fr 1fr}
   .logDock{grid-column:1 / -1}
   .teamCard{padding:8px}
@@ -773,7 +775,7 @@ img{max-width:100%;display:block}
 }
 
 @media (max-width: 960px){
-  #app{padding-bottom:210px;}
+  #app{padding-bottom:0;}
   .topbar{padding:10px 10px 0}
   .brandName{font-size:18px}
   .gameTitle{font-size:16px}
@@ -814,7 +816,7 @@ img{max-width:100%;display:block}
 }
 
 @media (max-width: 560px){
-  #app{padding-bottom:220px;}
+  #app{padding-bottom:0;}
   .topDeck{grid-template-columns:1fr 1fr}
   .logDock{grid-column:1 / -1}
   .teamCard{padding:8px}
