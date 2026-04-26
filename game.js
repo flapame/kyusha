@@ -191,6 +191,15 @@ function apText(team) {
   return `${teamAP(team)} / ${state.apMax?.[team] ?? 0}`;
 }
 
+function skillIcon(skill) {
+  if (!skill) return '<span class="skillIconFallback">?</span>';
+  if (skill.icon) {
+    return `<img class="skillIconImg" src="${escapeHtml(skill.icon)}" alt="${escapeHtml(skill.title)}" draggable="false">`;
+  }
+  const label = skill.costText === "被动" ? "被" : `S${skill.no}`;
+  return `<span class="skillIconFallback">${escapeHtml(label)}</span>`;
+}
+
 // ----------------------
 // 规则与开始界面
 // ----------------------
