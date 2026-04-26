@@ -24,8 +24,6 @@
           <span id="turnBadge" class="badge">回合：—</span>
           <span id="turnTeamBadge" class="badge turn">当前行动：—</span>
           <span id="matchBadge" class="badge">本地双人</span>
-          <span id="blueApBadge" class="badge blue">蓝方行动点数：—</span>
-          <span id="redApBadge" class="badge red">红方行动点数：—</span>
         </div>
       </div>
 
@@ -38,21 +36,17 @@
           <div id="log" class="log"></div>
         </section>
 
-        <section id="blueCard" class="card teamCard">
+        <section id="blueCard" class="card teamCard compact">
           <h3>蓝方</h3>
-          <div id="blueHud" class="small">—</div>
+          <div id="blueHud" class="small teamHudLine">—</div>
           <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
-          <div class="bar hp"><div id="blueHpBar" style="width:0%"></div></div>
-          <div class="bar shield"><div id="blueShieldBar" style="width:0%"></div></div>
           <div id="blueSummary" class="teamSummary">—</div>
         </section>
 
-        <section id="redCard" class="card teamCard">
+        <section id="redCard" class="card teamCard compact">
           <h3>红方</h3>
-          <div id="redHud" class="small">—</div>
+          <div id="redHud" class="small teamHudLine">—</div>
           <div class="bar ap"><div id="redApBar" style="width:0%"></div></div>
-          <div class="bar hp"><div id="redHpBar" style="width:0%"></div></div>
-          <div class="bar shield"><div id="redShieldBar" style="width:0%"></div></div>
           <div id="redSummary" class="teamSummary">—</div>
         </section>
       </div>
@@ -77,21 +71,37 @@
 
         <div class="sep"></div>
 
-        <div id="selectedInfo" class="heroCard">
-          <div class="hintText">点击棋盘上的英雄查看属性、被动与技能。</div>
-        </div>
-
-        <div class="heroDetailShell">
-          <div id="heroDetail" class="heroDetailScroll hintText">
-            点击棋盘上的英雄查看可行动作。
-          </div>
+        <div class="heroCard">
+          <strong>点击提示</strong>
+          <div class="hintText">点击棋盘上的英雄后，下方会显示该英雄的头像、被动、主动技能与可执行操作。</div>
         </div>
       </aside>
     </main>
 
+    <section class="actionDock card" id="actionDock">
+      <div class="panelHeader">
+        <h3>英雄信息与技能</h3>
+        <div class="small">点选英雄后显示详细内容</div>
+      </div>
+
+      <div class="actionDockGrid">
+        <div class="actionDockPane actionDockHero">
+          <div id="selectedInfo" class="heroCard">
+            <div class="hintText">点击棋盘上的英雄查看属性、被动与当前状态。</div>
+          </div>
+        </div>
+
+        <div class="actionDockPane actionDockSkills">
+          <div id="heroDetail" class="heroDetailScroll hintText">
+            点击棋盘上的英雄查看可行动作。
+          </div>
+          <div id="skillBar" class="skillBar"></div>
+        </div>
+      </div>
+    </section>
+
     <footer class="controls">
       <div class="inner">
-        <div id="skillBar" class="skillBar"></div>
         <div class="btnRow">
           <button id="btnDeselect" class="btnGhost">取消选择</button>
           <button id="btnEndTurn" class="btnGood">结束回合</button>

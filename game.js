@@ -517,6 +517,9 @@ function startBattle() {
 function beginTurn(team, opts = {}) {
   state.activeTeam = team;
   state.turn += opts.initial ? 0 : 1;
+  state.selectedUid = null;
+  state.pendingAction = null;
+  state.selectedMode = "move";
 
   /*
     行动点数规则：
@@ -576,6 +579,9 @@ function endTurn() {
   const current = state.activeTeam;
   const next = otherTeam(current);
   state.lastUnusedAp[current] = state.ap[current];
+  state.selectedUid = null;
+  state.pendingAction = null;
+  state.selectedMode = "move";
 
   // 宿傩固定每回合受到 1 点真实伤害
   teamHeroes(current).forEach(h => {
@@ -1006,14 +1012,16 @@ function renderHud() {
   $("phaseBadge").textContent = `阶段：${phaseText(state.phase)}`;
   $("turnBadge").textContent = `回合：${state.turn}`;
 
-  $("blueApBadge").textContent = `蓝方行动点数：${teamAP("blue")} / ${state.apMax.blue || 0}`;
-  $("redApBadge").textContent = `红方行动点数：${teamAP("red")} / ${state.apMax.red || 0}`;
-
   const turnBadge = $("turnTeamBadge");
   if (turnBadge) {
     turnBadge.textContent = `当前行动：${TEAM[state.activeTeam].name}`;
     turnBadge.className = `badge turn ${state.activeTeam}`;
   }
+
+  const blueHud = $("blueHud");
+  const redHud = $("redHud");
+  if (blueHud) blueHud.textContent = `本方：蓝方 · 行动点 ${teamAP("blue")} / ${state.apMax.blue || 0}`;
+  if (redHud) redHud.textContent = `本方：红方 · 行动点 ${teamAP("red")} / ${state.apMax.red || 0}`;
 
   const blueCard = $("blueCard");
   const redCard = $("redCard");
@@ -1188,7 +1196,7 @@ function renderSelectedPanel(hero) {
   }
 
   const skillChips = def.skills.map(s => `
-    <span class="skillChip">${s.costText === "被动" ? "被动" : "主动"} · ${escapeHtml(s.title)}</span>
+    <span class="skillChip">${s.costText === "被动" ? "被动技能" : "主动技能"} · ${escapeHtml(s.title)}</span>
   `).join("");
 
   const skillCards = def.skills.map(s => `
@@ -1197,7 +1205,7 @@ function renderSelectedPanel(hero) {
         <div class="skillIconSlot">${skillIcon(s)}</div>
         <div class="skillDetailTitleWrap">
           <strong>技能${s.no}：${escapeHtml(s.title)}</strong>
-          <div class="smallCaps">${s.costText === "被动" ? "类型：被动" : `类型：主动 · 消耗：${escapeHtml(s.costText)}`}</div>
+          <div class="smallCaps">${s.costText === "被动" ? "编号：被动" : `编号：${s.no} · 类型：主动 · 消耗：${escapeHtml(s.costText)}`}</div>
         </div>
       </div>
       <div class="heroMeta">${escapeHtml(s.desc)}</div>
@@ -1253,7 +1261,7 @@ function renderSelectedPanel(hero) {
   `;
 
   if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
-    const panel = $("selectedInfo");
+    const panel = $("actionDock");
     if (panel && typeof panel.scrollIntoView === "function") {
       requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "start" }));
     }
@@ -1314,7 +1322,7 @@ function isSkillAvailable(hero, skillNo) {
   }
 
   if (hero.defId === "sukuna" && skillNo === 4) {
-    return hero.phase2 && teamAP(hero.team) >= 2;
+    return hero.phase2 && teamAP(hero.team) >= 9;
   }
 
   if (hero.defId === "gojo" && skillNo === 2) {
@@ -1366,8 +1374,14 @@ function countBurnedHeroes() {
 function onCellTap(x, y) {
   if (state.phase === "intro" || state.phase === "draft" || state.phase === "deploy" || state.phase === "gameover") return;
 
-  const hero = selectedHero();
+  let hero = selectedHero();
   const target = heroAt(x, y);
+
+  // 如果回合已经切换，先清掉上一方的选择对象，避免影响下一方直接点选英雄。
+  if (hero && hero.team !== state.activeTeam) {
+    deselectHero();
+    hero = null;
+  }
 
   // 没选中任何英雄时，只允许点己方已部署英雄来选中。
   if (!hero) {
@@ -1428,7 +1442,7 @@ function selectHero(uid) {
   renderAll();
 
   if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
-    const panel = $("selectedInfo");
+    const panel = $("actionDock");
     if (panel && typeof panel.scrollIntoView === "function") {
       requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "start" }));
     }
@@ -1464,9 +1478,11 @@ function performMove(hero, targetX, targetY) {
     hero.buffs.archerFreeMoveLeft -= 1;
   }
 
+  const fromX = hero.x;
+  const fromY = hero.y;
   hero.x = targetX;
   hero.y = targetY;
-  log(`【${TEAM[hero.team].name}】${hero.name} 移动 (${hero.x},${hero.y}) → (${targetX},${targetY})，行动点数 ${apText(hero.team)}。`);
+  log(`【${TEAM[hero.team].name}】${hero.name} 移动 (${fromX},${fromY}) → (${targetX},${targetY})，行动点数 ${apText(hero.team)}。`);
   renderAll();
 }
 
@@ -1709,9 +1725,9 @@ function resolveSukunaSkill2(hero) {
 
 function resolveSukunaSkill4(hero) {
   if (!hero.phase2) return;
-  if (teamAP(hero.team) < 2) return;
+  if (teamAP(hero.team) < 9) return;
 
-  state.ap[hero.team] -= 2;
+  state.ap[hero.team] -= 9;
 
   state.effects.push({
     type: "sukunaDomain",
@@ -1723,7 +1739,7 @@ function resolveSukunaSkill4(hero) {
     triggerTurn: state.turn + 1
   });
 
-  log(`【${hero.name}】展开神魔领域：下回合开始时生效。`);
+  log(`【${hero.name}】展开神魔领域（消耗 9 行动点）：下回合开始时生效。`);
   renderAll();
 }
 
