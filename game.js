@@ -145,6 +145,11 @@ function heroDef(hero) {
   return HERO_DEFS[hero.defId];
 }
 
+function heroAvatar(hero) {
+  const def = hero ? heroDef(hero) : null;
+  return def && def.avatar ? def.avatar : "";
+}
+
 function heroByUid(uid) {
   return state.heroes.find(h => h.uid === uid) || null;
 }
@@ -186,6 +191,15 @@ function apText(team) {
   return `${teamAP(team)} / ${state.apMax?.[team] ?? 0}`;
 }
 
+function skillIcon(skill) {
+  if (!skill) return '<span class="skillIconFallback">?</span>';
+  if (skill.icon) {
+    return `<img class="skillIconImg" src="${escapeHtml(skill.icon)}" alt="${escapeHtml(skill.title)}" draggable="false">`;
+  }
+  const label = skill.costText === "被动" ? "被" : `S${skill.no}`;
+  return `<span class="skillIconFallback">${escapeHtml(label)}</span>`;
+}
+
 // ----------------------
 // 规则与开始界面
 // ----------------------
@@ -214,7 +228,7 @@ function showIntro() {
       <strong>操作说明</strong>
       <ul class="ruleList">
         <li>点击英雄进行选择。</li>
-        <li>选中英雄后，点击空格移动，点击敌方进行攻击。</li>
+        <li>选中英雄后，点击空地移动，点击敌方进行普通攻击。</li>
         <li>选中英雄后，底部会显示技能按钮与说明。</li>
         <li>如果你看到了“没有这个技能”，通常表示该英雄本身没有对应技能编号。</li>
         <li>部署阶段可以使用“随机部署当前阵营”按钮，自动帮你摆放当前阵营英雄。</li>
@@ -264,6 +278,9 @@ function renderDraftOverlay() {
     const disabled = state.draft.picks[team].includes(id);
     return `
       <div class="heroCard heroPick ${disabled ? "disabled" : ""}" data-id="${id}">
+        <div class="pickAvatar">
+          ${def.avatar ? `<img src="${escapeHtml(def.avatar)}" alt="${escapeHtml(def.name)}头像" draggable="false">` : `<span>${escapeHtml(def.name.slice(0,1))}</span>`}
+        </div>
         <strong>${def.name}</strong>
         <div class="small">${escapeHtml(def.spawnHint)}</div>
         <div class="small" style="margin-top:6px">HP ${def.maxHp} / 攻击 ${def.atk} / 普攻范围 ${def.attackRange}</div>
@@ -289,6 +306,7 @@ function renderDraftOverlay() {
     el.addEventListener("click", () => chooseDraftHero(el.dataset.id));
   });
 }
+
 
 function chooseDraftHero(heroId) {
   const team = state.draft.currentTeam;
@@ -340,7 +358,6 @@ function renderDeployOverlay() {
   const list = undeployedHeroes(team);
 
   if (!list.length) {
-    // 如果当前队伍已经全部部署完成，自动切到下一方。
     const nextTeam = otherTeam(team);
     if (undeployedHeroes(nextTeam).length) {
       state.deploy.currentTeam = nextTeam;
@@ -357,6 +374,9 @@ function renderDeployOverlay() {
     const selected = state.deploy.selectedDraftHero?.uid === h.uid;
     return `
       <div class="heroCard heroPick ${selected ? "selected" : ""}" data-uid="${h.uid}">
+        <div class="pickAvatar">
+          ${heroAvatar(h) ? `<img src="${escapeHtml(heroAvatar(h))}" alt="${escapeHtml(h.name)}头像" draggable="false">` : `<span>${escapeHtml(h.name.slice(0,1))}</span>`}
+        </div>
         <strong>${h.name}</strong>
         <div class="small">${escapeHtml(def.spawnHint)}</div>
         <div class="small">HP ${h.maxHp} / 攻击 ${h.baseAtk}</div>
@@ -389,7 +409,7 @@ function renderDeployOverlay() {
       </div>
       <div class="heroCard">
         <strong>出生区（可点击格子）</strong>
-        <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:4px">
+        <div class="grid deployGrid">
           ${spawnCells}
         </div>
       </div>
@@ -450,6 +470,7 @@ function renderDeployOverlay() {
   });
 }
 
+
 function autoDeployCurrentTeam() {
   const team = state.deploy.currentTeam;
   const pool = undeployedHeroes(team);
@@ -505,6 +526,9 @@ function startBattle() {
 function beginTurn(team, opts = {}) {
   state.activeTeam = team;
   state.turn += opts.initial ? 0 : 1;
+  state.selectedUid = null;
+  state.pendingAction = null;
+  state.selectedMode = "move";
 
   /*
     行动点数规则：
@@ -564,6 +588,9 @@ function endTurn() {
   const current = state.activeTeam;
   const next = otherTeam(current);
   state.lastUnusedAp[current] = state.ap[current];
+  state.selectedUid = null;
+  state.pendingAction = null;
+  state.selectedMode = "move";
 
   // 宿傩固定每回合受到 1 点真实伤害
   teamHeroes(current).forEach(h => {
@@ -721,7 +748,7 @@ function renderGameOverOverlay(winner) {
 // ----------------------
 // 伤害与状态处理
 // ----------------------
-// 统一伤害入口：普攻、技能、结界、灼烧都尽量走这里，方便统计总伤害 / 承伤 / 减伤。
+// 统一伤害入口：普攻、技能、领域、灼烧都尽量走这里，方便统计总伤害 / 承伤 / 减伤。
 function applyDamage(source, target, rawDamage, reason = "伤害") {
   if (!target || target.dead) return { dealt: 0, reduced: 0, final: 0 };
 
@@ -849,7 +876,7 @@ function resolveDelayedEffect(effect) {
       if (h.team === owner.team) return;
       const d = Math.abs(h.x - effect.x) + Math.abs(h.y - effect.y);
       if (d <= effect.radius) {
-        applyDamage(owner, h, 3, "赤夜结界");
+        applyDamage(owner, h, 3, "赤夜领域");
         h.burnTurns = Math.max(h.burnTurns, 2);
       }
     });
@@ -994,14 +1021,16 @@ function renderHud() {
   $("phaseBadge").textContent = `阶段：${phaseText(state.phase)}`;
   $("turnBadge").textContent = `回合：${state.turn}`;
 
-  $("blueApBadge").textContent = `蓝方行动点数：${teamAP("blue")} / ${state.apMax.blue || 0}`;
-  $("redApBadge").textContent = `红方行动点数：${teamAP("red")} / ${state.apMax.red || 0}`;
-
   const turnBadge = $("turnTeamBadge");
   if (turnBadge) {
     turnBadge.textContent = `当前行动：${TEAM[state.activeTeam].name}`;
     turnBadge.className = `badge turn ${state.activeTeam}`;
   }
+
+  const blueHud = $("blueHud");
+  const redHud = $("redHud");
+  if (blueHud) blueHud.textContent = `本方：蓝方 · 行动点 ${teamAP("blue")} / ${state.apMax.blue || 0}`;
+  if (redHud) redHud.textContent = `本方：红方 · 行动点 ${teamAP("red")} / ${state.apMax.red || 0}`;
 
   const blueCard = $("blueCard");
   const redCard = $("redCard");
@@ -1029,6 +1058,18 @@ function phaseText(phase) {
 
 function renderGrid() {
   const grid = $("grid");
+  if (!grid) return;
+
+  const labelsX = $("boardLabelsX");
+  const labelsY = $("boardLabelsY");
+
+  if (labelsX) {
+    labelsX.innerHTML = Array.from({ length: W }, (_, x) => `<span class="axisMark">${x}</span>`).join("");
+  }
+  if (labelsY) {
+    labelsY.innerHTML = Array.from({ length: H }, (_, y) => `<span class="axisMark">${y}</span>`).join("");
+  }
+
   grid.innerHTML = "";
 
   for (let y = 0; y < H; y++) {
@@ -1045,13 +1086,10 @@ function renderGrid() {
       const hero = heroAt(x, y);
       const selected = selectedHero();
 
-      if (selected) {
-        if (selected.uid === hero?.uid) {
-          cell.classList.add("selected");
-        }
+      if (selected && selected.uid === hero?.uid) {
+        cell.classList.add("selected");
       }
 
-      // 可移动/攻击高亮
       if (state.phase === "battle" && selected && canAct(selected)) {
         if (state.selectedMode === "move") {
           const reach = reachableCells(selected);
@@ -1059,15 +1097,30 @@ function renderGrid() {
         } else if (state.selectedMode === "attack") {
           const targets = attackTargets(selected);
           if (targets.some(t => t.x === x && t.y === y)) cell.classList.add("attackHint");
-        } else if (state.selectedMode === "skill") {
-          // 技能时的高亮主要由 pendingAction 控制，具体在 skillBar 或弹窗里处理
         }
       }
 
-      // 结界/屏障效果的可视化：简单打底
       state.effects.forEach(e => {
-        if (e.type === "mountainBarrier" && e.cells.some(c => c.x === x && c.y === y)) {
-          cell.classList.add("blockHint");
+        const within = (() => {
+          if (e.type === "mountainBarrier") {
+            return Array.isArray(e.cells) && e.cells.some(c => c.x === x && c.y === y);
+          }
+          const radius = typeof e.radius === "number" ? e.radius : 0;
+          return Math.abs(x - e.x) + Math.abs(y - e.y) <= radius;
+        })();
+
+        if (!within) return;
+
+        if (e.type === "gojoDomain") {
+          cell.classList.add("domainHint", "domainGojo", "domainPulse");
+        } else if (e.type === "sukunaDomain") {
+          cell.classList.add("domainHint", "domainSukuna", "domainPulse");
+        } else if (e.type === "nightDomain") {
+          cell.classList.add("domainHint", "domainNight", "domainPulse");
+        } else if (e.type === "mountainBarrier") {
+          cell.classList.add("blockHint", "barrierHint");
+        } else if (e.type === "mountainShield") {
+          cell.classList.add("shieldHint");
         }
       });
 
@@ -1078,12 +1131,14 @@ function renderGrid() {
 
       if (hero) {
         const unit = document.createElement("div");
-        unit.className = `unit ${hero.team}`;
-        const fx = formatHeroFx(hero);
+        unit.className = `unit ${hero.team} ${selected?.uid === hero.uid ? "selected" : ""}`;
+        const avatarSrc = heroAvatar(hero);
         unit.innerHTML = `
-          <div class="name">${escapeHtml(hero.name)}</div>
-          <div class="hp">HP ${hero.hp}/${hero.maxHp}</div>
-          <div class="fx">${escapeHtml(fx)}</div>
+          <div class="unitAvatarShell">
+            ${avatarSrc ? `<img class="unitAvatar" src="${escapeHtml(avatarSrc)}" alt="${escapeHtml(hero.name)}头像" draggable="false">` : `<div class="unitAvatarFallback">${escapeHtml(hero.name.slice(0,1))}</div>`}
+          </div>
+          <div class="unitHpBar"><span style="width:${clamp((hero.hp / hero.maxHp) * 100, 0, 100)}%"></span></div>
+          <div class="unitHpText">${hero.hp}/${hero.maxHp}</div>
         `;
         cell.appendChild(unit);
       }
@@ -1093,6 +1148,7 @@ function renderGrid() {
     }
   }
 }
+
 
 function formatHeroFx(hero) {
   const fx = [];
@@ -1112,30 +1168,67 @@ function renderSelectedPanel(hero) {
 
   if (!hero) {
     $("selectedPill").textContent = "未选择英雄";
-    summary.innerHTML = `<div class="hintText">点击一位已部署的英雄，查看属性、被动与技能。</div>`;
-    detail.innerHTML = `<div class="hintText">这里会显示完整技能介绍、战斗统计和状态说明。</div>`;
+    $("selectedState").textContent = "—";
+    const heroAvatarEl = $("heroAvatar");
+    if (heroAvatarEl) {
+      heroAvatarEl.removeAttribute("src");
+      heroAvatarEl.alt = "hero avatar";
+    }
+    summary.innerHTML = `
+      <div class="heroCard">
+        <div class="hintText">点击一位已部署英雄，查看属性、被动、主动技能与当前状态。</div>
+      </div>
+    `;
+    detail.innerHTML = `
+      <div class="heroCard">
+        <strong>详细说明</strong>
+        <div class="hintText">这里会显示完整技能介绍、技能消耗、战斗统计、领域范围与状态说明。</div>
+      </div>
+    `;
     return;
   }
 
   const def = heroDef(hero);
   $("selectedPill").textContent = `${hero.name} · ${TEAM[hero.team].name}`;
+  $("selectedState").textContent = `HP ${hero.hp}/${hero.maxHp} · ${hero.team === "blue" ? "蓝方" : "红方"}`;
+
+  const heroAvatarEl = $("heroAvatar");
+  if (heroAvatarEl) {
+    const src = heroAvatar(hero);
+    if (src) {
+      heroAvatarEl.src = src;
+      heroAvatarEl.alt = `${hero.name}头像`;
+    } else {
+      heroAvatarEl.removeAttribute("src");
+      heroAvatarEl.alt = `${hero.name}头像`;
+    }
+  }
 
   const skillChips = def.skills.map(s => `
-    <span class="skillChip">技能${s.no}：${escapeHtml(s.title)}</span>
+    <span class="skillChip">${s.costText === "被动" ? "被动技能" : "主动技能"} · ${escapeHtml(s.title)}</span>
   `).join("");
 
   const skillCards = def.skills.map(s => `
     <div class="skillDetail">
-      <strong>技能${s.no}：${escapeHtml(s.title)}</strong>
-      <div class="smallCaps">消耗：${escapeHtml(s.costText)}</div>
+      <div class="skillDetailHead">
+        <div class="skillIconSlot">${skillIcon(s)}</div>
+        <div class="skillDetailTitleWrap">
+          <strong>技能${s.no}：${escapeHtml(s.title)}</strong>
+          <div class="smallCaps">${s.costText === "被动" ? "编号：被动" : `编号：${s.no} · 类型：主动 · 消耗：${escapeHtml(s.costText)}`}</div>
+        </div>
+      </div>
       <div class="heroMeta">${escapeHtml(s.desc)}</div>
     </div>
   `).join("");
 
+  const statusText = formatHeroFx(hero) || "无";
+
   summary.innerHTML = `
     <div class="heroCard">
       <div class="heroBrief">
-        <div class="avatar ${hero.team}">${escapeHtml(hero.name.slice(0, 1))}</div>
+        <div class="avatar ${hero.team}">
+          ${heroAvatar(hero) ? `<img class="avatarImg" src="${escapeHtml(heroAvatar(hero))}" alt="${escapeHtml(hero.name)}头像" draggable="false">` : escapeHtml(hero.name.slice(0, 1))}
+        </div>
         <div class="heroBriefMain">
           <div class="heroTitle">${escapeHtml(hero.name)}</div>
           <div class="heroMeta">
@@ -1146,10 +1239,15 @@ function renderSelectedPanel(hero) {
         </div>
       </div>
     </div>
+
     <div class="heroCard">
       <strong>被动与状态</strong>
-      <div class="heroMeta">被动：${escapeHtml(def.passive)}<br>当前状态：${escapeHtml(formatHeroFx(hero) || "无")}</div>
+      <div class="heroMeta">
+        <div><strong style="color:#fff">被动：</strong>${escapeHtml(def.passive)}</div>
+        <div style="margin-top:6px"><strong style="color:#fff">当前状态：</strong>${escapeHtml(statusText)}</div>
+      </div>
     </div>
+
     <div class="heroCard">
       <strong>技能速览</strong>
       <div class="skillChipRow">${skillChips}</div>
@@ -1170,7 +1268,15 @@ function renderSelectedPanel(hero) {
       <div class="heroMeta">标记数量：${hero.marks.length}</div>
     </div>
   `;
+
+  if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
+    const panel = $("actionDock");
+    if (panel && typeof panel.scrollIntoView === "function") {
+      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }
 }
+
 
 function renderSkillBar(hero) {
   const bar = $("skillBar");
@@ -1183,14 +1289,16 @@ function renderSkillBar(hero) {
 
   const def = heroDef(hero);
   def.skills.forEach(s => {
-    // 被动技能不放按钮，只展示描述。
     if (s.costText === "被动") return;
     const btn = document.createElement("button");
     btn.className = "skillButton";
     btn.innerHTML = `
-      <span class="skillNo">技能${s.no}</span>
-      <span class="skillName">${escapeHtml(s.title)}</span>
-      <span class="skillCost">${escapeHtml(s.costText)}</span>
+      <span class="skillButtonIcon">${skillIcon(s)}</span>
+      <span class="skillButtonText">
+        <span class="skillNo">技能${s.no}</span>
+        <span class="skillName">${escapeHtml(s.title)}</span>
+        <span class="skillCost">${escapeHtml(s.costText)}</span>
+      </span>
     `;
     btn.onclick = () => useSkill(hero, s.no);
     btn.disabled = !isSkillAvailable(hero, s.no);
@@ -1204,6 +1312,7 @@ function renderSkillBar(hero) {
     bar.appendChild(btn);
   }
 }
+
 
 function isSkillAvailable(hero, skillNo) {
   if (!canUseSkills(hero)) return false;
@@ -1222,7 +1331,7 @@ function isSkillAvailable(hero, skillNo) {
   }
 
   if (hero.defId === "sukuna" && skillNo === 4) {
-    return hero.phase2 && teamAP(hero.team) >= 2;
+    return hero.phase2 && teamAP(hero.team) >= 9;
   }
 
   if (hero.defId === "gojo" && skillNo === 2) {
@@ -1274,8 +1383,14 @@ function countBurnedHeroes() {
 function onCellTap(x, y) {
   if (state.phase === "intro" || state.phase === "draft" || state.phase === "deploy" || state.phase === "gameover") return;
 
-  const hero = selectedHero();
+  let hero = selectedHero();
   const target = heroAt(x, y);
+
+  // 如果回合已经切换，先清掉上一方的选择对象，避免影响下一方直接点选英雄。
+  if (hero && hero.team !== state.activeTeam) {
+    deselectHero();
+    hero = null;
+  }
 
   // 没选中任何英雄时，只允许点己方已部署英雄来选中。
   if (!hero) {
@@ -1334,6 +1449,13 @@ function selectHero(uid) {
   state.selectedMode = "move";
   state.pendingAction = null;
   renderAll();
+
+  if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
+    const panel = $("actionDock");
+    if (panel && typeof panel.scrollIntoView === "function") {
+      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }
 }
 
 function deselectHero() {
@@ -1365,9 +1487,11 @@ function performMove(hero, targetX, targetY) {
     hero.buffs.archerFreeMoveLeft -= 1;
   }
 
+  const fromX = hero.x;
+  const fromY = hero.y;
   hero.x = targetX;
   hero.y = targetY;
-  log(`【${TEAM[hero.team].name}】${hero.name} 移动 (${hero.x},${hero.y}) → (${targetX},${targetY})，行动点数 ${apText(hero.team)}。`);
+  log(`【${TEAM[hero.team].name}】${hero.name} 移动 (${fromX},${fromY}) → (${targetX},${targetY})，行动点数 ${apText(hero.team)}。`);
   renderAll();
 }
 
@@ -1610,9 +1734,9 @@ function resolveSukunaSkill2(hero) {
 
 function resolveSukunaSkill4(hero) {
   if (!hero.phase2) return;
-  if (teamAP(hero.team) < 2) return;
+  if (teamAP(hero.team) < 9) return;
 
-  state.ap[hero.team] -= 2;
+  state.ap[hero.team] -= 9;
 
   state.effects.push({
     type: "sukunaDomain",
@@ -1624,7 +1748,7 @@ function resolveSukunaSkill4(hero) {
     triggerTurn: state.turn + 1
   });
 
-  log(`【${hero.name}】展开神魔领域：下回合开始时生效。`);
+  log(`【${hero.name}】展开神魔领域（消耗 9 行动点）：下回合开始时生效。`);
   renderAll();
 }
 
@@ -1789,7 +1913,7 @@ function resolveNightSkill3(hero) {
     triggerTurn: state.turn + 1
   });
 
-  log(`【${hero.name}】展开赤夜结界：下回合开始时生效。`);
+  log(`【${hero.name}】展开赤夜领域：下回合开始时生效。`);
   renderAll();
 }
 
@@ -1807,23 +1931,10 @@ function openInfoOverlay() {
 function bindButtons() {
   $("btnDeselect").onclick = deselectHero;
   $("btnEndTurn").onclick = endTurn;
-  $("btnMoveMode").onclick = () => {
-    const hero = selectedHero();
-    if (!hero) return;
-    state.selectedMode = "move";
-    renderAll();
-  };
-  $("btnAttackMode").onclick = () => {
-    const hero = selectedHero();
-    if (!hero) return;
-    state.selectedMode = "attack";
-    renderAll();
-  };
-  $("btnSkillMode").onclick = () => {
-    const hero = selectedHero();
-    if (!hero) return;
-    state.selectedMode = "skill";
-    renderAll();
+  const clearBtn = $("clearLogBtn");
+  if (clearBtn) clearBtn.onclick = () => {
+    state.logs = [];
+    renderLog();
   };
 }
 

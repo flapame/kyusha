@@ -11,6 +11,7 @@
   注意：
   1) 这里尽量只放“描述 + 基础数值”，不要写复杂逻辑。
   2) 真正的技能结算逻辑在 game.js。
+  3) avatar 字段指向 avatars/ 文件夹里的头像图片。
 */
 
 window.GAME_RULES = [
@@ -30,6 +31,7 @@ window.HERO_DEFS = {
     id: "sword",
     name: "剑仙",
     teamColor: "blue",
+    avatar: "avatars/sword.png",
     maxHp: 7,
     atk: 2,
     attackRange: 1,
@@ -56,6 +58,7 @@ window.HERO_DEFS = {
     id: "sukuna",
     name: "两面宿傩",
     teamColor: "red",
+    avatar: "avatars/sukuna.png",
     maxHp: 20,
     atk: 1,
     attackRange: 1,
@@ -84,8 +87,8 @@ window.HERO_DEFS = {
       {
         no: 4,
         title: "领域·神魔领域",
-        costText: "2 行动点",
-        desc: "以自身为中心，3 格范围内形成结界。结界不限制移动；在下回合开始时，对结界内所有其他角色造成 9 点伤害。"
+        costText: "9 行动点",
+        desc: "以自身为中心，3 格范围内形成领域。领域不限制移动；在下回合开始时，对领域内所有其他角色造成 9 点伤害。制约消耗为 9 行动点。"
       }
     ]
   },
@@ -94,11 +97,12 @@ window.HERO_DEFS = {
     id: "gojo",
     name: "五条悟",
     teamColor: "blue",
+    avatar: "avatars/gojo.png",
     maxHp: 11,
     atk: 3,
     attackRange: 1,
     attackCost: 2,
-    spawnHint: "高爆发中距离角色，擅长防御与结界控制。",
+    spawnHint: "高爆发中距离角色，擅长防御与领域控制。",
     passive: "若上回合仍有未使用的行动点，则会将这些行动点转化为『无下限防御』。当本回合受到伤害时，先消耗该防御值抵挡伤害；若防御值不足，则剩余伤害扣血。",
     skills: [
       {
@@ -111,7 +115,7 @@ window.HERO_DEFS = {
         no: 2,
         title: "领域·无量空处",
         costText: "10 行动点",
-        desc: "以自身为中心，2 格范围内形成结界。结界持续 1 回合；在下回合开始时，对结界内除自身外所有角色造成 2 点伤害并冻结 1 回合。若本次结界总伤害超过 7 点，则额外获得 1 个回合，但该额外回合的行动点上限为 4 点。"
+        desc: "以自身为中心，2 格范围内形成领域。领域持续 1 回合；在下回合开始时，对领域内除自身外所有角色造成 2 点伤害并冻结 1 回合。若本次领域总伤害超过 7 点，则额外获得 1 个回合，但该额外回合的行动点上限为 4 点。"
       }
     ]
   },
@@ -120,6 +124,7 @@ window.HERO_DEFS = {
     id: "archer",
     name: "寂声射手",
     teamColor: "blue",
+    avatar: "avatars/archer.png",
     maxHp: 8,
     atk: 1,
     attackRange: 3,
@@ -152,6 +157,7 @@ window.HERO_DEFS = {
     id: "mountain",
     name: "山脉之神",
     teamColor: "red",
+    avatar: "avatars/mountain.png",
     maxHp: 15,
     atk: 2,
     attackRange: 1,
@@ -169,7 +175,7 @@ window.HERO_DEFS = {
         no: 2,
         title: "山体庇护",
         costText: "8 行动点",
-        desc: "以自身为中心，1 格范围内展开结界。下回合开始前，结界内所有我方英雄（包含自身）受到的伤害减少 1。"
+        desc: "以自身为中心，1 格范围内展开领域。下回合开始前，领域内所有我方英雄（包含自身）受到的伤害减少 1。"
       }
     ]
   },
@@ -178,6 +184,7 @@ window.HERO_DEFS = {
     id: "night",
     name: "烈焰之夜神",
     teamColor: "red",
+    avatar: "avatars/night.png",
     maxHp: 9,
     atk: 1,
     attackRange: 2,
@@ -199,9 +206,9 @@ window.HERO_DEFS = {
       },
       {
         no: 3,
-        title: "领域·赤夜结界",
+        title: "领域·赤夜领域",
         costText: "9 行动点",
-        desc: "以自身为中心，2 格范围内展开结界。下回合开始时，对结界内所有敌方英雄造成 3 点伤害并附加灼烧 2 回合。"
+        desc: "以自身为中心，2 格范围内展开领域。下回合开始时，对领域内所有敌方英雄造成 3 点伤害并附加灼烧 2 回合。"
       }
     ]
   }
