@@ -36,41 +36,24 @@
           <div id="log" class="log"></div>
         </section>
 
-        <div class="topDockSide">
-          <section class="turnDock card">
-            <div class="panelHeader">
-              <h3>回合操作</h3>
-              <div class="small">结束回合与当前选中信息</div>
-            </div>
-            <div class="turnDockInfo">
-              <div id="selectedPill" class="pill">未选择英雄</div>
-              <div id="selectedState" class="pill">—</div>
-            </div>
-            <div class="btnRow turnButtons">
-              <button id="btnDeselect" class="btnGhost">取消选择</button>
-              <button id="btnEndTurn" class="btnGood">结束回合</button>
-            </div>
-          </section>
+        <section id="blueCard" class="card teamCard compact">
+          <h3>蓝方</h3>
+          <div id="blueHud" class="small teamHudLine">—</div>
+          <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
+          <div id="blueSummary" class="teamSummary">—</div>
+        </section>
 
-          <section id="blueCard" class="card teamCard compact">
-            <h3>蓝方</h3>
-            <div id="blueHud" class="small teamHudLine">—</div>
-            <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
-            <div id="blueSummary" class="teamSummary">—</div>
-          </section>
-
-          <section id="redCard" class="card teamCard compact">
-            <h3>红方</h3>
-            <div id="redHud" class="small teamHudLine">—</div>
-            <div class="bar ap"><div id="redApBar" style="width:0%"></div></div>
-            <div id="redSummary" class="teamSummary">—</div>
-          </section>
-        </div>
+        <section id="redCard" class="card teamCard compact">
+          <h3>红方</h3>
+          <div id="redHud" class="small teamHudLine">—</div>
+          <div class="bar ap"><div id="redApBar" style="width:0%"></div></div>
+          <div id="redSummary" class="teamSummary">—</div>
+        </section>
       </div>
     </header>
 
     <main class="mainArea">
-      <section class="gridWrap" id="gridWrap">
+      <section class="gridWrap">
         <div class="boardHeader">
           <div class="boardAxisX" id="boardLabelsX"></div>
         </div>
@@ -81,6 +64,13 @@
       </section>
 
       <aside class="sidebar">
+        <div class="row space">
+          <div id="selectedPill" class="pill">未选择英雄</div>
+          <div id="selectedState" class="pill">—</div>
+        </div>
+
+        <div class="sep"></div>
+
         <div class="heroCard">
           <strong>点击提示</strong>
           <div class="hintText">点击棋盘上的英雄后，下方会显示该英雄的头像、被动、主动技能与可执行操作。</div>
@@ -94,22 +84,24 @@
         <div class="small">点选英雄后显示详细内容</div>
       </div>
 
-      <div id="skillBar" class="skillBar actionSkillBar"></div>
-
       <div class="actionDockGrid">
         <div class="actionDockPane actionDockHero">
           <div id="selectedInfo" class="heroCard">
             <div class="hintText">点击棋盘上的英雄查看属性、被动、技能与当前状态。</div>
           </div>
         </div>
-
-        <div class="actionDockPane actionDockSkills">
-          <div id="heroDetail" class="heroDetailScroll hintText">
-            点击棋盘上的英雄查看可行动作。
-          </div>
-        </div>
       </div>
     </section>
+
+    <footer class="controls">
+      <div class="inner">
+        <div id="skillBar" class="skillBar footerSkillBar"></div>
+        <div class="btnRow">
+          <button id="btnDeselect" class="btnGhost">取消选择</button>
+          <button id="btnEndTurn" class="btnGood">结束回合</button>
+        </div>
+      </div>
+    </footer>
   </div>
 
   <div id="overlay" class="overlay">

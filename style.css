@@ -99,35 +99,10 @@ img{max-width:100%;display:block}
 
 .topDeck{
   display:grid;
-  grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);
+  grid-template-columns:minmax(280px,1.4fr) minmax(170px,.3fr) minmax(170px,.3fr);
   gap:8px;
   align-items:stretch;
   padding-bottom:8px;
-}
-.topDockSide{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  min-width:0;
-}
-.turnDock{
-  padding:10px;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.turnDockInfo{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.turnDock .btnRow{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-}
-.turnDock .btnRow button{
-  min-width:0;
 }
 .card{
   position:relative;
@@ -643,7 +618,7 @@ img{max-width:100%;display:block}
   flex-direction:column;
   gap:8px;
 }
-.actionSkillBar{margin-bottom:0}
+.footerSkillBar{margin-bottom:0}
 .skillBar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;align-items:stretch}
 .skillBar button{flex:1 1 auto; min-width:100px;}
 .btnRow{display:flex;gap:8px;flex-wrap:wrap}
@@ -676,56 +651,6 @@ img{max-width:100%;display:block}
 .skillButton .skillName{font-size:14px;font-weight:800;color:#fff}
 .skillButton .skillCost{font-size:11px;color:var(--muted)}
 .skillButton:disabled{opacity:.45}
-
-
-.boardFxLayer{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  z-index:18;
-  overflow:visible;
-}
-.boardFxSprite{
-  position:absolute;
-  transform:translate(-50%,-50%);
-  pointer-events:none;
-  opacity:0;
-  animation: fxPop .45s ease-out forwards;
-  filter:drop-shadow(0 0 14px rgba(255,255,255,.18));
-}
-.boardFxSprite.attack{
-  animation-duration:.42s;
-  mix-blend-mode:screen;
-}
-.boardFxSprite.hit{
-  animation-duration:.52s;
-  mix-blend-mode:screen;
-}
-.boardFxText{
-  position:absolute;
-  transform:translate(-50%,-100%);
-  pointer-events:none;
-  color:rgba(255,255,255,.78);
-  font-size:12px;
-  font-weight:800;
-  letter-spacing:.08em;
-  text-shadow:0 1px 2px rgba(0,0,0,.8);
-  opacity:0;
-  animation: floatToast 2s ease-out forwards;
-  white-space:nowrap;
-}
-@keyframes fxPop{
-  0%{opacity:0; transform:translate(-50%,-50%) scale(.55)}
-  15%{opacity:1}
-  65%{opacity:1}
-  100%{opacity:0; transform:translate(-50%,-50%) scale(1.08)}
-}
-@keyframes floatToast{
-  0%{opacity:0; transform:translate(-50%,-70%) translateY(10px); filter:blur(.2px)}
-  12%{opacity:.78}
-  70%{opacity:.45}
-  100%{opacity:0; transform:translate(-50%,-120%) translateY(-12px); filter:blur(.2px)}
-}
 
 .deployGrid{
   aspect-ratio:auto;
@@ -775,7 +700,7 @@ img{max-width:100%;display:block}
   .gameTitle{font-size:16px}
   .gameSubtitle{font-size:11px}
   .badge{padding:6px 10px;font-size:11px}
-  .topDeck{grid-template-columns:1fr;gap:8px}
+  .topDeck{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .logDock{grid-column:1 / -1;min-height:118px;padding:10px}
   .log{height:84px;font-size:11px}
   .teamCard{padding:10px}
@@ -810,7 +735,7 @@ img{max-width:100%;display:block}
 
 @media (max-width: 560px){
   #app{padding-bottom:0;}
-  .topDeck{grid-template-columns:1fr}
+  .topDeck{grid-template-columns:1fr 1fr}
   .logDock{grid-column:1 / -1}
   .teamCard{padding:8px}
   .teamCard h3{font-size:13px}
@@ -837,7 +762,7 @@ img{max-width:100%;display:block}
 .actionDock{
   margin:0 12px 12px;
   padding:12px;
-  max-height:none;
+  max-height:36vh;
   background:rgba(255,255,255,.03);
   border:1px solid rgba(255,255,255,.08);
   border-radius:18px;
@@ -848,7 +773,7 @@ img{max-width:100%;display:block}
 }
 .actionDockGrid{
   display:grid;
-  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  grid-template-columns:1fr;
   gap:10px;
   align-items:start;
   min-height:0;
@@ -874,7 +799,7 @@ img{max-width:100%;display:block}
   .gameTitle{font-size:16px}
   .gameSubtitle{font-size:11px}
   .badge{padding:6px 10px;font-size:11px}
-  .topDeck{grid-template-columns:1fr;gap:8px}
+  .topDeck{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .logDock{grid-column:1 / -1;min-height:108px;padding:10px}
   .log{height:78px;font-size:11px}
   .teamCard{padding:8px}
@@ -909,7 +834,7 @@ img{max-width:100%;display:block}
 
 @media (max-width: 560px){
   #app{padding-bottom:0;}
-  .topDeck{grid-template-columns:1fr}
+  .topDeck{grid-template-columns:1fr 1fr}
   .logDock{grid-column:1 / -1}
   .teamCard{padding:8px}
   .teamCard h3{font-size:13px}
