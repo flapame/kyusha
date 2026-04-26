@@ -157,6 +157,14 @@ function heroEffectAsset(hero, kind) {
   return def.effects[kind] || "";
 }
 
+function heroAttackEffect(hero) {
+  return "";
+}
+
+function heroHitEffect(hero) {
+  return "";
+}
+
 function spawnFx(x, y, src, ttl = 560) {
   if (!src) return;
   const id = `fx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -180,6 +188,66 @@ function spawnCombatFx(source, target) {
 
 function heroByUid(uid) {
   return state.heroes.find(h => h.uid === uid) || null;
+}
+
+function getBoardFxLayer() {
+  let layer = document.querySelector(".boardFxLayer");
+  if (!layer) {
+    const grid = $("grid");
+    if (!grid) return null;
+    layer = document.createElement("div");
+    layer.className = "boardFxLayer";
+    grid.appendChild(layer);
+  }
+  return layer;
+}
+
+function cellCenterInBoard(x, y) {
+  const grid = $("grid");
+  const cell = grid ? grid.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`) : null;
+  if (!grid || !cell) return null;
+  const board = grid.getBoundingClientRect();
+  const rect = cell.getBoundingClientRect();
+  return {
+    left: rect.left - board.left + rect.width / 2,
+    top: rect.top - board.top + rect.height / 2,
+    width: rect.width,
+    height: rect.height
+  };
+}
+
+function showBoardFxAtCell(x, y, src, className, duration = 520, scale = 1) {
+  const layer = getBoardFxLayer();
+  const pos = cellCenterInBoard(x, y);
+  if (!layer || !pos || !src) return null;
+
+  const img = document.createElement("img");
+  img.className = `boardFxSprite ${className}`;
+  img.src = src;
+  img.alt = "";
+  img.draggable = false;
+  img.style.left = `${pos.left}px`;
+  img.style.top = `${pos.top}px`;
+  img.style.width = `${Math.max(36, pos.width * 1.1 * scale)}px`;
+  img.style.height = `${Math.max(36, pos.height * 1.1 * scale)}px`;
+  layer.appendChild(img);
+  window.setTimeout(() => img.remove(), duration);
+  return img;
+}
+
+function showFloatingTextAtCell(x, y, text) {
+  const layer = getBoardFxLayer();
+  const pos = cellCenterInBoard(x, y);
+  if (!layer || !pos) return null;
+
+  const el = document.createElement("div");
+  el.className = "boardFxText";
+  el.textContent = text;
+  el.style.left = `${pos.left}px`;
+  el.style.top = `${pos.top - pos.height * 0.65}px`;
+  layer.appendChild(el);
+  window.setTimeout(() => el.remove(), 2050);
+  return el;
 }
 
 function maybeTriggerSukunaPhase(hero) {
@@ -861,6 +929,16 @@ function getMountainDamageReduction(target) {
   return reduction;
 }
 
+function isInsideActiveGojoDomain(x, y) {
+  return state.effects.some(e => e.type === "gojoDomain" && (!e.triggerTurn || e.triggerTurn > state.turn) && Math.abs(x - e.x) + Math.abs(y - e.y) <= e.radius);
+}
+
+function isLeavingGojoDomain(hero, targetX, targetY) {
+  if (!hero || hero.dead || hero.defId === "gojo") return false;
+  if (!isInsideActiveGojoDomain(hero.x, hero.y)) return false;
+  return !isInsideActiveGojoDomain(targetX, targetY);
+}
+
 // ----------------------
 // 延迟效果解析
 // ----------------------
@@ -1196,6 +1274,11 @@ function renderGrid() {
       cell.addEventListener("click", () => onCellTap(x, y));
       grid.appendChild(cell);
     }
+  }
+
+  const fxLayer = getBoardFxLayer();
+  if (fxLayer && fxLayer.parentElement !== grid) {
+    grid.appendChild(fxLayer);
   }
 }
 
@@ -1562,7 +1645,12 @@ function performAttack(hero, target) {
 
   hero.attackTimesThisTurn += 1;
   const damage = hero.atk + hero.tempAtkBonus;
+  const attackSrc = heroAttackEffect(hero);
+  const hitSrc = heroHitEffect(hero);
   applyDamage(hero, target, damage, "普攻");
+  renderAll();
+  if (attackSrc) showBoardFxAtCell(hero.x, hero.y, attackSrc, "attack", 420, 1);
+  if (hitSrc) showBoardFxAtCell(target.x, target.y, hitSrc, "hit", 520, 1.08);
 
   // 射手被动：攻击敌方会偷取敌方下回合 1 点行动点
   if (hero.defId === "archer") {
@@ -1792,6 +1880,7 @@ function resolveSukunaSkill4(hero) {
 
   log(`【${hero.name}】展开神魔领域（消耗 9 行动点）：两回合后结算。`);
   renderAll();
+  showFloatingTextAtCell(hero.x, hero.y, "领域展开！");
 }
 
 function resolveGojoSkill2(hero) {
@@ -1810,6 +1899,7 @@ function resolveGojoSkill2(hero) {
 
   log(`【${hero.name}】展开无量空处：两回合后开始结算，领域期间除自身外无法离开。`);
   renderAll();
+  showFloatingTextAtCell(hero.x, hero.y, "领域展开！");
 }
 
 function resolveArcherSkill1(hero, target) {
@@ -1957,6 +2047,7 @@ function resolveNightSkill3(hero) {
 
   log(`【${hero.name}】展开赤夜领域：两回合后结算。`);
   renderAll();
+  showFloatingTextAtCell(hero.x, hero.y, "领域展开！");
 }
 
 // ----------------------

@@ -33,6 +33,8 @@ window.HERO_DEFS = {
     name: "剑仙",
     teamColor: "blue",
     avatar: "avatars/sword.png",
+    attackEffect: "assets/effects/attack_01.png",
+    hitEffect: "assets/effects/hit_01.png",
     effects: {
       attack: "assets/effects/attack_01.png",
       hit: "assets/effects/hit_01.png"
@@ -64,6 +66,8 @@ window.HERO_DEFS = {
     name: "两面宿傩",
     teamColor: "red",
     avatar: "avatars/sukuna.png",
+    attackEffect: "assets/effects/attack_02.png",
+    hitEffect: "assets/effects/hit_02.png",
     effects: {
       attack: "assets/effects/attack_02.png",
       hit: "assets/effects/hit_02.png"
@@ -107,6 +111,8 @@ window.HERO_DEFS = {
     name: "五条悟",
     teamColor: "blue",
     avatar: "avatars/gojo.png",
+    attackEffect: "assets/effects/attack_03.png",
+    hitEffect: "assets/effects/hit_03.png",
     effects: {
       attack: "assets/effects/attack_03.png",
       hit: "assets/effects/hit_03.png"
@@ -138,6 +144,8 @@ window.HERO_DEFS = {
     name: "寂声射手",
     teamColor: "blue",
     avatar: "avatars/archer.png",
+    attackEffect: "assets/effects/attack_04.png",
+    hitEffect: "assets/effects/hit_04.png",
     effects: {
       attack: "assets/effects/attack_04.png",
       hit: "assets/effects/hit_04.png"
@@ -175,6 +183,8 @@ window.HERO_DEFS = {
     name: "山脉之神",
     teamColor: "red",
     avatar: "avatars/mountain.png",
+    attackEffect: "assets/effects/attack_05.png",
+    hitEffect: "assets/effects/hit_05.png",
     effects: {
       attack: "assets/effects/attack_05.png",
       hit: "assets/effects/hit_05.png"
@@ -206,6 +216,8 @@ window.HERO_DEFS = {
     name: "烈焰之夜神",
     teamColor: "red",
     avatar: "avatars/night.png",
+    attackEffect: "assets/effects/attack_06.png",
+    hitEffect: "assets/effects/hit_06.png",
     effects: {
       attack: "assets/effects/attack_06.png",
       hit: "assets/effects/hit_06.png"
