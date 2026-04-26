@@ -57,6 +57,7 @@ const state = {
   },
   heroes: [],
   effects: [],
+  fx: [],
   barriers: [],
   logs: [],
   // 记录上一回合结束时剩余的行动点数（给五条悟的无下限防御使用）
@@ -148,6 +149,33 @@ function heroDef(hero) {
 function heroAvatar(hero) {
   const def = hero ? heroDef(hero) : null;
   return def && def.avatar ? def.avatar : "";
+}
+
+function heroEffectAsset(hero, kind) {
+  const def = hero ? heroDef(hero) : null;
+  if (!def || !def.effects) return "";
+  return def.effects[kind] || "";
+}
+
+function spawnFx(x, y, src, ttl = 560) {
+  if (!src) return;
+  const id = `fx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  state.fx.push({ id, x, y, src });
+  renderAll();
+  window.setTimeout(() => {
+    state.fx = state.fx.filter(f => f.id !== id);
+    renderAll();
+  }, ttl);
+}
+
+function spawnCombatFx(source, target) {
+  if (!source || !target) return;
+  const attackSrc = heroEffectAsset(source, 'attack');
+  const hitSrc = heroEffectAsset(source, 'hit');
+  const sx = source.x, sy = source.y;
+  const tx = target.x, ty = target.y;
+  if (attackSrc) spawnFx(sx, sy, attackSrc, 620);
+  if (hitSrc) spawnFx(tx, ty, hitSrc, 620);
 }
 
 function heroByUid(uid) {
@@ -259,6 +287,7 @@ function startDraft() {
   state.selectedMode = "move";
   state.pendingAction = null;
   state.effects = [];
+  state.fx = [];
   state.barriers = [];
   state.bonusTurn = null;
   state.logs = [];
@@ -625,7 +654,7 @@ function processStartOfTurnEffects(team) {
   state.heroes.forEach(h => {
     if (h.dead || !h.placed) return;
 
-    // 灼烧：每回合开始时造成 1 点伤害，持续若干回合
+    // 灼烧：每回合开始时造成 1 点伤害，持续若干回合（夜神为 3 回合）
     if (h.burnTurns > 0) {
       h.burnTurns -= 1;
       applyDamage(null, h, 1, "灼烧");
@@ -771,6 +800,7 @@ function applyDamage(source, target, rawDamage, reason = "伤害") {
     target.hp -= finalDamage;
     target.stats.taken += finalDamage;
     if (source) source.stats.dealt += finalDamage;
+    if (source) spawnCombatFx(source, target);
     log(`${source ? source.name : "系统"} 对 ${target.name} 造成 ${finalDamage} 点${reason === "伤害" ? "伤害" : reason}。`);
   } else {
     log(`${target.name} 完全抵挡了这次${reason}。`);
@@ -877,7 +907,7 @@ function resolveDelayedEffect(effect) {
       const d = Math.abs(h.x - effect.x) + Math.abs(h.y - effect.y);
       if (d <= effect.radius) {
         applyDamage(owner, h, 3, "赤夜领域");
-        h.burnTurns = Math.max(h.burnTurns, 2);
+        h.burnTurns = Math.max(h.burnTurns, 3);
       }
     });
   }
@@ -926,6 +956,16 @@ function attackCost(hero) {
   return hero.attackTimesThisTurn === 0 ? hero.attackCost : hero.attackCost + 1;
 }
 
+function isInsideGojoDomain(hero, x, y) {
+  return state.effects.some(e => {
+    if (e.type !== "gojoDomain") return false;
+    if (state.turn >= e.triggerTurn) return false;
+    if (hero.uid === e.ownerUid) return false;
+    const d = Math.abs(x - e.x) + Math.abs(y - e.y);
+    return d <= e.radius;
+  });
+}
+
 function isBlockedCell(x, y, movingHero) {
   // 英雄占位
   const occupied = heroAt(x, y);
@@ -937,6 +977,11 @@ function isBlockedCell(x, y, movingHero) {
     if (e.heroUid === movingHero.uid) continue; // 山神自己可以穿过自己封的路
     if (e.cells.some(c => c.x === x && c.y === y)) return true;
   }
+
+  // 五条悟领域：领域内其他角色不能离开领域
+  const currentInside = isInsideGojoDomain(movingHero, movingHero.x, movingHero.y);
+  const nextInside = isInsideGojoDomain(movingHero, x, y);
+  if (currentInside && !nextInside) return true;
 
   return false;
 }
@@ -1140,6 +1185,14 @@ function renderGrid() {
         cell.appendChild(unit);
       }
 
+      const fxItems = state.fx.filter(f => f.x === x && f.y === y);
+      fxItems.forEach(fx => {
+        const fxEl = document.createElement("div");
+        fxEl.className = "cellFx";
+        fxEl.innerHTML = `<img src="${escapeHtml(fx.src)}" alt="特效" draggable="false">`;
+        cell.appendChild(fxEl);
+      });
+
       cell.addEventListener("click", () => onCellTap(x, y));
       grid.appendChild(cell);
     }
@@ -1160,8 +1213,7 @@ function formatHeroFx(hero) {
 
 function renderSelectedPanel(hero) {
   const summary = $("selectedInfo");
-  const detail = $("heroDetail");
-  if (!summary || !detail) return;
+  if (!summary) return;
 
   if (!hero) {
     $("selectedPill").textContent = "未选择英雄";
@@ -1174,12 +1226,6 @@ function renderSelectedPanel(hero) {
     summary.innerHTML = `
       <div class="heroCard">
         <div class="hintText">点击一位已部署英雄，查看属性、被动、主动技能与当前状态。</div>
-      </div>
-    `;
-    detail.innerHTML = `
-      <div class="heroCard">
-        <strong>详细说明</strong>
-        <div class="hintText">这里会显示完整技能介绍、技能消耗、战斗统计、领域范围与状态说明。</div>
       </div>
     `;
     return;
@@ -1211,7 +1257,7 @@ function renderSelectedPanel(hero) {
         <div class="skillIconSlot">${skillIcon(s)}</div>
         <div class="skillDetailTitleWrap">
           <strong>技能${s.no}：${escapeHtml(s.title)}</strong>
-          <div class="smallCaps">${s.costText === "被动" ? "编号：被动" : `编号：${s.no} · 类型：主动 · 消耗：${escapeHtml(s.costText)}`}</div>
+          <div class="smallCaps">${s.costText === "被动" ? "编号：被动 · 类型：被动" : `编号：${s.no} · 类型：主动 · 消耗：${escapeHtml(s.costText)}`}</div>
         </div>
       </div>
       <div class="heroMeta">${escapeHtml(s.desc)}</div>
@@ -1246,16 +1292,15 @@ function renderSelectedPanel(hero) {
     </div>
 
     <div class="heroCard">
-      <strong>技能速览</strong>
+      <strong>技能总览</strong>
       <div class="skillChipRow">${skillChips}</div>
     </div>
-  `;
 
-  detail.innerHTML = `
     <div class="heroCard">
       <strong>详细技能说明</strong>
       <div class="skillDetailGrid">${skillCards}</div>
     </div>
+
     <div class="heroCard">
       <strong>战斗统计</strong>
       <div class="heroMeta">总造成伤害：${hero.stats.dealt}</div>
@@ -1603,7 +1648,7 @@ function useSkill(hero, skillNo) {
   }
 
   if (hero.defId === "night" && skillNo === 1) {
-    showTargetSelection(hero, skillNo, "nightSkill1", "选择目标", "请选择 2 格内敌方英雄，造成 2 点伤害并附加灼烧。");
+    showTargetSelection(hero, skillNo, "nightSkill1", "选择目标", "请选择 2 格内敌方英雄，造成 2 点伤害并附加灼烧 3 回合。");
     return;
   }
 
@@ -1742,10 +1787,10 @@ function resolveSukunaSkill4(hero) {
     x: hero.x,
     y: hero.y,
     radius: 3,
-    triggerTurn: state.turn + 1
+    triggerTurn: state.turn + 2
   });
 
-  log(`【${hero.name}】展开神魔领域（消耗 9 行动点）：下回合开始时生效。`);
+  log(`【${hero.name}】展开神魔领域（消耗 9 行动点）：两回合后结算。`);
   renderAll();
 }
 
@@ -1760,10 +1805,10 @@ function resolveGojoSkill2(hero) {
     x: hero.x,
     y: hero.y,
     radius: 2,
-    triggerTurn: state.turn + 1
+    triggerTurn: state.turn + 2
   });
 
-  log(`【${hero.name}】展开无量空处：下回合开始时生效。`);
+  log(`【${hero.name}】展开无量空处：两回合后开始结算，领域期间除自身外无法离开。`);
   renderAll();
 }
 
@@ -1875,8 +1920,8 @@ function resolveNightSkill1(hero, target) {
 
   state.ap[hero.team] -= 2;
   applyDamage(hero, target, 2, "烈焰灼击");
-  target.burnTurns = Math.max(target.burnTurns, 2);
-  log(`【${hero.name}】附加灼烧 2 回合。`);
+  target.burnTurns = Math.max(target.burnTurns, 3);
+  log(`【${hero.name}】附加灼烧 3 回合。`);
   renderAll();
 }
 
@@ -1907,10 +1952,10 @@ function resolveNightSkill3(hero) {
     x: hero.x,
     y: hero.y,
     radius: 2,
-    triggerTurn: state.turn + 1
+    triggerTurn: state.turn + 2
   });
 
-  log(`【${hero.name}】展开赤夜领域：下回合开始时生效。`);
+  log(`【${hero.name}】展开赤夜领域：两回合后结算。`);
   renderAll();
 }
 

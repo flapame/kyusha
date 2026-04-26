@@ -12,13 +12,14 @@
   1) 这里尽量只放“描述 + 基础数值”，不要写复杂逻辑。
   2) 真正的技能结算逻辑在 game.js。
   3) avatar 字段指向 avatars/ 文件夹里的头像图片。
+  4) effects.attack / effects.hit 指向攻击特效与命中特效图片，后期可直接替换文件。
 */
 
 window.GAME_RULES = [
   "棋盘为 9×4；左侧 3×2 为蓝方出生区，右侧 3×2 为红方出生区。",
   "每个玩家从英雄池中选择 3 位英雄；同一位英雄可以被双方同时选择。",
   "双方随机决定先后手；首回合先手获得 2 点行动点，后手通过临时行动点卡补足到 2 点。之后每到自己的回合，行动点自动回复并逐回合上涨，上限 10 点。",
-  "每位玩家自己的行动点会在回合开始时自动回复，并按回合逐一上涨 1 点，上限 10 点。",
+  "每个玩家自己的行动点会在回合开始时自动回复，并按回合逐一上涨 1 点，上限 10 点。",
   "移动消耗 1 点行动点；普通攻击每位英雄每回合最多 2 次，第二次攻击额外消耗 1 点行动点。",
   "英雄死亡后不能再行动；任一方全部英雄阵亡时，游戏结束并进入结算。",
   "被动技能也会在英雄信息面板中显示，方便你查看完整规则。"
@@ -32,6 +33,10 @@ window.HERO_DEFS = {
     name: "剑仙",
     teamColor: "blue",
     avatar: "avatars/sword.png",
+    effects: {
+      attack: "assets/effects/attack_01.png",
+      hit: "assets/effects/hit_01.png"
+    },
     maxHp: 7,
     atk: 2,
     attackRange: 1,
@@ -59,6 +64,10 @@ window.HERO_DEFS = {
     name: "两面宿傩",
     teamColor: "red",
     avatar: "avatars/sukuna.png",
+    effects: {
+      attack: "assets/effects/attack_02.png",
+      hit: "assets/effects/hit_02.png"
+    },
     maxHp: 20,
     atk: 1,
     attackRange: 1,
@@ -88,7 +97,7 @@ window.HERO_DEFS = {
         no: 4,
         title: "领域·神魔领域",
         costText: "9 行动点",
-        desc: "以自身为中心，3 格范围内形成领域。领域不限制移动；在下回合开始时，对领域内所有其他角色造成 9 点伤害。制约消耗为 9 行动点。"
+        desc: "以自身为中心，3 格范围内形成领域。领域不限制移动；在两回合后开始时，对领域内所有其他角色造成 9 点伤害。"
       }
     ]
   },
@@ -98,6 +107,10 @@ window.HERO_DEFS = {
     name: "五条悟",
     teamColor: "blue",
     avatar: "avatars/gojo.png",
+    effects: {
+      attack: "assets/effects/attack_03.png",
+      hit: "assets/effects/hit_03.png"
+    },
     maxHp: 11,
     atk: 3,
     attackRange: 1,
@@ -107,15 +120,15 @@ window.HERO_DEFS = {
     skills: [
       {
         no: 1,
-        title: "普通攻击",
-        costText: "2 行动点",
-        desc: "对 1 格范围内敌方造成 3 点伤害。"
+        title: "无下限防御",
+        costText: "被动",
+        desc: "若上回合有未使用的行动点，则本回合开始时获得等量防御值；受到伤害时先由防御值抵挡。"
       },
       {
         no: 2,
         title: "领域·无量空处",
         costText: "10 行动点",
-        desc: "以自身为中心，2 格范围内形成领域。领域持续 1 回合；在下回合开始时，对领域内除自身外所有角色造成 2 点伤害并冻结 1 回合。若本次领域总伤害超过 7 点，则额外获得 1 个回合，但该额外回合的行动点上限为 4 点。"
+        desc: "以自身为中心，2 格范围内形成领域。领域持续 2 回合；在两回合后开始时，对领域内除自身外所有角色造成 2 点伤害并冻结 1 回合。若本次领域总伤害超过 7 点，则额外获得 1 个回合，但该额外回合的行动点上限为 4 点。"
       }
     ]
   },
@@ -125,6 +138,10 @@ window.HERO_DEFS = {
     name: "寂声射手",
     teamColor: "blue",
     avatar: "avatars/archer.png",
+    effects: {
+      attack: "assets/effects/attack_04.png",
+      hit: "assets/effects/hit_04.png"
+    },
     maxHp: 8,
     atk: 1,
     attackRange: 3,
@@ -158,6 +175,10 @@ window.HERO_DEFS = {
     name: "山脉之神",
     teamColor: "red",
     avatar: "avatars/mountain.png",
+    effects: {
+      attack: "assets/effects/attack_05.png",
+      hit: "assets/effects/hit_05.png"
+    },
     maxHp: 15,
     atk: 2,
     attackRange: 1,
@@ -185,6 +206,10 @@ window.HERO_DEFS = {
     name: "烈焰之夜神",
     teamColor: "red",
     avatar: "avatars/night.png",
+    effects: {
+      attack: "assets/effects/attack_06.png",
+      hit: "assets/effects/hit_06.png"
+    },
     maxHp: 9,
     atk: 1,
     attackRange: 2,
@@ -196,7 +221,7 @@ window.HERO_DEFS = {
         no: 1,
         title: "烈焰灼击",
         costText: "2 行动点",
-        desc: "对 2 格范围内敌方造成 2 点伤害并附加灼烧 2 回合（每回合开始时受到 1 点伤害）。"
+        desc: "对 2 格范围内敌方造成 2 点伤害并附加灼烧 3 回合（每回合开始时受到 1 点伤害）。"
       },
       {
         no: 2,
@@ -208,7 +233,7 @@ window.HERO_DEFS = {
         no: 3,
         title: "领域·赤夜领域",
         costText: "9 行动点",
-        desc: "以自身为中心，2 格范围内展开领域。下回合开始时，对领域内所有敌方英雄造成 3 点伤害并附加灼烧 2 回合。"
+        desc: "以自身为中心，2 格范围内展开领域。两回合后开始时，对领域内所有敌方英雄造成 3 点伤害并附加灼烧 3 回合。"
       }
     ]
   }

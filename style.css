@@ -362,6 +362,28 @@ img{max-width:100%;display:block}
   color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,.8);
 }
+.cellFx{
+  position:absolute;
+  inset:-10px;
+  pointer-events:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:3;
+}
+.cellFx img{
+  width:calc(100% + 18px);
+  height:calc(100% + 18px);
+  object-fit:contain;
+  filter:drop-shadow(0 0 12px rgba(255,255,255,.28));
+  animation:fxPop .55s ease-out forwards;
+  transform-origin:center;
+}
+@keyframes fxPop{
+  0%{opacity:0;transform:scale(.5) rotate(-8deg)}
+  20%{opacity:1}
+  100%{opacity:0;transform:scale(1.15) rotate(0deg)}
+}
 
 .sidebar{
   display:flex;
@@ -751,13 +773,12 @@ img{max-width:100%;display:block}
 }
 .actionDockGrid{
   display:grid;
-  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  grid-template-columns:1fr;
   gap:10px;
   align-items:start;
   min-height:0;
 }
 .actionDockPane{min-height:0;display:flex;flex-direction:column}
-.actionDockSkills .heroDetailScroll{max-height:220px;padding-right:6px;overflow-y:auto}
 .actionDockHero .heroCard{margin-bottom:0}
 .teamCard.compact{padding:10px;min-height:0}
 .teamCard.compact .bar.ap{margin-top:6px}
@@ -809,8 +830,7 @@ img{max-width:100%;display:block}
   .modal{max-height:92vh;padding:12px}
   .modal .grid2{grid-template-columns:1fr}
   .actionDockGrid{grid-template-columns:1fr}
-  .actionDockSkills .heroDetailScroll{max-height:220px}
-}
+  }
 
 @media (max-width: 560px){
   #app{padding-bottom:0;}
