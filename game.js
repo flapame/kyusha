@@ -60,7 +60,6 @@ const state = {
   fx: [],
   barriers: [],
   logs: [],
-  floatingTexts: [],
   // 记录上一回合结束时剩余的行动点数（给五条悟的无下限防御使用）
   lastUnusedAp: { blue: 0, red: 0 },
   // 每个阵营自己的回合计数，用来控制“自动回复 + 逐回合上涨”的行动点数
@@ -179,16 +178,6 @@ function spawnCombatFx(source, target) {
   if (hitSrc) spawnFx(tx, ty, hitSrc, 620);
 }
 
-function spawnFloatingText(x, y, text, ttl = 2000) {
-  const id = `txt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-  state.floatingTexts.push({ id, x, y, text });
-  renderAll();
-  window.setTimeout(() => {
-    state.floatingTexts = state.floatingTexts.filter(t => t.id !== id);
-    renderAll();
-  }, ttl);
-}
-
 function heroByUid(uid) {
   return state.heroes.find(h => h.uid === uid) || null;
 }
@@ -299,7 +288,6 @@ function startDraft() {
   state.pendingAction = null;
   state.effects = [];
   state.fx = [];
-  state.floatingTexts = [];
   state.barriers = [];
   state.bonusTurn = null;
   state.logs = [];
@@ -317,37 +305,21 @@ function renderDraftOverlay() {
 
   const heroCards = Object.entries(HERO_DEFS).map(([id, def]) => {
     const disabled = state.draft.picks[team].includes(id);
-    const pickedBlue = state.draft.picks.blue.includes(id);
-    const pickedRed = state.draft.picks.red.includes(id);
-    const pickClasses = [
-      disabled ? "disabled" : "",
-      pickedBlue ? "pickedBlue" : "",
-      pickedRed ? "pickedRed" : "",
-      (pickedBlue && pickedRed) ? "pickedBoth" : ""
-    ].filter(Boolean).join(" ");
-    const tags = [];
-    if (pickedRed) tags.push('<span class="pickTag red">红方已选</span>');
-    if (pickedBlue) tags.push('<span class="pickTag blue">蓝方已选</span>');
-    if (pickedBlue && pickedRed) tags.push('<span class="pickTag both">双方已选</span>');
     return `
-      <div class="heroCard heroPick ${pickClasses}" data-id="${id}">
+      <div class="heroCard heroPick ${disabled ? "disabled" : ""}" data-id="${id}">
         <div class="pickAvatar">
           ${def.avatar ? `<img src="${escapeHtml(def.avatar)}" alt="${escapeHtml(def.name)}头像" draggable="false">` : `<span>${escapeHtml(def.name.slice(0,1))}</span>`}
         </div>
         <strong>${def.name}</strong>
         <div class="small">${escapeHtml(def.spawnHint)}</div>
         <div class="small" style="margin-top:6px">HP ${def.maxHp} / 攻击 ${def.atk} / 普攻范围 ${def.attackRange}</div>
-        ${tags.length ? `<div class="pickTagRow">${tags.join("")}</div>` : ""}
       </div>
     `;
   }).join("");
 
   openOverlay(`
     <h2>英雄选择</h2>
-    <div class="draftToolbar">
-      <p>当前轮到：<strong>${TEAM[team].name}</strong> 选择第 ${pickedCount + 1} 位英雄。</p>
-      <button class="btnGhost draftRandomBtn" id="randomPickBtn">随机选择</button>
-    </div>
+    <p>当前轮到：<strong>${TEAM[team].name}</strong> 选择第 ${pickedCount + 1} 位英雄。</p>
     <div class="small">提示：同一方不能重复选择同一英雄；但双方可以选择同一个英雄类型。</div>
     <div class="grid2" style="margin-top:12px">
       ${heroCards}
@@ -358,22 +330,12 @@ function renderDraftOverlay() {
   `);
 
   $("backIntroBtn").onclick = showIntro;
-  const randomPickBtn = $("randomPickBtn");
-  if (randomPickBtn) randomPickBtn.onclick = () => chooseRandomDraftHero();
 
   document.querySelectorAll(".heroPick:not(.disabled)").forEach(el => {
     el.addEventListener("click", () => chooseDraftHero(el.dataset.id));
   });
 }
 
-
-function chooseRandomDraftHero() {
-  const team = state.draft.currentTeam;
-  const candidates = Object.keys(HERO_DEFS).filter(id => !state.draft.picks[team].includes(id));
-  if (!candidates.length) return;
-  const pick = candidates[Math.floor(Math.random() * candidates.length)];
-  chooseDraftHero(pick);
-}
 
 function chooseDraftHero(heroId) {
   const team = state.draft.currentTeam;
@@ -1231,14 +1193,6 @@ function renderGrid() {
         cell.appendChild(fxEl);
       });
 
-      const floatTexts = state.floatingTexts.filter(t => t.x === x && t.y === y);
-      floatTexts.forEach(t => {
-        const txt = document.createElement("div");
-        txt.className = "battleFloatText";
-        txt.textContent = t.text;
-        cell.appendChild(txt);
-      });
-
       cell.addEventListener("click", () => onCellTap(x, y));
       grid.appendChild(cell);
     }
@@ -1357,6 +1311,12 @@ function renderSelectedPanel(hero) {
     </div>
   `;
 
+  if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
+    const panel = $("actionDock");
+    if (panel && typeof panel.scrollIntoView === "function") {
+      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+    }
+  }
 }
 
 
@@ -1532,6 +1492,12 @@ function selectHero(uid) {
   state.pendingAction = null;
   renderAll();
 
+  if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) {
+    const panel = $("actionDock");
+    if (panel && typeof panel.scrollIntoView === "function") {
+      requestAnimationFrame(() => panel.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+    }
+  }
 }
 
 function deselectHero() {
@@ -1595,7 +1561,6 @@ function performAttack(hero, target) {
   }
 
   hero.attackTimesThisTurn += 1;
-  spawnCombatFx(hero, target);
   const damage = hero.atk + hero.tempAtkBonus;
   applyDamage(hero, target, damage, "普攻");
 
@@ -1824,7 +1789,6 @@ function resolveSukunaSkill4(hero) {
     radius: 3,
     triggerTurn: state.turn + 2
   });
-  spawnFloatingText(hero.x, hero.y, "领域展开！", 2000);
 
   log(`【${hero.name}】展开神魔领域（消耗 9 行动点）：两回合后结算。`);
   renderAll();
@@ -1843,7 +1807,6 @@ function resolveGojoSkill2(hero) {
     radius: 2,
     triggerTurn: state.turn + 2
   });
-  spawnFloatingText(hero.x, hero.y, "领域展开！", 2000);
 
   log(`【${hero.name}】展开无量空处：两回合后开始结算，领域期间除自身外无法离开。`);
   renderAll();
@@ -1991,7 +1954,6 @@ function resolveNightSkill3(hero) {
     radius: 2,
     triggerTurn: state.turn + 2
   });
-  spawnFloatingText(hero.x, hero.y, "领域展开！", 2000);
 
   log(`【${hero.name}】展开赤夜领域：两回合后结算。`);
   renderAll();
