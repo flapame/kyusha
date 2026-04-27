@@ -58,6 +58,7 @@ const state = {
   heroes: [],
   effects: [],
   fx: [],
+  sukunaLineFx: [],
   barriers: [],
   logs: [],
   floatingTexts: [],
@@ -149,7 +150,43 @@ function heroDef(hero) {
 
 function heroAvatar(hero) {
   const def = hero ? heroDef(hero) : null;
-  return def && def.avatar ? def.avatar : "";
+  if (!def) return "";
+  if (hero && hero.phase2 && def.phase2Avatar) return def.phase2Avatar;
+  return def.avatar || "";
+}
+
+function imgWithFallback(src, alt, className, fallbackHtml) {
+  if (!src) return fallbackHtml || "";
+  const classAttr = className ? ` class="${className}"` : "";
+  const safeSrc = escapeHtml(src);
+  const safeAlt = escapeHtml(alt || "");
+  const fallback = fallbackHtml ? fallbackHtml : "";
+  return `<img${classAttr} src="${safeSrc}" alt="${safeAlt}" draggable="false" onerror="this.style.display='none';const fb=this.nextElementSibling;if(fb)fb.classList.remove('hidden')">${fallback}`;
+}
+
+function heroAvatarMarkup(hero, kind = "avatar") {
+  const def = hero ? heroDef(hero) : null;
+  const src = heroAvatar(hero);
+  const letter = escapeHtml((hero?.name || def?.name || "?").slice(0, 1));
+
+  if (kind === "unit") {
+    return `<div class="unitAvatarShell">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'unitAvatar', `<div class="unitAvatarFallback hidden">${letter}</div>`)}</div>`;
+  }
+
+  if (kind === "pick") {
+    return `<div class="pickAvatar">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'pickAvatarImg', `<span class="pickAvatarFallback hidden">${letter}</span>`)}</div>`;
+  }
+
+  const team = hero?.team || def?.teamColor || "blue";
+  return `<div class="avatar ${escapeHtml(team)}">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'avatarImg', `<div class="avatarFallback hidden">${letter}</div>`)}</div>`;
+}
+
+function visibleSkills(hero) {
+  if (!hero) return [];
+  const def = heroDef(hero);
+  if (!def || !Array.isArray(def.skills)) return [];
+  if (hero.defId !== 'sukuna') return def.skills.slice();
+  return def.skills.filter(s => hero.phase2 ? !s.phase1Only : !s.phase2Only);
 }
 
 function heroEffectAsset(hero, kind) {
@@ -179,14 +216,34 @@ function spawnCombatFx(source, target) {
   if (hitSrc) spawnFx(tx, ty, hitSrc, 620);
 }
 
-function spawnFloatingText(x, y, text, ttl = 2000) {
+function spawnFloatingText(x, y, text, ttl = 2000, className = "domainFloatText") {
   const id = `txt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-  state.floatingTexts.push({ id, x, y, text });
+  state.floatingTexts.push({ id, x, y, text, className });
   renderAll();
   window.setTimeout(() => {
     state.floatingTexts = state.floatingTexts.filter(t => t.id !== id);
     renderAll();
   }, ttl);
+}
+
+function spawnSukunaSlashFx(lines, ttl = 2000) {
+  if (!Array.isArray(lines) || !lines.length) return;
+  const id = `slash-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  state.sukunaLineFx.push({ id, lines });
+  renderAll();
+  window.setTimeout(() => {
+    state.sukunaLineFx = state.sukunaLineFx.filter(f => f.id !== id);
+    renderAll();
+  }, ttl);
+}
+
+function addSukunaMark(hero, x, y) {
+  if (!hero || hero.dead || hero.defId !== 'sukuna' || hero.phase2) return false;
+  if (!Array.isArray(hero.marks)) hero.marks = [];
+  const k = keyOf(x, y);
+  if (hero.marks.some(m => keyOf(m.x, m.y) === k)) return false;
+  hero.marks.push({ x, y });
+  return true;
 }
 
 function heroByUid(uid) {
@@ -203,6 +260,8 @@ function maybeTriggerSukunaPhase(hero) {
   hero.atk = 2;
   hero.attackCost = 2;
   hero.dead = false;
+  hero.marks = [];
+  state.sukunaLineFx = [];
   log(`【${hero.name}】进入二阶段：神武解！生命恢复至 10，攻击力提升至 2。`);
 }
 
@@ -232,11 +291,8 @@ function apText(team) {
 
 function skillIcon(skill) {
   if (!skill) return '<span class="skillIconFallback">?</span>';
-  if (skill.icon) {
-    return `<img class="skillIconImg" src="${escapeHtml(skill.icon)}" alt="${escapeHtml(skill.title)}" draggable="false">`;
-  }
   const label = skill.costText === "被动" ? "被" : `S${skill.no}`;
-  return `<span class="skillIconFallback">${escapeHtml(label)}</span>`;
+  return imgWithFallback(skill.icon || "", skill.title || "技能图标", "skillIconImg", `<span class="skillIconFallback hidden">${escapeHtml(label)}</span>`);
 }
 
 // ----------------------
@@ -299,6 +355,7 @@ function startDraft() {
   state.pendingAction = null;
   state.effects = [];
   state.fx = [];
+  state.sukunaLineFx = [];
   state.floatingTexts = [];
   state.barriers = [];
   state.bonusTurn = null;
@@ -332,7 +389,7 @@ function renderDraftOverlay() {
     return `
       <div class="heroCard heroPick ${pickClasses}" data-id="${id}">
         <div class="pickAvatar">
-          ${def.avatar ? `<img src="${escapeHtml(def.avatar)}" alt="${escapeHtml(def.name)}头像" draggable="false">` : `<span>${escapeHtml(def.name.slice(0,1))}</span>`}
+          ${imgWithFallback(def.avatar || "", `${escapeHtml(def.name)}头像`, "pickAvatarImg", `<span class="pickAvatarFallback hidden">${escapeHtml(def.name.slice(0,1))}</span>`)}
         </div>
         <strong>${def.name}</strong>
         <div class="small">${escapeHtml(def.spawnHint)}</div>
@@ -441,9 +498,7 @@ function renderDeployOverlay() {
     const selected = state.deploy.selectedDraftHero?.uid === h.uid;
     return `
       <div class="heroCard heroPick ${selected ? "selected" : ""}" data-uid="${h.uid}">
-        <div class="pickAvatar">
-          ${heroAvatar(h) ? `<img src="${escapeHtml(heroAvatar(h))}" alt="${escapeHtml(h.name)}头像" draggable="false">` : `<span>${escapeHtml(h.name.slice(0,1))}</span>`}
-        </div>
+        ${heroAvatarMarkup(h, "pick")}
         <strong>${h.name}</strong>
         <div class="small">${escapeHtml(def.spawnHint)}</div>
         <div class="small">HP ${h.maxHp} / 攻击 ${h.baseAtk}</div>
@@ -577,6 +632,8 @@ function autoDeployCurrentTeam() {
 function startBattle() {
   state.phase = "battle";
   state.turn = 1;
+  state.sukunaLineFx = [];
+  state.floatingTexts = [];
   state.activeTeam = state.firstTeam;
 
   // 首回合进入战斗。真实的行动点数刷新规则在 beginTurn() 中统一处理。
@@ -848,12 +905,16 @@ function applyDamage(source, target, rawDamage, reason = "伤害") {
     target.stats.reduced += reduction;
   }
 
-  // 宿傩被动：无论受到伤害还是攻击敌方，只要发生伤害结算，就在相应位置留下标记
-  if (target.defId === "sukuna") {
-    target.marks.push({ x: target.x, y: target.y });
+  // 宿傩标记：对自己受伤位置、以及自己造成伤害的位置进行标记；二阶段不再留一二技能的标记
+  if (target.defId === "sukuna" && !target.phase2) {
+    addSukunaMark(target, target.x, target.y);
   }
-  if (source && source.defId === "sukuna" && finalDamage > 0) {
-    source.marks.push({ x: target.x, y: target.y });
+  if (source && source.defId === "sukuna" && !source.phase2 && finalDamage > 0) {
+    addSukunaMark(source, target.x, target.y);
+  }
+  if (source && source.defId === "sukuna" && source.phase2 && finalDamage > 0) {
+    target.rootedTurns = Math.max(target.rootedTurns, 2);
+    log(`【${source.name}】触发原身之恶：目标进入禁锢 2 回合。`);
   }
 
   // 如果生命降到 0 以下，处理宿傩二阶段，或者正常死亡
@@ -915,7 +976,7 @@ function resolveDelayedEffect(effect) {
       if (d <= effect.radius) {
         const result = applyDamage(owner, h, 2, "无量空处");
         totalDamage += result.final;
-        h.frozenTurns = Math.max(h.frozenTurns, 1);
+        h.frozenTurns = Math.max(h.frozenTurns, 2);
       }
     });
 
@@ -1212,15 +1273,20 @@ function renderGrid() {
       if (hero) {
         const unit = document.createElement("div");
         unit.className = `unit ${hero.team} ${selected?.uid === hero.uid ? "selected" : ""}`;
-        const avatarSrc = heroAvatar(hero);
         unit.innerHTML = `
-          <div class="unitAvatarShell">
-            ${avatarSrc ? `<img class="unitAvatar" src="${escapeHtml(avatarSrc)}" alt="${escapeHtml(hero.name)}头像" draggable="false">` : `<div class="unitAvatarFallback">${escapeHtml(hero.name.slice(0,1))}</div>`}
-          </div>
+          ${heroAvatarMarkup(hero, "unit")}
           <div class="unitHpBar"><span style="width:${clamp((hero.hp / hero.maxHp) * 100, 0, 100)}%"></span></div>
           <div class="unitHpText">${hero.hp}/${hero.maxHp}</div>
         `;
         cell.appendChild(unit);
+      }
+
+      const markHere = state.heroes.some(h => h.defId === "sukuna" && h.marks.some(m => m.x === x && m.y === y));
+      if (markHere) {
+        const mark = document.createElement("div");
+        mark.className = "sukunaMarkLabel";
+        mark.textContent = "解标记";
+        cell.appendChild(mark);
       }
 
       const fxItems = state.fx.filter(f => f.x === x && f.y === y);
@@ -1231,20 +1297,68 @@ function renderGrid() {
         cell.appendChild(fxEl);
       });
 
-      const floatTexts = state.floatingTexts.filter(t => t.x === x && t.y === y);
-      floatTexts.forEach(t => {
-        const txt = document.createElement("div");
-        txt.className = "battleFloatText";
-        txt.textContent = t.text;
-        cell.appendChild(txt);
-      });
-
       cell.addEventListener("click", () => onCellTap(x, y));
       grid.appendChild(cell);
     }
   }
+
+  renderBoardTransientLayer();
 }
 
+
+function renderBoardTransientLayer() {
+  const grid = $("grid");
+  if (!grid) return;
+  const oldLayer = grid.querySelector(".boardFxLayer");
+  if (oldLayer) oldLayer.remove();
+
+  const layer = document.createElement("div");
+  layer.className = "boardFxLayer";
+
+  const gridRect = grid.getBoundingClientRect();
+  const cellRects = new Map();
+  grid.querySelectorAll(".cell").forEach(cell => {
+    const x = Number(cell.dataset.x);
+    const y = Number(cell.dataset.y);
+    cellRects.set(keyOf(x, y), cell.getBoundingClientRect());
+  });
+
+  state.sukunaLineFx.forEach(fx => {
+    fx.lines.forEach(line => {
+      const fromRect = cellRects.get(keyOf(line.from.x, line.from.y));
+      const toRect = cellRects.get(keyOf(line.to.x, line.to.y));
+      if (!fromRect || !toRect) return;
+      const sx = fromRect.left - gridRect.left + fromRect.width / 2;
+      const sy = fromRect.top - gridRect.top + fromRect.height / 2;
+      const ex = toRect.left - gridRect.left + toRect.width / 2;
+      const ey = toRect.top - gridRect.top + toRect.height / 2;
+      const dx = ex - sx;
+      const dy = ey - sy;
+      const len = Math.max(24, Math.hypot(dx, dy));
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      const slash = document.createElement("div");
+      slash.className = "boardFxSlash";
+      slash.style.left = `${sx}px`;
+      slash.style.top = `${sy}px`;
+      slash.style.width = `${len}px`;
+      slash.style.transform = `translateY(-50%) rotate(${angle}deg)`;
+      layer.appendChild(slash);
+    });
+  });
+
+  state.floatingTexts.forEach(t => {
+    const rect = cellRects.get(keyOf(t.x, t.y));
+    if (!rect) return;
+    const txt = document.createElement("div");
+    txt.className = `boardFxText ${t.className || "domainFloatText"}`;
+    txt.style.left = `${rect.left - gridRect.left + rect.width / 2}px`;
+    txt.style.top = `${rect.top - gridRect.top - 10}px`;
+    txt.textContent = t.text;
+    layer.appendChild(txt);
+  });
+
+  grid.appendChild(layer);
+}
 
 function formatHeroFx(hero) {
   const fx = [];
@@ -1264,11 +1378,6 @@ function renderSelectedPanel(hero) {
   if (!hero) {
     $("selectedPill").textContent = "未选择英雄";
     $("selectedState").textContent = "—";
-    const heroAvatarEl = $("heroAvatar");
-    if (heroAvatarEl) {
-      heroAvatarEl.removeAttribute("src");
-      heroAvatarEl.alt = "hero avatar";
-    }
     summary.innerHTML = `
       <div class="heroCard">
         <div class="hintText">点击一位已部署英雄，查看属性、被动、主动技能与当前状态。</div>
@@ -1278,26 +1387,15 @@ function renderSelectedPanel(hero) {
   }
 
   const def = heroDef(hero);
+  const skills = visibleSkills(hero);
   $("selectedPill").textContent = `${hero.name} · ${TEAM[hero.team].name}`;
   $("selectedState").textContent = `HP ${hero.hp}/${hero.maxHp} · ${hero.team === "blue" ? "蓝方" : "红方"}`;
 
-  const heroAvatarEl = $("heroAvatar");
-  if (heroAvatarEl) {
-    const src = heroAvatar(hero);
-    if (src) {
-      heroAvatarEl.src = src;
-      heroAvatarEl.alt = `${hero.name}头像`;
-    } else {
-      heroAvatarEl.removeAttribute("src");
-      heroAvatarEl.alt = `${hero.name}头像`;
-    }
-  }
-
-  const skillChips = def.skills.map(s => `
+  const skillChips = skills.map(s => `
     <span class="skillChip">${s.costText === "被动" ? "被动技能" : "主动技能"} · ${escapeHtml(s.title)}</span>
   `).join("");
 
-  const skillCards = def.skills.map(s => `
+  const skillCards = skills.map(s => `
     <div class="skillDetail">
       <div class="skillDetailHead">
         <div class="skillIconSlot">${skillIcon(s)}</div>
@@ -1311,19 +1409,22 @@ function renderSelectedPanel(hero) {
   `).join("");
 
   const statusText = formatHeroFx(hero) || "无";
+  const gojoBlockPct = hero.defId === "gojo" ? clamp((hero.gojoBlock / Math.max(hero.maxHp, 1)) * 100, 0, 100) : 0;
 
   summary.innerHTML = `
     <div class="heroCard">
       <div class="heroBrief">
-        <div class="avatar ${hero.team}">
-          ${heroAvatar(hero) ? `<img class="avatarImg" src="${escapeHtml(heroAvatar(hero))}" alt="${escapeHtml(hero.name)}头像" draggable="false">` : escapeHtml(hero.name.slice(0, 1))}
-        </div>
+        ${heroAvatarMarkup(hero, "avatar")}
         <div class="heroBriefMain">
           <div class="heroTitle">${escapeHtml(hero.name)}</div>
           <div class="heroMeta">
             阵营：${TEAM[hero.team].name}<br>
             生命：${hero.hp}/${hero.maxHp}　攻击：${hero.atk}　普攻范围：${hero.attackRange}<br>
             普攻消耗：${hero.attackCost}　普通攻击次数：${hero.attackTimesThisTurn}/2
+          </div>
+          <div class="miniBarStack">
+            <div class="unitHpBar"><span style="width:${clamp((hero.hp / hero.maxHp) * 100, 0, 100)}%"></span></div>
+            ${hero.defId === "gojo" ? `<div class="unitHpBar gojoBlock"><span style="width:${gojoBlockPct}%"></span></div>` : ""}
           </div>
         </div>
       </div>
@@ -1356,7 +1457,6 @@ function renderSelectedPanel(hero) {
       <div class="heroMeta">标记数量：${hero.marks.length}</div>
     </div>
   `;
-
 }
 
 
@@ -1369,8 +1469,8 @@ function renderSkillBar(hero) {
     return;
   }
 
-  const def = heroDef(hero);
-  def.skills.forEach(s => {
+  const skills = visibleSkills(hero);
+  skills.forEach(s => {
     if (s.costText === "被动") return;
     const btn = document.createElement("button");
     btn.className = "skillButton";
@@ -1387,7 +1487,7 @@ function renderSkillBar(hero) {
     bar.appendChild(btn);
   });
 
-  if (!def.skills.some(s => s.costText !== "被动")) {
+  if (!skills.some(s => s.costText !== "被动")) {
     const btn = document.createElement("button");
     btn.textContent = "该英雄暂无主动技能";
     btn.disabled = true;
@@ -1408,12 +1508,14 @@ function isSkillAvailable(hero, skillNo) {
     return teamAP(hero.team) >= 5 && skillTargets(hero, 2).length > 0;
   }
 
+  if (!visibleSkills(hero).some(s => s.no === skillNo)) return false;
+
   if (hero.defId === "sukuna" && skillNo === 2) {
-    return hero.marks.length >= 5;
+    return !hero.phase2 && hero.marks.length >= 5;
   }
 
-  if (hero.defId === "sukuna" && skillNo === 4) {
-    return hero.phase2 && teamAP(hero.team) >= 9;
+  if (hero.defId === "sukuna" && skillNo === 5) {
+    return hero.phase2 && teamAP(hero.team) >= 8;
   }
 
   if (hero.defId === "gojo" && skillNo === 2) {
@@ -1647,8 +1749,8 @@ function useSkill(hero, skillNo) {
     return;
   }
 
-  if (hero.defId === "sukuna" && skillNo === 4) {
-    resolveSukunaSkill4(hero);
+  if (hero.defId === "sukuna" && skillNo === 5) {
+    resolveSukunaSkill5(hero);
     return;
   }
 
@@ -1789,13 +1891,19 @@ function resolveSwordSkill2(hero, target) {
 }
 
 function resolveSukunaSkill2(hero) {
-  if (hero.marks.length < 5) return;
+  if (hero.phase2 || hero.marks.length < 5) return;
 
-  // 为了稳定与可读，这里将“标记连线范围”简化为“所有标记所在格”。
-  // 如果以后你想做更严格的线段判定，只需要改这里，不用改其它文件。
-  const markedCells = new Set(hero.marks.map(m => keyOf(m.x, m.y)));
+  const marks = hero.marks.slice();
+  const markedCells = new Set(marks.map(m => keyOf(m.x, m.y)));
+  const lines = [];
+  for (let i = 0; i < marks.length; i++) {
+    for (let j = i + 1; j < marks.length; j++) {
+      lines.push({ from: { x: marks[i].x, y: marks[i].y }, to: { x: marks[j].x, y: marks[j].y } });
+    }
+  }
+  spawnSukunaSlashFx(lines, 2000);
+
   let hitCount = 0;
-
   state.heroes.forEach(t => {
     if (t.dead || !t.placed) return;
     if (markedCells.has(keyOf(t.x, t.y))) {
@@ -1809,11 +1917,11 @@ function resolveSukunaSkill2(hero) {
   renderAll();
 }
 
-function resolveSukunaSkill4(hero) {
+function resolveSukunaSkill5(hero) {
   if (!hero.phase2) return;
-  if (teamAP(hero.team) < 9) return;
+  if (teamAP(hero.team) < 8) return;
 
-  state.ap[hero.team] -= 9;
+  state.ap[hero.team] -= 8;
 
   state.effects.push({
     type: "sukunaDomain",
@@ -1824,9 +1932,9 @@ function resolveSukunaSkill4(hero) {
     radius: 3,
     triggerTurn: state.turn + 2
   });
-  spawnFloatingText(hero.x, hero.y, "领域展开！", 2000);
+  spawnFloatingText(hero.x, hero.y, "领域展开！", 2000, "domainFloatText");
 
-  log(`【${hero.name}】展开神魔领域（消耗 9 行动点）：两回合后结算。`);
+  log(`【${hero.name}】展开伏魔御厨子（消耗 8 行动点）：两回合后结算。`);
   renderAll();
 }
 
@@ -1843,7 +1951,7 @@ function resolveGojoSkill2(hero) {
     radius: 2,
     triggerTurn: state.turn + 2
   });
-  spawnFloatingText(hero.x, hero.y, "领域展开！", 2000);
+  spawnFloatingText(hero.x, hero.y, "领域展开！", 2000, "domainFloatText");
 
   log(`【${hero.name}】展开无量空处：两回合后开始结算，领域期间除自身外无法离开。`);
   renderAll();
@@ -1876,8 +1984,8 @@ function resolveArcherSkill3(hero, target) {
 
   state.ap[hero.team] -= 6;
   applyDamage(hero, target, 3, "缠绕箭");
-  target.rootedTurns = Math.max(target.rootedTurns, 1);
-  log(`【${hero.name}】使目标进入缠绕 1 回合。`);
+  target.rootedTurns = Math.max(target.rootedTurns, 2);
+  log(`【${hero.name}】使目标进入缠绕 2 回合。`);
   renderAll();
 }
 
@@ -1991,7 +2099,7 @@ function resolveNightSkill3(hero) {
     radius: 2,
     triggerTurn: state.turn + 2
   });
-  spawnFloatingText(hero.x, hero.y, "领域展开！", 2000);
+  spawnFloatingText(hero.x, hero.y, "领域展开！", 2000, "domainFloatText");
 
   log(`【${hero.name}】展开赤夜领域：两回合后结算。`);
   renderAll();

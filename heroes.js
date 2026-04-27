@@ -19,7 +19,7 @@ window.GAME_RULES = [
   "棋盘为 9×4；左侧 3×2 为蓝方出生区，右侧 3×2 为红方出生区。",
   "每个玩家从英雄池中选择 3 位英雄；同一位英雄可以被双方同时选择。",
   "双方随机决定先后手；首回合先手获得 2 点行动点，后手通过临时行动点卡补足到 2 点。之后每到自己的回合，行动点自动回复并逐回合上涨，上限 10 点。",
-  "每个玩家自己的行动点会在回合开始时自动回复，并按回合逐一上涨 1 点，上限 10 点。",
+  "每位玩家自己的行动点会在回合开始时自动回复，并按回合逐一上涨 1 点，上限 10 点。",
   "移动消耗 1 点行动点；普通攻击每位英雄每回合最多 2 次，第二次攻击额外消耗 1 点行动点。",
   "英雄死亡后不能再行动；任一方全部英雄阵亡时，游戏结束并进入结算。",
   "被动技能也会在英雄信息面板中显示，方便你查看完整规则。"
@@ -48,13 +48,17 @@ window.HERO_DEFS = {
         no: 1,
         title: "一式·血刃",
         costText: "2 行动点",
-        desc: "本回合自身攻击力 +1；同时失去 1 点生命。"
+        desc: "本回合自身攻击力 +1；同时失去 1 点生命。",
+        icon: "assets/skills/sword_skill1.png",
+        phase1Only: true
       },
       {
         no: 2,
         title: "二式·突刺",
         costText: "5 行动点",
-        desc: "对 2 格内敌方英雄使用。冲到目标身后 1 格，造成 4 点伤害，并让自身冻结 2 回合。"
+        desc: "对 2 格内敌方英雄使用。冲到目标身后 1 格，造成 4 点伤害，并让自身冻结 2 回合。",
+        icon: "assets/skills/sword_skill2.png",
+        phase1Only: true
       }
     ]
   },
@@ -64,6 +68,7 @@ window.HERO_DEFS = {
     name: "两面宿傩",
     teamColor: "red",
     avatar: "avatars/sukuna.png",
+    phase2Avatar: "avatars/sukuna_phase2.png",
     effects: {
       attack: "assets/effects/attack_02.png",
       hit: "assets/effects/hit_02.png"
@@ -79,25 +84,40 @@ window.HERO_DEFS = {
         no: 1,
         title: "标记被动",
         costText: "被动",
-        desc: "每当你受到伤害，或攻击敌方造成伤害时，会在对应位置留下一个标记。"
+        desc: "每当你受到伤害，或攻击敌方造成伤害时，会在对应位置留下一个标记。",
+        icon: "assets/skills/sukuna_skill1.png",
+        phase1Only: true
       },
       {
         no: 2,
         title: "伏魔·解",
         costText: "无直接行动点消耗",
-        desc: "当标记数量 ≥ 5 时可释放。对标记连线范围内所有角色造成 4 点伤害，不分敌我（包括自身）。"
+        desc: "当标记数量 ≥ 5 时可释放。对标记连线范围内所有角色造成 4 点伤害，不分敌我（包括自身）。",
+        icon: "assets/skills/sukuna_skill2.png",
+        phase1Only: true
       },
       {
         no: 3,
         title: "二阶段·神武解",
         costText: "被动",
-        desc: "当生命值降至 0 时，进入二阶段：生命回复到 10，攻击力提升到 2。"
+        desc: "当生命值降至 0 时，进入二阶段：生命回复到 10，攻击力提升到 2。",
+        icon: "assets/skills/sukuna_skill3.png"
       },
       {
         no: 4,
-        title: "领域·神魔领域",
-        costText: "9 行动点",
-        desc: "以自身为中心，3 格范围内形成领域。领域不限制移动；在两回合后开始时，对领域内所有其他角色造成 9 点伤害。"
+        title: "原身之恶",
+        costText: "被动",
+        desc: "当宿傩处于二阶段并造成伤害时，对目标施加 2 回合禁锢效果。",
+        icon: "assets/skills/sukuna_skill4.png",
+        phase2Only: true
+      },
+      {
+        no: 5,
+        title: "伏魔御厨子",
+        costText: "8 行动点",
+        desc: "以自身为中心，3 格范围内形成领域。领域不限制移动；在两回合后开始时，对领域内所有其他角色造成 9 点伤害。",
+        icon: "assets/skills/sukuna_skill5.png",
+        phase2Only: true
       }
     ]
   },
@@ -122,13 +142,15 @@ window.HERO_DEFS = {
         no: 1,
         title: "无下限防御",
         costText: "被动",
-        desc: "若上回合有未使用的行动点，则本回合开始时获得等量防御值；受到伤害时先由防御值抵挡。"
+        desc: "若上回合有未使用的行动点，则本回合开始时获得等量防御值；受到伤害时先由防御值抵挡。",
+        icon: "assets/skills/gojo_skill1.png"
       },
       {
         no: 2,
         title: "领域·无量空处",
         costText: "10 行动点",
-        desc: "以自身为中心，2 格范围内形成领域。领域持续 2 回合；在两回合后开始时，对领域内除自身外所有角色造成 2 点伤害并冻结 1 回合。若本次领域总伤害超过 7 点，则额外获得 1 个回合，但该额外回合的行动点上限为 4 点。"
+        desc: "以自身为中心，2 格范围内形成领域。领域持续 2 回合；在两回合后开始时，对领域内除自身外所有角色造成 2 点伤害并冻结 2 回合。若本次领域总伤害超过 7 点，则额外获得 1 个回合，但该额外回合的行动点上限为 4 点。",
+        icon: "assets/skills/gojo_skill2.png"
       }
     ]
   },
@@ -153,19 +175,22 @@ window.HERO_DEFS = {
         no: 1,
         title: "连射",
         costText: "2 行动点",
-        desc: "对 3 格范围内敌方造成 1 点伤害。"
+        desc: "对 3 格范围内敌方造成 1 点伤害。",
+        icon: "assets/skills/archer_skill1.png"
       },
       {
         no: 2,
         title: "轻步潜行",
         costText: "6 行动点",
-        desc: "接下来的 2 回合内，移动消耗变为 0；但每回合最多移动 2 次，且每次移动不能超过 2 格。"
+        desc: "接下来的 2 回合内，移动消耗变为 0；但每回合最多移动 2 次，且每次移动不能超过 2 格。",
+        icon: "assets/skills/archer_skill2.png"
       },
       {
         no: 3,
         title: "缠绕箭",
         costText: "6 行动点",
-        desc: "对 1 格范围内敌方造成 3 点伤害并施加缠绕 1 回合。缠绕期间目标只能移动或普通攻击，不能释放技能。"
+        desc: "对 1 格范围内敌方造成 3 点伤害并施加缠绕 2 回合。缠绕期间目标只能移动或普通攻击，不能释放技能。",
+        icon: "assets/skills/archer_skill3.png"
       }
     ]
   },
@@ -190,13 +215,15 @@ window.HERO_DEFS = {
         no: 1,
         title: "封路",
         costText: "4 行动点",
-        desc: "指定方向直线 3 格内生成封路地形。其他角色无法到达、无法穿过；若释放时路径中已有角色，敌方受 2 点伤害，我方回复 2 点生命，然后封路立即消失。"
+        desc: "指定方向直线 3 格内生成封路地形。其他角色无法到达、无法穿过；若释放时路径中已有角色，敌方受 2 点伤害，我方回复 2 点生命，然后封路立即消失。",
+        icon: "assets/skills/mountain_skill1.png"
       },
       {
         no: 2,
         title: "山体庇护",
         costText: "8 行动点",
-        desc: "以自身为中心，1 格范围内展开领域。下回合开始前，领域内所有我方英雄（包含自身）受到的伤害减少 1。"
+        desc: "以自身为中心，1 格范围内展开领域。下回合开始前，领域内所有我方英雄（包含自身）受到的伤害减少 1。",
+        icon: "assets/skills/mountain_skill2.png"
       }
     ]
   },
@@ -221,19 +248,22 @@ window.HERO_DEFS = {
         no: 1,
         title: "烈焰灼击",
         costText: "2 行动点",
-        desc: "对 2 格范围内敌方造成 2 点伤害并附加灼烧 3 回合（每回合开始时受到 1 点伤害）。"
+        desc: "对 2 格范围内敌方造成 2 点伤害并附加灼烧 3 回合（每回合开始时受到 1 点伤害）。",
+        icon: "assets/skills/night_skill1.png"
       },
       {
         no: 2,
         title: "焰爆",
         costText: "6 行动点",
-        desc: "若场上存在至少 2 名被灼烧的英雄，则对所有被灼烧英雄造成 2 点伤害。"
+        desc: "若场上存在至少 2 名被灼烧的英雄，则对所有被灼烧英雄造成 2 点伤害。",
+        icon: "assets/skills/night_skill2.png"
       },
       {
         no: 3,
         title: "领域·赤夜领域",
         costText: "9 行动点",
-        desc: "以自身为中心，2 格范围内展开领域。两回合后开始时，对领域内所有敌方英雄造成 3 点伤害并附加灼烧 3 回合。"
+        desc: "以自身为中心，2 格范围内展开领域。两回合后开始时，对领域内所有敌方英雄造成 3 点伤害并附加灼烧 3 回合。",
+        icon: "assets/skills/night_skill3.png"
       }
     ]
   }
