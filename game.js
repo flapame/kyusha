@@ -172,9 +172,12 @@ function heroAvatarMarkup(hero, kind = "avatar") {
   const src = heroAvatar(hero);
   const letter = escapeHtml((hero?.name || def?.name || "?").slice(0, 1));
 
+  const gojoBadge = hero?.defId === "gojo"
+    ? `<div class="gojoBlockBadge">防御 ${hero.gojoBlock || 0}</div>`
+    : "";
+
   if (kind === "unit") {
-    const blockBadge = hero?.defId === "gojo" ? `<div class="unitBlockBadge">防御 ${hero.gojoBlock || 0}</div>` : "";
-    return `<div class="unitAvatarWrap"><div class="unitAvatarShell">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'unitAvatar', `<div class="unitAvatarFallback hidden">${letter}</div>`)}</div>${blockBadge}</div>`;
+    return `<div class="unitAvatarWrap">${gojoBadge}<div class="unitAvatarShell">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'unitAvatar', `<div class="unitAvatarFallback hidden">${letter}</div>`)}</div></div>`;
   }
 
   if (kind === "pick") {
@@ -182,8 +185,7 @@ function heroAvatarMarkup(hero, kind = "avatar") {
   }
 
   const team = hero?.team || def?.teamColor || "blue";
-  const blockBadge = hero?.defId === "gojo" ? `<div class="avatarBlockBadge">防御 ${hero.gojoBlock || 0}</div>` : "";
-  return `<div class="avatarWrap"><div class="avatar ${escapeHtml(team)}">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'avatarImg', `<div class="avatarFallback hidden">${letter}</div>`)}</div>${blockBadge}</div>`;
+  return `<div class="avatarWrap">${gojoBadge}<div class="avatar ${escapeHtml(team)}">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'avatarImg', `<div class="avatarFallback hidden">${letter}</div>`)}</div></div>`;
 }
 
 function visibleSkills(hero) {
@@ -205,12 +207,18 @@ function ensureGojoMarks(hero) {
   return hero.gojoMarks;
 }
 
+function heroGojoMarks(hero) {
+  const marks = ensureGojoMarks(hero);
+  if (!marks) return { blue: null, red: null };
+  return marks;
+}
+
 function gojoMarkAt(x, y) {
   return state.heroes
     .filter(h => h.defId === 'gojo' && h.gojoMarks)
     .flatMap(h => [
-      h.gojoMarks.blue ? { ...h.gojoMarks.blue, type: 'gojoBlue', owner: h.uid } : null,
-      h.gojoMarks.red ? { ...h.gojoMarks.red, type: 'gojoRed', owner: h.uid } : null
+      h.gojoMarks.blue ? { ...h.gojoMarks.blue, type: 'gojoBlue', owner: h.uid, team: h.team } : null,
+      h.gojoMarks.red ? { ...h.gojoMarks.red, type: 'gojoRed', owner: h.uid, team: h.team } : null
     ])
     .filter(Boolean)
     .find(m => m.x === x && m.y === y) || null;
@@ -219,7 +227,7 @@ function gojoMarkAt(x, y) {
 function setGojoMark(hero, kind, x, y) {
   const marks = ensureGojoMarks(hero);
   if (!marks) return null;
-  marks[kind] = { x, y };
+  marks[kind] = { x, y, ownerUid: hero.uid, team: hero.team };
   return marks[kind];
 }
 
@@ -260,8 +268,7 @@ function gojoSkillCells(hero, skillNo) {
 }
 
 function gojoMarkSummary(hero) {
-  const marks = ensureGojoMarks(hero);
-  if (!marks) return '无';
+  const marks = heroGojoMarks(hero);
   const parts = [];
   if (marks.blue) parts.push(`苍(${marks.blue.x},${marks.blue.y})`);
   if (marks.red) parts.push(`赫(${marks.red.x},${marks.red.y})`);
@@ -1406,8 +1413,9 @@ function renderGrid() {
           });
         }
         if (h.defId === "gojo" && h.gojoMarks) {
-          if (h.gojoMarks.blue && h.gojoMarks.blue.x === x && h.gojoMarks.blue.y === y) markBits.push({ text: "苍标记", cls: "gojoBlueMarkLabel" });
-          if (h.gojoMarks.red && h.gojoMarks.red.x === x && h.gojoMarks.red.y === y) markBits.push({ text: "赫标记", cls: "gojoRedMarkLabel" });
+          const marks = heroGojoMarks(h);
+          if (marks.blue && marks.blue.x === x && marks.blue.y === y && marks.blue.ownerUid === h.uid) markBits.push({ text: "苍标记", cls: "gojoBlueMarkLabel" });
+          if (marks.red && marks.red.x === x && marks.red.y === y && marks.red.ownerUid === h.uid) markBits.push({ text: "赫标记", cls: "gojoRedMarkLabel" });
         }
       });
       if (markBits.length) {
@@ -1562,8 +1570,9 @@ function formatHeroFx(hero) {
   if (hero.burnTurns > 0) fx.push(`灼烧${hero.burnTurns}`);
   if (hero.defId === "gojo" && hero.gojoBlock > 0) fx.push(`防御${hero.gojoBlock}`);
   if (hero.defId === "gojo" && hero.gojoMarks) {
-    if (hero.gojoMarks.blue) fx.push(`苍(${hero.gojoMarks.blue.x},${hero.gojoMarks.blue.y})`);
-    if (hero.gojoMarks.red) fx.push(`赫(${hero.gojoMarks.red.x},${hero.gojoMarks.red.y})`);
+    const marks = heroGojoMarks(hero);
+    if (marks.blue) fx.push(`苍(${marks.blue.x},${marks.blue.y})`);
+    if (marks.red) fx.push(`赫(${marks.red.x},${marks.red.y})`);
   }
   if (hero.defId === "archer" && hero.buffs.archerFreeMove > 0) fx.push(`轻步${hero.buffs.archerFreeMove}回合`);
   if (hero.marks.length > 0) fx.push(`标记${hero.marks.length}`);
@@ -2254,14 +2263,16 @@ function resolveGojoSkill4(hero) {
 }
 
 function hasGojoMizushi(hero) {
-  const marks = ensureGojoMarks(hero);
+  const marks = heroGojoMarks(hero);
   return !!(marks && marks.blue && marks.red);
 }
 
 function resolveGojoSkill5(hero) {
   if (teamAP(hero.team) < 10) return;
-  const marks = ensureGojoMarks(hero);
+  const marks = heroGojoMarks(hero);
   if (!marks || !marks.blue || !marks.red) return;
+  if (marks.blue.ownerUid && marks.blue.ownerUid !== hero.uid) return;
+  if (marks.red.ownerUid && marks.red.ownerUid !== hero.uid) return;
 
   const blue = { ...marks.blue };
   const red = { ...marks.red };
