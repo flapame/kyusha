@@ -107,6 +107,8 @@ function createHeroInstance(defId, team) {
     marks: [],
     gojoMarks: { blue: null, red: null },
     gojoBlock: 0,       // 五条被动存档
+    swordMarks: [],     // 剑仙“剑”标记
+    swordDomain: null,
     sukunaPhase: 0,
     stats: {
       dealt: 0,
@@ -230,6 +232,37 @@ function clearGojoMarks(hero) {
   marks.red = null;
 }
 
+function ensureSwordMarks(hero) {
+  if (!hero) return null;
+  if (!Array.isArray(hero.swordMarks)) hero.swordMarks = [];
+  return hero.swordMarks;
+}
+
+function addSwordMark(hero, x, y) {
+  const marks = ensureSwordMarks(hero);
+  if (!marks) return null;
+  const existing = marks.find(m => m.x === x && m.y === y);
+  if (existing) {
+  existing.count = (existing.count || 1) + 1;
+    return existing;
+  }
+  const mark = { x, y, count: 1 };
+  marks.push(mark);
+  return mark;
+}
+
+function consumeSwordMark(hero) {
+  const marks = ensureSwordMarks(hero);
+  if (!marks || !marks.length) return false;
+  const mark = marks.find(m => (m.count || 1) > 0);
+  if (!mark) return false;
+  mark.count = (mark.count || 1) - 1;
+  if (mark.count <= 0) {
+    const idx = marks.indexOf(mark);
+    if (idx >= 0) marks.splice(idx, 1);
+  }
+  return true;
+}
 function gojoSkillCells(hero, skillNo) {
   if (!hero || hero.defId !== 'gojo') return [];
   const cells = [];
@@ -785,7 +818,7 @@ function beginTurn(team, opts = {}) {
   teamHeroes(team).forEach(h => {
     if (h.dead) return;
     if (h.defId === "gojo") {
-      h.gojoBlock = unused;
+      h.gojoBlock = Math.min(unused, 4);
     }
   });
 
@@ -872,6 +905,20 @@ function processStartOfTurnEffects(team) {
       }
     }
   });
+
+  state.effects.forEach(effect => {
+    if (effect.type !== "swordDomain") return;
+    if (currentTurn < effect.nextTurn || currentTurn > effect.endTurn) return;
+    const owner = heroByUid(effect.ownerUid);
+    if (!owner || owner.dead) return;
+    const targets = state.heroes.filter(h => !h.dead && h.placed && h.team !== owner.team && Math.abs(h.x - effect.x) + Math.abs(h.y - effect.y) <= effect.radius);
+    targets.forEach(t => {
+      applyDamage(owner, t, 1, "万剑归宗");
+      addSwordMark(owner, t.x, t.y);
+    });
+    effect.nextTurn = currentTurn + 1;
+  });
+  state.effects = state.effects.filter(effect => !(effect.type === "swordDomain" && currentTurn > effect.endTurn));
 
   // 3) 处理山脉之神的减伤光环（如果有）
   // 这里不做回合扣减，因为其持续由 effect 控制。
@@ -988,7 +1035,16 @@ function applyDamage(source, target, rawDamage, reason = "伤害") {
   const mountainReductions = getMountainDamageReduction(target);
   reduction += mountainReductions;
 
-  const finalDamage = Math.max(0, rawDamage - reduction);
+  let finalDamage = Math.max(0, rawDamage - reduction);
+
+  if (target.defId === "sword" && rawDamage > 0 && finalDamage >= target.hp) {
+    if (consumeSwordMark(target)) {
+      const prevented = finalDamage - Math.max(target.hp - 1, 0);
+      finalDamage = Math.max(target.hp - 1, 0);
+      reduction += prevented;
+      log(`【${target.name}】消耗 1 个“剑”标记抵挡了致命伤害。`);
+    }
+  }
 
   if (finalDamage > 0) {
     target.hp -= finalDamage;
@@ -996,6 +1052,11 @@ function applyDamage(source, target, rawDamage, reason = "伤害") {
     if (source) source.stats.dealt += finalDamage;
     if (source) spawnCombatFx(source, target);
     log(`${source ? source.name : "系统"} 对 ${target.name} 造成 ${finalDamage} 点${reason === "伤害" ? "伤害" : reason}。`);
+    if (source && source.defId === "sword" && finalDamage > 0) {
+      const healed = Math.ceil(finalDamage / 2);
+      source.hp = Math.min(source.maxHp, source.hp + healed);
+      log(`【${source.name}】触发剑心回响，回复 ${healed} 点生命。`);
+    }
   } else {
     log(`${target.name} 完全抵挡了这次${reason}。`);
   }
@@ -1375,6 +1436,8 @@ function renderGrid() {
           cell.classList.add("domainHint", "domainSukuna", "domainPulse");
         } else if (e.type === "nightDomain") {
           cell.classList.add("domainHint", "domainNight", "domainPulse");
+        } else if (e.type === "swordDomain") {
+          cell.classList.add("domainHint", "domainSword", "domainPulse");
         } else if (e.type === "mountainBarrier") {
           cell.classList.add("blockHint", "barrierHint");
         } else if (e.type === "mountainShield") {
@@ -1408,6 +1471,14 @@ function renderGrid() {
         if (h.defId === "gojo" && h.gojoMarks) {
           if (h.gojoMarks.blue && h.gojoMarks.blue.x === x && h.gojoMarks.blue.y === y) markBits.push({ text: "苍标记", cls: "gojoBlueMarkLabel" });
           if (h.gojoMarks.red && h.gojoMarks.red.x === x && h.gojoMarks.red.y === y) markBits.push({ text: "赫标记", cls: "gojoRedMarkLabel" });
+        }
+        if (h.defId === "sword" && Array.isArray(h.swordMarks)) {
+          h.swordMarks.forEach(mark => {
+            if (mark.x === x && mark.y === y) {
+              const count = mark.count || 1;
+              markBits.push({ text: count > 1 ? `剑${count}` : "剑标记", cls: "swordMarkLabel" });
+            }
+          });
         }
       });
       if (markBits.length) {
@@ -1565,6 +1636,10 @@ function formatHeroFx(hero) {
     if (hero.gojoMarks.blue) fx.push(`苍(${hero.gojoMarks.blue.x},${hero.gojoMarks.blue.y})`);
     if (hero.gojoMarks.red) fx.push(`赫(${hero.gojoMarks.red.x},${hero.gojoMarks.red.y})`);
   }
+  if (hero.defId === "sword" && Array.isArray(hero.swordMarks) && hero.swordMarks.length) {
+    const total = hero.swordMarks.reduce((sum, m) => sum + (m.count || 1), 0);
+    fx.push(`剑${total}`);
+  }
   if (hero.defId === "archer" && hero.buffs.archerFreeMove > 0) fx.push(`轻步${hero.buffs.archerFreeMove}回合`);
   if (hero.marks.length > 0) fx.push(`标记${hero.marks.length}`);
   return fx.join(" | ");
@@ -1703,10 +1778,18 @@ function isSkillAvailable(hero, skillNo) {
 
   // 这里统一做“条件判断”
   if (hero.defId === "sword" && skillNo === 1) {
-    return teamAP(hero.team) >= 2 && hero.hp > 1;
+    return true;
   }
 
   if (hero.defId === "sword" && skillNo === 2) {
+    return teamAP(hero.team) >= 5 && skillTargets(hero, 2).length > 0;
+  }
+
+  if (hero.defId === "sword" && skillNo === 3) {
+    return teamAP(hero.team) >= 10;
+  }
+
+  if (hero.defId === "sukuna" && skillNo === 2) {
     return teamAP(hero.team) >= 5 && skillTargets(hero, 2).length > 0;
   }
 
@@ -1947,11 +2030,21 @@ function useSkill(hero, skillNo) {
   state.pendingAction = null;
 
   if (hero.defId === "sword" && skillNo === 1) {
-    resolveSwordSkill1(hero);
+    log(`【${hero.name}】的被动【剑心回响】已自动生效。`);
     return;
   }
 
   if (hero.defId === "sword" && skillNo === 2) {
+    showTargetSelection(hero, skillNo, "swordSkill2", "选择目标", "请选择 2 格内敌方英雄，突刺到其身后并造成 4 点伤害。");
+    return;
+  }
+
+  if (hero.defId === "sword" && skillNo === 3) {
+    resolveSwordSkill3(hero);
+    return;
+  }
+
+  if (hero.defId === "sukuna" && skillNo === 1) {
     showTargetSelection(hero, skillNo, "swordSkill2", "选择目标", "请选择 2 格内敌方英雄，突刺到其身后并造成 4 点伤害。");
     return;
   }
@@ -2117,12 +2210,7 @@ function chooseCellAction(pending, x, y) {
 // 各英雄技能结算
 // ----------------------
 function resolveSwordSkill1(hero) {
-  if (teamAP(hero.team) < 2) return;
-  state.ap[hero.team] -= 2;
-  hero.tempAtkBonus += 1;
-  hero.hp -= 1;
-  log(`【${hero.name}】发动一式·血刃：本回合攻击力 +1，并失去 1 点生命。`);
-  renderAll();
+  log(`【${hero.name}】的被动【剑心回响】已自动生效。`);
 }
 
 function resolveSwordSkill2(hero, target) {
@@ -2145,8 +2233,12 @@ function resolveSwordSkill2(hero, target) {
     log(`【${hero.name}】突刺到目标身后 (${backX},${backY})。`);
   }
 
-  hero.frozenTurns = Math.max(hero.frozenTurns, 2);
-  log(`【${hero.name}】进入冻结状态 2 回合。`);
+  const splashTargets = state.heroes.filter(h => !h.dead && h.placed && h.team !== hero.team && h.uid !== target.uid && Math.abs(h.x - hero.x) + Math.abs(h.y - hero.y) <= 1);
+  if (splashTargets.length) {
+    splashTargets.forEach(t => applyDamage(hero, t, 2, "突刺余波"));
+    log(`【${hero.name}】突刺穿过目标后，震荡了 ${splashTargets.length} 名周围敌方英雄。`);
+  }
+
   checkGameOver();
   renderAll();
 }
@@ -2292,6 +2384,27 @@ function resolveGojoSkill5(hero) {
   renderAll();
 }
 
+function resolveSwordSkill3(hero) {
+  if (teamAP(hero.team) < 10) return;
+  state.ap[hero.team] -= 10;
+
+  state.effects = state.effects.filter(effect => !(effect.type === "swordDomain" && effect.ownerUid === hero.uid));
+
+  hero.hp = 1;
+  state.effects.push({
+    type: "swordDomain",
+    ownerUid: hero.uid,
+    team: hero.team,
+    x: hero.x,
+    y: hero.y,
+    radius: 1,
+    nextTurn: state.turn + 1,
+    endTurn: state.turn + 2
+  });
+
+  log(`【${hero.name}】展开终式·万剑归宗：领域持续 2 回合，开启时血量降至 1。`);
+  renderAll();
+}
 function resolveArcherSkill1(hero, target) {
   if (!target || target.team === hero.team) return;
   if (teamAP(hero.team) < 2) return;

@@ -328,6 +328,12 @@ img{max-width:100%;display:block}
   color:#f3ecff;
   border-color:rgba(176,139,255,.42);
 }
+.swordMarkLabel{
+  background:rgba(245,208,112,.22);
+  color:#fff7d9;
+  border-color:rgba(245,208,112,.42);
+}
+.domainSword{background:rgba(245,208,112,.14)!important; outline:2px solid rgba(245,208,112,.42)}
 .selected{
   outline:2px solid #f4c15d;
   box-shadow:0 0 0 2px rgba(241,196,107,.18), inset 0 0 0 1px rgba(0,0,0,.36);
@@ -497,7 +503,8 @@ img{max-width:100%;display:block}
   padding:10px;
   line-height:1.5;
 }
-.skillDetailHead{display:flex;gap:10px;align-items:center;margin-bottom:4px}
+.skillDetailHead{display:flex;gap:10px;align-items:flex-start;margin-bottom:4px}
+.skillDetailTitleWrap{flex:1;min-width:0}
 .skillIconSlot{
   width:42px;
   height:42px;
@@ -523,8 +530,8 @@ img{max-width:100%;display:block}
   letter-spacing:.04em;
 }
 .assetFallback.hidden,.hidden{display:none !important}
-.skillDetail strong{display:block;margin-bottom:4px}
-.smallCaps{font-size:11px;letter-spacing:.06em;color:var(--muted)}
+.skillDetail strong{display:block;margin-bottom:4px;overflow-wrap:anywhere;word-break:break-word}
+.smallCaps{font-size:11px;letter-spacing:.06em;color:var(--muted);overflow-wrap:anywhere;word-break:break-word}
 .heroCard{
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.08);
@@ -595,7 +602,7 @@ img{max-width:100%;display:block}
 }
 .heroBriefMain{flex:1;min-width:0}
 .heroTitle{font-size:18px;font-weight:900;margin-bottom:4px}
-.heroMeta{font-size:12px;color:var(--muted);line-height:1.55}
+.heroMeta{font-size:12px;color:var(--muted);line-height:1.55;overflow-wrap:anywhere;word-break:break-word}
 .skillChipRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .skillChip{
   display:inline-flex;
