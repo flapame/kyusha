@@ -2266,7 +2266,7 @@ function resolveGojoSkill5(hero) {
   const blue = { ...marks.blue };
   const red = { ...marks.red };
   const center = { x: (blue.x + red.x) / 2, y: (blue.y + red.y) / 2 };
-  const radius = 1.5;
+  const radius = Math.hypot(blue.x - red.x, blue.y - red.y) / 2;
 
   state.ap[hero.team] -= 10;
   clearGojoMarks(hero);
