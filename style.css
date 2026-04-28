@@ -339,14 +339,15 @@ img{max-width:100%;display:block}
 
 .unit{
   position:absolute;
-  inset:4px;
+  inset:3px;
   border-radius:10px;
   display:flex;
   flex-direction:column;
-  align-items:center;
+  align-items:stretch;
   justify-content:flex-start;
-  padding:4px 4px 6px;
-  gap:4px;
+  padding:3px;
+  gap:2px;
+  box-sizing:border-box;
   background:rgba(0,0,0,.16);
   border:1px solid rgba(255,255,255,.06);
   backdrop-filter:blur(2px);
@@ -356,7 +357,8 @@ img{max-width:100%;display:block}
 .unit.red{box-shadow:0 0 0 1px rgba(255,109,125,.45), inset 0 0 10px rgba(255,109,125,.08)}
 .unitAvatarShell{
   width:100%;
-  aspect-ratio:1;
+  flex:1 1 auto;
+  min-height:0;
   border-radius:8px;
   overflow:hidden;
   background:#0c1018;
@@ -382,21 +384,25 @@ img{max-width:100%;display:block}
   color:#fff;
   background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.03));
 }
-.miniBarStack{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.miniBarStack{display:flex;flex-direction:column;gap:2px;margin-top:0}
 .unitHpBar.gojoBlock>span{background:linear-gradient(90deg,#b08bff,#6d28d9)}
 .unitHpBar{
   width:100%;
-  height:6px;
+  height:5px;
   border-radius:999px;
   background:rgba(255,255,255,.12);
   overflow:hidden;
+  flex:0 0 auto;
 }
 .unitHpBar>span{display:block;height:100%;background:linear-gradient(90deg,#f4c15d,#2fd071)}
 .unitHpText{
-  font-size:10px;
+  font-size:9px;
+  line-height:1;
   font-weight:800;
   color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,.8);
+  flex:0 0 auto;
+  white-space:nowrap;
 }
 .cellFx{
   position:absolute;
@@ -832,9 +838,9 @@ img{max-width:100%;display:block}
   .boardMain{grid-template-columns:16px minmax(0,1fr)}
   .grid{gap:3px}
   .cell{border-radius:8px}
-  .unitAvatarShell{width:26px;height:26px;border-radius:9px}
+  .unitAvatarShell{width:100%;border-radius:8px}
   .unitHpBar{height:4px}
-  .unitHpText{font-size:9px}
+  .unitHpText{font-size:8px}
   .heroCard{padding:7px}
   .heroBrief{gap:8px}
   .avatar,.heroAvatarShell{width:48px;height:48px;border-radius:14px}
@@ -931,9 +937,9 @@ img{max-width:100%;display:block}
   .boardMain{grid-template-columns:16px minmax(0,1fr)}
   .grid{gap:3px}
   .cell{border-radius:8px}
-  .unitAvatarShell{width:26px;height:26px;border-radius:9px}
+  .unitAvatarShell{width:100%;border-radius:8px}
   .unitHpBar{height:4px}
-  .unitHpText{font-size:9px}
+  .unitHpText{font-size:8px}
   .heroCard{padding:7px}
   .heroBrief{gap:8px}
   .avatar,.heroAvatarShell{width:48px;height:48px;border-radius:14px}
