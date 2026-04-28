@@ -1055,3 +1055,43 @@ img{max-width:100%;display:block}
   35%{opacity:1}
   100%{transform:scale(2.15);opacity:0}
 }
+
+/* 手机端英雄信息卡适配：只调整 selectedInfo，避免文字被挤成竖排 */
+@media (max-width: 700px){
+  .actionDock .actionDockGrid,
+  .actionDock .actionDockPane{
+    width:100%;
+    min-width:0;
+  }
+  #selectedInfo{
+    width:100%;
+    min-width:0;
+    box-sizing:border-box;
+  }
+  #selectedInfo .heroBrief{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+  }
+  #selectedInfo .heroBriefMain{
+    width:100%;
+    min-width:0;
+  }
+  #selectedInfo .heroMeta{
+    width:100%;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+  #selectedInfo .miniBarStack,
+  #selectedInfo .skillChipRow{
+    width:100%;
+  }
+  #selectedInfo .skillChipRow{
+    justify-content:flex-start;
+  }
+  #selectedInfo .heroTitle{
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+}
