@@ -127,7 +127,6 @@ window.HERO_DEFS = {
     name: "五条悟",
     teamColor: "blue",
     avatar: "avatars/gojo.png",
-    phase2Avatar: "avatars/gojo_phase2.png",
     effects: {
       attack: "assets/effects/attack_03.png",
       hit: "assets/effects/hit_03.png"
@@ -136,8 +135,8 @@ window.HERO_DEFS = {
     atk: 3,
     attackRange: 1,
     attackCost: 2,
-    spawnHint: "高爆发中距离角色，擅长无下限防御、苍/赫与领域控制。",
-    passive: "若上回合仍有未使用的行动点，则会将这些行动点转化为『无下限防御』。当本回合受到伤害时，先消耗该防御值抵挡伤害；若防御值不足，则剩余伤害扣血。第一次释放领域后会进入二阶段，并解锁虚式•茈。",
+    spawnHint: "高爆发中距离角色，擅长防御与领域控制。",
+    passive: "若上回合仍有未使用的行动点，则会将这些行动点转化为『无下限防御』。当本回合受到伤害时，先消耗该防御值抵挡伤害；若防御值不足，则剩余伤害扣血。",
     skills: [
       {
         no: 1,
@@ -148,32 +147,10 @@ window.HERO_DEFS = {
       },
       {
         no: 2,
-        title: "苍",
-        costText: "3 行动点",
-        desc: "对自身周围 1 格内的敌方英雄造成 2 点伤害；也可对周围 1 格内空格释放并留下苍标记。同一时间只会存在一个苍标记。",
-        icon: "assets/skills/gojo_skill2.png"
-      },
-      {
-        no: 3,
-        title: "赫",
-        costText: "3 行动点",
-        desc: "对自身周围 3 格内的敌方英雄造成 2 点伤害，并在目标格留下赫标记。同一时间只会存在一个赫标记。",
-        icon: "assets/skills/gojo_skill3.png"
-      },
-      {
-        no: 4,
         title: "领域·无量空处",
         costText: "10 行动点",
-        desc: "以自身为中心，2 格范围内形成领域。领域持续 2 回合；在两回合后开始时，对领域内除自身外所有角色造成 2 点伤害并冻结 2 回合。第一次释放后进入二阶段。",
-        icon: "assets/skills/gojo_skill4.png"
-      },
-      {
-        no: 5,
-        title: "虚式•茈",
-        costText: "10 行动点",
-        desc: "若场上同时存在苍标记与赫标记，则会在两标记连线中点处形成圆形范围，对范围内所有英雄（包括自身）造成 10 点伤害；结算后苍与赫标记消失。",
-        icon: "assets/skills/gojo_skill5.png",
-        phase2Only: true
+        desc: "以自身为中心，2 格范围内形成领域。领域持续 2 回合；在两回合后开始时，对领域内除自身外所有角色造成 2 点伤害并冻结 2 回合。若本次领域总伤害超过 7 点，则额外获得 1 个回合，但该额外回合的行动点上限为 4 点。",
+        icon: "assets/skills/gojo_skill2.png"
       }
     ]
   },

@@ -62,8 +62,6 @@ const state = {
   barriers: [],
   logs: [],
   floatingTexts: [],
-  gojoFx: [],
-  suspendGameOverCheck: false,
   // 记录上一回合结束时剩余的行动点数（给五条悟的无下限防御使用）
   lastUnusedAp: { blue: 0, red: 0 },
   // 每个阵营自己的回合计数，用来控制“自动回复 + 逐回合上涨”的行动点数
@@ -105,7 +103,6 @@ function createHeroInstance(defId, team) {
     stunnedTurns: 0,    // 这种状态相当于“无法行动”
     burnTurns: 0,
     marks: [],
-    gojoMarks: { blue: null, red: null },
     gojoBlock: 0,       // 五条被动存档
     sukunaPhase: 0,
     stats: {
@@ -173,7 +170,7 @@ function heroAvatarMarkup(hero, kind = "avatar") {
   const letter = escapeHtml((hero?.name || def?.name || "?").slice(0, 1));
 
   if (kind === "unit") {
-    const blockBadge = hero?.defId === "gojo" ? `<div class="unitBlockBadge">防御 ${hero.gojoBlock || 0}</div>` : "";
+    const blockBadge = hero?.defId === "gojo" ? `<div class="unitBlockBadge">🛡️ 格挡 ${hero.gojoBlock || 0}</div>` : "";
     return `<div class="unitAvatarWrap"><div class="unitAvatarShell">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'unitAvatar', `<div class="unitAvatarFallback hidden">${letter}</div>`)}</div>${blockBadge}</div>`;
   }
 
@@ -182,7 +179,7 @@ function heroAvatarMarkup(hero, kind = "avatar") {
   }
 
   const team = hero?.team || def?.teamColor || "blue";
-  const blockBadge = hero?.defId === "gojo" ? `<div class="avatarBlockBadge">防御 ${hero.gojoBlock || 0}</div>` : "";
+  const blockBadge = hero?.defId === "gojo" ? `<div class="avatarBlockBadge">🛡️ 格挡 ${hero.gojoBlock || 0}</div>` : "";
   return `<div class="avatarWrap"><div class="avatar ${escapeHtml(team)}">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'avatarImg', `<div class="avatarFallback hidden">${letter}</div>`)}</div>${blockBadge}</div>`;
 }
 
@@ -190,6 +187,7 @@ function visibleSkills(hero) {
   if (!hero) return [];
   const def = heroDef(hero);
   if (!def || !Array.isArray(def.skills)) return [];
+  if (hero.defId !== 'sukuna') return def.skills.slice();
   return def.skills.filter(s => hero.phase2 ? !s.phase1Only : !s.phase2Only);
 }
 
@@ -197,75 +195,6 @@ function heroEffectAsset(hero, kind) {
   const def = hero ? heroDef(hero) : null;
   if (!def || !def.effects) return "";
   return def.effects[kind] || "";
-}
-
-function ensureGojoMarks(hero) {
-  if (!hero) return null;
-  if (!hero.gojoMarks) hero.gojoMarks = { blue: null, red: null };
-  return hero.gojoMarks;
-}
-
-function gojoMarkAt(x, y, ownerUid = null) {
-  return state.heroes
-    .filter(h => h.defId === 'gojo' && h.gojoMarks && (!ownerUid || h.uid === ownerUid))
-    .flatMap(h => [
-      h.gojoMarks.blue ? { ...h.gojoMarks.blue, type: 'gojoBlue', owner: h.uid } : null,
-      h.gojoMarks.red ? { ...h.gojoMarks.red, type: 'gojoRed', owner: h.uid } : null
-    ])
-    .filter(Boolean)
-    .find(m => m.x === x && m.y === y && (!ownerUid || m.owner === ownerUid)) || null;
-}
-
-function setGojoMark(hero, kind, x, y) {
-  const marks = ensureGojoMarks(hero);
-  if (!marks) return null;
-  marks[kind] = { x, y, owner: hero.uid, team: hero.team };
-  return marks[kind];
-}
-
-function clearGojoMarks(hero) {
-  const marks = ensureGojoMarks(hero);
-  if (!marks) return;
-  marks.blue = null;
-  marks.red = null;
-}
-
-function gojoSkillCells(hero, skillNo) {
-  if (!hero || hero.defId !== 'gojo') return [];
-  const cells = [];
-  if (skillNo === 2) {
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        const x = hero.x + dx;
-        const y = hero.y + dy;
-        if (!inBounds(x, y)) continue;
-        if (dx === 0 && dy === 0) continue;
-        const occupant = heroAt(x, y);
-        if (occupant && occupant.team === hero.team) continue;
-        cells.push({ x, y });
-      }
-    }
-  }
-  if (skillNo === 3) {
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        if (Math.max(Math.abs(x - hero.x), Math.abs(y - hero.y)) > 3) continue;
-        const occupant = heroAt(x, y);
-        if (!occupant || occupant.team === hero.team) continue;
-        cells.push({ x, y });
-      }
-    }
-  }
-  return cells;
-}
-
-function gojoMarkSummary(hero) {
-  const marks = ensureGojoMarks(hero);
-  if (!marks) return '无';
-  const parts = [];
-  if (marks.blue) parts.push(`苍(${marks.blue.x},${marks.blue.y})`);
-  if (marks.red) parts.push(`赫(${marks.red.x},${marks.red.y})`);
-  return parts.length ? parts.join(' | ') : '无';
 }
 
 function spawnFx(x, y, src, ttl = 560) {
@@ -308,31 +237,6 @@ function spawnSukunaSlashFx(lines, ttl = 2000) {
     state.sukunaLineFx = state.sukunaLineFx.filter(f => f.id !== id);
     renderAll();
   }, ttl);
-}
-
-function pushGojoFx(effect, ttl = 900) {
-  const id = effect.id || `gfx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-  state.gojoFx.push({ ...effect, id });
-  renderAll();
-  window.setTimeout(() => {
-    state.gojoFx = state.gojoFx.filter(f => f.id !== id);
-    renderAll();
-  }, ttl);
-}
-
-function spawnGojoMizushiFx(markA, markB, center) {
-  if (!markA || !markB || !center) return;
-  pushGojoFx({ type: 'line', from: markA, to: markB }, 1100);
-  window.setTimeout(() => {
-    pushGojoFx({ type: 'pull', from: markA, to: center, color: 'blue' }, 820);
-    pushGojoFx({ type: 'pull', from: markB, to: center, color: 'red' }, 820);
-  }, 140);
-  window.setTimeout(() => {
-    pushGojoFx({ type: 'core', at: center }, 520);
-  }, 560);
-  window.setTimeout(() => {
-    pushGojoFx({ type: 'boom', at: center }, 720);
-  }, 860);
 }
 
 function addSukunaMark(hero, x, y) {
@@ -454,7 +358,6 @@ function startDraft() {
   state.effects = [];
   state.fx = [];
   state.sukunaLineFx = [];
-  state.gojoFx = [];
   state.floatingTexts = [];
   state.barriers = [];
   state.bonusTurn = null;
@@ -1028,7 +931,7 @@ function applyDamage(source, target, rawDamage, reason = "伤害") {
 
   updateHud();
   renderAll();
-  if (!state.suspendGameOverCheck) checkGameOver();
+  checkGameOver();
   return { dealt: finalDamage, reduced: reduction, final: finalDamage };
 }
 
@@ -1242,16 +1145,7 @@ function skillTargets(hero, skillNo) {
     return state.heroes.filter(t => t.team !== hero.team && !t.dead && t.placed && manhattan(hero, t) <= 2);
   }
 
-  if (hero.defId === "gojo" && (skillNo === 2 || skillNo === 3)) {
-    return skillCells(hero, skillNo).map(c => ({ x: c.x, y: c.y }));
-  }
-
   return [];
-}
-
-function skillCells(hero, skillNo) {
-  if (hero.defId === "gojo" && (skillNo === 2 || skillNo === 3)) return gojoSkillCells(hero, skillNo);
-  return skillTargets(hero, skillNo);
 }
 
 function manhattan(a, b) {
@@ -1349,15 +1243,6 @@ function renderGrid() {
         if (targets.some(t => t.x === x && t.y === y)) cell.classList.add("attackHint");
       }
 
-      if (state.phase === "battle" && state.pendingAction && state.pendingAction.kind === "skillCell") {
-        const p = state.pendingAction;
-        const hero = heroByUid(p.heroUid);
-        if (hero) {
-          const cells = skillCells(hero, p.skillNo);
-          if (cells.some(c => c.x === x && c.y === y)) cell.classList.add("targetHint");
-        }
-      }
-
       state.effects.forEach(e => {
         const within = (() => {
           if (e.type === "mountainBarrier") {
@@ -1398,29 +1283,12 @@ function renderGrid() {
         cell.appendChild(unit);
       }
 
-      const markBits = [];
-      state.heroes.forEach(h => {
-        if (h.defId === "sukuna" && h.marks) {
-          h.marks.forEach((m, idx) => {
-            if (m.x === x && m.y === y) markBits.push({ text: "解标记", cls: "sukunaMarkLabel", order: idx });
-          });
-        }
-        if (h.defId === "gojo" && h.gojoMarks) {
-          if (h.gojoMarks.blue && h.gojoMarks.blue.x === x && h.gojoMarks.blue.y === y) markBits.push({ text: "苍标记", cls: "gojoBlueMarkLabel" });
-          if (h.gojoMarks.red && h.gojoMarks.red.x === x && h.gojoMarks.red.y === y) markBits.push({ text: "赫标记", cls: "gojoRedMarkLabel" });
-        }
-      });
-      if (markBits.length) {
-        const stack = document.createElement("div");
-        stack.className = "cellMarkStack";
-        markBits.forEach((bit, idx) => {
-          const mark = document.createElement("div");
-          mark.className = `${bit.cls}`;
-          mark.textContent = bit.text;
-          mark.style.transform = `translateX(${idx % 2 === 0 ? 0 : 8}px)`;
-          stack.appendChild(mark);
-        });
-        cell.appendChild(stack);
+      const markHere = state.heroes.some(h => h.defId === "sukuna" && h.marks.some(m => m.x === x && m.y === y));
+      if (markHere) {
+        const mark = document.createElement("div");
+        mark.className = "sukunaMarkLabel";
+        mark.textContent = "解标记";
+        cell.appendChild(mark);
       }
 
       const fxItems = state.fx.filter(f => f.x === x && f.y === y);
@@ -1457,20 +1325,6 @@ function renderBoardTransientLayer() {
     cellRects.set(keyOf(x, y), cell.getBoundingClientRect());
   });
 
-  const cellCenter = (x, y) => {
-    const ref = cellRects.get(keyOf(Math.max(0, Math.min(W - 1, Math.floor(x))), Math.max(0, Math.min(H - 1, Math.floor(y)))));
-    const rightRef = cellRects.get(keyOf(Math.max(0, Math.min(W - 1, Math.ceil(x))), Math.max(0, Math.min(H - 1, Math.floor(y)))));
-    const downRef = cellRects.get(keyOf(Math.max(0, Math.min(W - 1, Math.floor(x))), Math.max(0, Math.min(H - 1, Math.ceil(y)))));
-    const base = cellRects.get(keyOf(0, 0));
-    const stepX = rightRef && ref ? (rightRef.left - ref.left) : (base ? base.width : 40);
-    const stepY = downRef && ref ? (downRef.top - ref.top) : (base ? base.height : 40);
-    if (!ref) return { x: 0, y: 0 };
-    return {
-      x: (ref.left - gridRect.left + ref.width / 2) + (x - Math.floor(x)) * stepX,
-      y: (ref.top - gridRect.top + ref.height / 2) + (y - Math.floor(y)) * stepY
-    };
-  };
-
   state.sukunaLineFx.forEach(fx => {
     fx.lines.forEach(line => {
       const fromRect = cellRects.get(keyOf(line.from.x, line.from.y));
@@ -1494,53 +1348,6 @@ function renderBoardTransientLayer() {
     });
   });
 
-  state.gojoFx.forEach(fx => {
-    if (fx.type === 'line') {
-      const fromRect = cellRects.get(keyOf(fx.from.x, fx.from.y));
-      const toRect = cellRects.get(keyOf(fx.to.x, fx.to.y));
-      if (!fromRect || !toRect) return;
-      const sx = fromRect.left - gridRect.left + fromRect.width / 2;
-      const sy = fromRect.top - gridRect.top + fromRect.height / 2;
-      const ex = toRect.left - gridRect.left + toRect.width / 2;
-      const ey = toRect.top - gridRect.top + toRect.height / 2;
-      const dx = ex - sx;
-      const dy = ey - sy;
-      const len = Math.max(24, Math.hypot(dx, dy));
-      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-      const line = document.createElement('div');
-      line.className = 'boardFxGojoLine';
-      line.style.left = `${sx}px`;
-      line.style.top = `${sy}px`;
-      line.style.width = `${len}px`;
-      line.style.transform = `translateY(-50%) rotate(${angle}deg)`;
-      layer.appendChild(line);
-    } else if (fx.type === 'pull') {
-      const from = cellCenter(fx.from.x, fx.from.y);
-      const to = cellCenter(fx.to.x, fx.to.y);
-      const orb = document.createElement('div');
-      orb.className = `boardFxGojoOrb ${fx.color === 'red' ? 'red' : 'blue'} gojoPull`; 
-      orb.style.left = `${from.x}px`;
-      orb.style.top = `${from.y}px`;
-      orb.style.setProperty('--gojo-to-x', `${to.x - from.x}px`);
-      orb.style.setProperty('--gojo-to-y', `${to.y - from.y}px`);
-      layer.appendChild(orb);
-    } else if (fx.type === 'core') {
-      const pos = cellCenter(fx.at.x, fx.at.y);
-      const core = document.createElement('div');
-      core.className = 'boardFxGojoCore';
-      core.style.left = `${pos.x}px`;
-      core.style.top = `${pos.y}px`;
-      layer.appendChild(core);
-    } else if (fx.type === 'boom') {
-      const pos = cellCenter(fx.at.x, fx.at.y);
-      const boom = document.createElement('div');
-      boom.className = 'boardFxGojoBoom';
-      boom.style.left = `${pos.x}px`;
-      boom.style.top = `${pos.y}px`;
-      layer.appendChild(boom);
-    }
-  });
-
   state.floatingTexts.forEach(t => {
     const rect = cellRects.get(keyOf(t.x, t.y));
     if (!rect) return;
@@ -1561,10 +1368,6 @@ function formatHeroFx(hero) {
   if (hero.rootedTurns > 0) fx.push(`缠绕${hero.rootedTurns}`);
   if (hero.burnTurns > 0) fx.push(`灼烧${hero.burnTurns}`);
   if (hero.defId === "gojo" && hero.gojoBlock > 0) fx.push(`防御${hero.gojoBlock}`);
-  if (hero.defId === "gojo" && hero.gojoMarks) {
-    if (hero.gojoMarks.blue) fx.push(`苍(${hero.gojoMarks.blue.x},${hero.gojoMarks.blue.y})`);
-    if (hero.gojoMarks.red) fx.push(`赫(${hero.gojoMarks.red.x},${hero.gojoMarks.red.y})`);
-  }
   if (hero.defId === "archer" && hero.buffs.archerFreeMove > 0) fx.push(`轻步${hero.buffs.archerFreeMove}回合`);
   if (hero.marks.length > 0) fx.push(`标记${hero.marks.length}`);
   return fx.join(" | ");
@@ -1609,7 +1412,6 @@ function renderSelectedPanel(hero) {
 
   const statusText = formatHeroFx(hero) || "无";
   const gojoBlockPct = hero.defId === "gojo" ? clamp((hero.gojoBlock / Math.max(hero.maxHp, 1)) * 100, 0, 100) : 0;
-  const gojoPhaseLabel = hero.defId === "gojo" ? (hero.phase2 ? "二阶段" : "一阶段") : "";
 
   summary.innerHTML = `
     <div class="heroCard">
@@ -1621,7 +1423,7 @@ function renderSelectedPanel(hero) {
             阵营：${TEAM[hero.team].name}<br>
             生命：${hero.hp}/${hero.maxHp}　攻击：${hero.atk}　普攻范围：${hero.attackRange}<br>
             普攻消耗：${hero.attackCost}　普通攻击次数：${hero.attackTimesThisTurn}/2<br>
-            ${hero.defId === "gojo" ? `形态：${gojoPhaseLabel}<br>` : ""}
+            ${hero.defId === "gojo" ? `格挡：🛡️ ${hero.gojoBlock || 0}` : ""}
           </div>
           <div class="miniBarStack">
             <div class="unitHpBar"><span style="width:${clamp((hero.hp / hero.maxHp) * 100, 0, 100)}%"></span></div>
@@ -1636,7 +1438,6 @@ function renderSelectedPanel(hero) {
       <div class="heroMeta">
         <div><strong style="color:#fff">被动：</strong>${escapeHtml(def.passive)}</div>
         <div style="margin-top:6px"><strong style="color:#fff">当前状态：</strong>${escapeHtml(statusText)}</div>
-        ${hero.defId === "gojo" ? `<div style="margin-top:6px"><strong style="color:#fff">苍/赫：</strong>${escapeHtml(gojoMarkSummary(hero))}</div>` : ""}
       </div>
     </div>
 
@@ -1721,19 +1522,7 @@ function isSkillAvailable(hero, skillNo) {
   }
 
   if (hero.defId === "gojo" && skillNo === 2) {
-    return teamAP(hero.team) >= 3 && gojoSkillCells(hero, 2).length > 0;
-  }
-
-  if (hero.defId === "gojo" && skillNo === 3) {
-    return teamAP(hero.team) >= 3 && gojoSkillCells(hero, 3).length > 0;
-  }
-
-  if (hero.defId === "gojo" && skillNo === 4) {
     return teamAP(hero.team) >= 10;
-  }
-
-  if (hero.defId === "gojo" && skillNo === 5) {
-    return hero.phase2 && teamAP(hero.team) >= 10 && hasGojoMizushi(hero);
   }
 
   if (hero.defId === "archer" && skillNo === 1) {
@@ -1809,10 +1598,6 @@ function onCellTap(x, y) {
     const p = state.pendingAction;
     if (p.kind === "skillTarget" && target) {
       chooseTargetAction(p, target);
-      return;
-    }
-    if (p.kind === "skillCell") {
-      chooseCellAction(p, x, y);
       return;
     }
   }
@@ -1973,22 +1758,7 @@ function useSkill(hero, skillNo) {
   }
 
   if (hero.defId === "gojo" && skillNo === 2) {
-    showCellSelection(hero, skillNo, "gojoSkill2", "选择苍目标", "请选择自身周围 1 格内的空格或敌方英雄，释放苍并留下苍标记。");
-    return;
-  }
-
-  if (hero.defId === "gojo" && skillNo === 3) {
-    showCellSelection(hero, skillNo, "gojoSkill3", "选择赫目标", "请选择自身周围 3 格内的敌方英雄，造成 2 点伤害并留下赫标记。");
-    return;
-  }
-
-  if (hero.defId === "gojo" && skillNo === 4) {
-    resolveGojoSkill4(hero);
-    return;
-  }
-
-  if (hero.defId === "gojo" && skillNo === 5) {
-    resolveGojoSkill5(hero);
+    resolveGojoSkill2(hero);
     return;
   }
 
@@ -2046,19 +1816,6 @@ function showTargetSelection(hero, skillNo, actionKey, title, desc) {
   log(`【${hero.name}】请选择技能目标。`);
 }
 
-function showCellSelection(hero, skillNo, actionKey, title, desc) {
-  state.pendingAction = {
-    kind: "skillCell",
-    heroUid: hero.uid,
-    skillNo,
-    actionKey,
-    title,
-    desc
-  };
-  renderAll();
-  log(`【${hero.name}】请选择释放位置。`);
-}
-
 function showDirectionPicker(hero) {
   openOverlay(`
     <h2>选择方向</h2>
@@ -2091,21 +1848,6 @@ function chooseTargetAction(pending, targetHero) {
     resolveArcherSkill3(hero, targetHero);
   } else if (pending.actionKey === "nightSkill1") {
     resolveNightSkill1(hero, targetHero);
-  }
-
-  state.pendingAction = null;
-  state.selectedMode = "move";
-  renderAll();
-}
-
-function chooseCellAction(pending, x, y) {
-  const hero = heroByUid(pending.heroUid);
-  if (!hero || hero.dead) return;
-
-  if (pending.actionKey === "gojoSkill2") {
-    resolveGojoSkill2(hero, x, y);
-  } else if (pending.actionKey === "gojoSkill3") {
-    resolveGojoSkill3(hero, x, y);
   }
 
   state.pendingAction = null;
@@ -2199,37 +1941,7 @@ function resolveSukunaSkill5(hero) {
   renderAll();
 }
 
-function resolveGojoSkill2(hero, x, y) {
-  if (teamAP(hero.team) < 3) return;
-  if (Math.max(Math.abs(hero.x - x), Math.abs(hero.y - y)) > 1) return;
-  const occupant = heroAt(x, y);
-  if (occupant && occupant.team === hero.team) return;
-
-  state.ap[hero.team] -= 3;
-  if (occupant && occupant.team !== hero.team) {
-    applyDamage(hero, occupant, 2, "苍");
-  }
-  setGojoMark(hero, "blue", x, y);
-  spawnFloatingText(x, y, "苍", 1200, "domainFloatText");
-  log(`【${hero.name}】释放苍，并在 (${x},${y}) 留下苍标记。`);
-  renderAll();
-}
-
-function resolveGojoSkill3(hero, x, y) {
-  if (teamAP(hero.team) < 3) return;
-  if (Math.max(Math.abs(hero.x - x), Math.abs(hero.y - y)) > 3) return;
-  const occupant = heroAt(x, y);
-  if (!occupant || occupant.team === hero.team) return;
-
-  state.ap[hero.team] -= 3;
-  applyDamage(hero, occupant, 2, "赫");
-  setGojoMark(hero, "red", x, y);
-  spawnFloatingText(x, y, "赫", 1200, "domainFloatText");
-  log(`【${hero.name}】释放赫，并在 (${x},${y}) 留下赫标记。`);
-  renderAll();
-}
-
-function resolveGojoSkill4(hero) {
+function resolveGojoSkill2(hero) {
   if (teamAP(hero.team) < 10) return;
   state.ap[hero.team] -= 10;
 
@@ -2244,51 +1956,7 @@ function resolveGojoSkill4(hero) {
   });
   spawnFloatingText(hero.x, hero.y, "领域展开！", 2000, "domainFloatText");
 
-  if (!hero.phase2) {
-    hero.phase2 = true;
-    log(`【${hero.name}】第一次展开领域，进入二阶段！`);
-  }
-
   log(`【${hero.name}】展开无量空处：两回合后开始结算，领域期间除自身外无法离开。`);
-  renderAll();
-}
-
-function hasGojoMizushi(hero) {
-  const marks = ensureGojoMarks(hero);
-  return !!(marks && marks.blue && marks.red);
-}
-
-function resolveGojoSkill5(hero) {
-  if (teamAP(hero.team) < 10) return;
-  const marks = ensureGojoMarks(hero);
-  if (!marks || !marks.blue || !marks.red) return;
-
-  const blue = { ...marks.blue };
-  const red = { ...marks.red };
-  const center = { x: (blue.x + red.x) / 2, y: (blue.y + red.y) / 2 };
-  const radius = 1.5;
-
-  state.ap[hero.team] -= 10;
-  clearGojoMarks(hero);
-  spawnGojoMizushiFx(blue, red, center);
-
-  const targets = state.heroes.filter(h => !h.dead && h.placed && Math.hypot(h.x - center.x, h.y - center.y) <= radius);
-  state.suspendGameOverCheck = true;
-  targets.forEach(t => {
-    applyDamage(hero, t, 10, "虚式•茈");
-  });
-  state.suspendGameOverCheck = false;
-
-  log(`【${hero.name}】释放虚式•茈，命中 ${targets.length} 名角色。`);
-  const blueAlive = aliveHeroes("blue").length;
-  const redAlive = aliveHeroes("red").length;
-  if (blueAlive === 0 && redAlive === 0) {
-    state.phase = "gameover";
-    state.endSummary = buildSummary(hero.team);
-    renderGameOverOverlay(hero.team);
-    return;
-  }
-  checkGameOver();
   renderAll();
 }
 
