@@ -205,21 +205,21 @@ function ensureGojoMarks(hero) {
   return hero.gojoMarks;
 }
 
-function gojoMarkAt(x, y, ownerUid = null) {
+function gojoMarkAt(x, y) {
   return state.heroes
-    .filter(h => h.defId === 'gojo' && h.gojoMarks && (!ownerUid || h.uid === ownerUid))
+    .filter(h => h.defId === 'gojo' && h.gojoMarks)
     .flatMap(h => [
       h.gojoMarks.blue ? { ...h.gojoMarks.blue, type: 'gojoBlue', owner: h.uid } : null,
       h.gojoMarks.red ? { ...h.gojoMarks.red, type: 'gojoRed', owner: h.uid } : null
     ])
     .filter(Boolean)
-    .find(m => m.x === x && m.y === y && (!ownerUid || m.owner === ownerUid)) || null;
+    .find(m => m.x === x && m.y === y) || null;
 }
 
 function setGojoMark(hero, kind, x, y) {
   const marks = ensureGojoMarks(hero);
   if (!marks) return null;
-  marks[kind] = { x, y, owner: hero.uid, team: hero.team };
+  marks[kind] = { x, y };
   return marks[kind];
 }
 

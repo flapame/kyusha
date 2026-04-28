@@ -294,20 +294,39 @@ img{max-width:100%;display:block}
   color:rgba(255,255,255,.23);
   z-index:2;
 }
-.sukunaMarkLabel{
+.cellMarkStack{
   position:absolute;
   left:4px;
   bottom:4px;
   z-index:4;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  pointer-events:none;
+}
+.sukunaMarkLabel,.gojoBlueMarkLabel,.gojoRedMarkLabel{
   font-size:10px;
   line-height:1;
   padding:3px 5px;
   border-radius:999px;
+  text-shadow:0 1px 2px rgba(0,0,0,.8);
+  border:1px solid transparent;
+  white-space:nowrap;
+}
+.sukunaMarkLabel{
   background:rgba(255,107,122,.24);
   color:#ffe9ec;
-  border:1px solid rgba(255,107,122,.42);
-  text-shadow:0 1px 2px rgba(0,0,0,.8);
-  pointer-events:none;
+  border-color:rgba(255,107,122,.42);
+}
+.gojoBlueMarkLabel{
+  background:rgba(91,147,255,.24);
+  color:#ecf5ff;
+  border-color:rgba(91,147,255,.42);
+}
+.gojoRedMarkLabel{
+  background:rgba(176,139,255,.24);
+  color:#f3ecff;
+  border-color:rgba(176,139,255,.42);
 }
 .selected{
   outline:2px solid #f4c15d;
@@ -320,14 +339,14 @@ img{max-width:100%;display:block}
 
 .unit{
   position:absolute;
-  inset:2px;
+  inset:4px;
   border-radius:10px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:flex-start;
-  padding:2px 2px 3px;
-  gap:1px;
+  padding:4px 4px 6px;
+  gap:4px;
   background:rgba(0,0,0,.16);
   border:1px solid rgba(255,255,255,.06);
   backdrop-filter:blur(2px);
@@ -336,7 +355,7 @@ img{max-width:100%;display:block}
 .unit.blue{box-shadow:0 0 0 1px rgba(90,162,255,.45), inset 0 0 10px rgba(90,162,255,.08)}
 .unit.red{box-shadow:0 0 0 1px rgba(255,109,125,.45), inset 0 0 10px rgba(255,109,125,.08)}
 .unitAvatarShell{
-  width:74%;
+  width:100%;
   aspect-ratio:1;
   border-radius:8px;
   overflow:hidden;
@@ -366,16 +385,15 @@ img{max-width:100%;display:block}
 .miniBarStack{display:flex;flex-direction:column;gap:4px;margin-top:8px}
 .unitHpBar.gojoBlock>span{background:linear-gradient(90deg,#b08bff,#6d28d9)}
 .unitHpBar{
-  width:94%;
-  height:4px;
+  width:100%;
+  height:6px;
   border-radius:999px;
   background:rgba(255,255,255,.12);
   overflow:hidden;
 }
 .unitHpBar>span{display:block;height:100%;background:linear-gradient(90deg,#f4c15d,#2fd071)}
 .unitHpText{
-  font-size:9px;
-  line-height:1;
+  font-size:10px;
   font-weight:800;
   color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,.8);
@@ -524,46 +542,24 @@ img{max-width:100%;display:block}
   flex:0 0 auto;
   overflow:hidden;
 }
-
+.avatar.blue{background:linear-gradient(180deg,rgba(90,162,255,.45),rgba(39,107,205,.35))}
+.avatar.red{background:linear-gradient(180deg,rgba(255,109,125,.45),rgba(204,48,72,.35))}
 .avatarWrap,.unitAvatarWrap{
-  position:relative;
   display:flex;
   flex-direction:column;
   align-items:center;
   gap:4px;
-  padding-top:10px;
-}
-.unitAvatarWrap{
-  padding-top:4px;
-  gap:2px;
 }
 .avatarBlockBadge,.unitBlockBadge{
-  position:absolute;
-  top:-2px;
-  left:50%;
-  transform:translateX(-50%);
-  z-index:3;
   font-size:10px;
   line-height:1;
-  padding:4px 7px;
+  padding:3px 6px;
   border-radius:999px;
-  background:rgba(176,139,255,.20);
-  color:#f3ecff;
-  border:1px solid rgba(176,139,255,.30);
-  box-shadow:0 2px 6px rgba(0,0,0,.22);
-  backdrop-filter:blur(4px);
+  background:rgba(176,139,255,.16);
+  color:#efe5ff;
+  border:1px solid rgba(176,139,255,.28);
   white-space:nowrap;
-  pointer-events:none;
 }
-.unitBlockBadge{
-  font-size:9px;
-  padding:2px 6px;
-  top:-4px;
-  background:rgba(91,147,255,.22);
-  border-color:rgba(91,147,255,.32);
-}
-.avatar.blue{background:linear-gradient(180deg,rgba(90,162,255,.45),rgba(39,107,205,.35))}
-.avatar.red{background:linear-gradient(180deg,rgba(255,109,125,.45),rgba(204,48,72,.35))}
 .avatarImg{
   width:100%;
   height:100%;
@@ -838,7 +834,7 @@ img{max-width:100%;display:block}
   .cell{border-radius:8px}
   .unitAvatarShell{width:26px;height:26px;border-radius:9px}
   .unitHpBar{height:4px}
-  .unitHpText{font-size:8px;line-height:1}
+  .unitHpText{font-size:9px}
   .heroCard{padding:7px}
   .heroBrief{gap:8px}
   .avatar,.heroAvatarShell{width:48px;height:48px;border-radius:14px}
@@ -937,7 +933,7 @@ img{max-width:100%;display:block}
   .cell{border-radius:8px}
   .unitAvatarShell{width:26px;height:26px;border-radius:9px}
   .unitHpBar{height:4px}
-  .unitHpText{font-size:8px;line-height:1}
+  .unitHpText{font-size:9px}
   .heroCard{padding:7px}
   .heroBrief{gap:8px}
   .avatar,.heroAvatarShell{width:48px;height:48px;border-radius:14px}
@@ -995,4 +991,23 @@ img{max-width:100%;display:block}
   0%{transform:translateX(-50%) translateY(0);opacity:.82}
   80%{opacity:.62}
   100%{transform:translateX(-50%) translateY(-14px);opacity:0}
+}
+
+@keyframes gojoLinePulse{
+  from{opacity:.65;filter:brightness(1)}
+  to{opacity:1;filter:brightness(1.2)}
+}
+@keyframes gojoPull{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--gojo-to-x), var(--gojo-to-y)) scale(.22);opacity:.25}
+}
+@keyframes gojoCorePulse{
+  0%{transform:scale(.45);opacity:0}
+  30%{opacity:1}
+  100%{transform:scale(1.65);opacity:0}
+}
+@keyframes gojoBoom{
+  0%{transform:scale(.25);opacity:.18}
+  35%{opacity:1}
+  100%{transform:scale(2.15);opacity:0}
 }
