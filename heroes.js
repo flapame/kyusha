@@ -42,13 +42,13 @@ window.HERO_DEFS = {
     attackRange: 1,
     attackCost: 1,
     spawnHint: "近战突袭型，擅长强化后爆发。",
-    passive: "对目标造成伤害后，会恢复造成伤害量一半（向上取整）的生命值。",
+    passive: "无额外被动。",
     skills: [
       {
         no: 1,
-        title: "剑心回响",
-        costText: "被动",
-        desc: "对目标造成伤害后，会恢复造成伤害量一半（向上取整）的生命值。",
+        title: "一式·血刃",
+        costText: "2 行动点",
+        desc: "本回合自身攻击力 +1；同时失去 1 点生命。",
         icon: "assets/skills/sword_skill1.png",
         phase1Only: true
       },
@@ -56,16 +56,8 @@ window.HERO_DEFS = {
         no: 2,
         title: "二式·突刺",
         costText: "5 行动点",
-        desc: "对 2 格内敌方英雄使用。冲到目标身后 1 格，造成 4 点伤害；若穿过目标后，自身周围 1 格内存在其他敌方英雄，则对范围内所有其他敌方英雄造成 2 点伤害。",
+        desc: "对 2 格内敌方英雄使用。冲到目标身后 1 格，造成 4 点伤害，并让自身冻结 2 回合。",
         icon: "assets/skills/sword_skill2.png",
-        phase1Only: true
-      },
-      {
-        no: 3,
-        title: "终式·万剑归宗",
-        costText: "10 行动点",
-        desc: "开启仙剑领域，领域范围为自身周围 1 格，持续 2 回合。开启时自身血量降至 1。领域每回合对领域内敌方英雄造成 1 点伤害，并在伤害处留下“剑”标记；若该格已存在标记，则标记数量 +1。自身受到致命伤时，可消耗 1 个“剑”标记抵挡此次伤害。",
-        icon: "assets/skills/sword_skill3.png",
         phase1Only: true
       }
     ]
@@ -240,7 +232,7 @@ window.HERO_DEFS = {
     attackRange: 1,
     attackCost: 2,
     spawnHint: "偏防守与地形控制，能封路也能减伤。",
-    passive: "对目标造成伤害后，会恢复造成伤害量一半（向上取整）的生命值。",
+    passive: "无额外被动。",
     skills: [
       {
         no: 1,
