@@ -294,21 +294,46 @@ img{max-width:100%;display:block}
   color:rgba(255,255,255,.23);
   z-index:2;
 }
-.sukunaMarkLabel{
+.cellMarkStack{
   position:absolute;
   left:4px;
   bottom:4px;
   z-index:4;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  pointer-events:none;
+}
+.sukunaMarkLabel,.gojoBlueMarkLabel,.gojoRedMarkLabel{
   font-size:10px;
   line-height:1;
   padding:3px 5px;
   border-radius:999px;
+  text-shadow:0 1px 2px rgba(0,0,0,.8);
+  border:1px solid transparent;
+  white-space:nowrap;
+}
+.sukunaMarkLabel{
   background:rgba(255,107,122,.24);
   color:#ffe9ec;
-  border:1px solid rgba(255,107,122,.42);
-  text-shadow:0 1px 2px rgba(0,0,0,.8);
-  pointer-events:none;
+  border-color:rgba(255,107,122,.42);
 }
+.gojoBlueMarkLabel{
+  background:rgba(91,147,255,.24);
+  color:#ecf5ff;
+  border-color:rgba(91,147,255,.42);
+}
+.gojoRedMarkLabel{
+  background:rgba(176,139,255,.24);
+  color:#f3ecff;
+  border-color:rgba(176,139,255,.42);
+}
+.swordMarkLabel{
+  background:rgba(245,208,112,.22);
+  color:#fff7d9;
+  border-color:rgba(245,208,112,.42);
+}
+.domainSword{background:rgba(245,208,112,.14)!important; outline:2px solid rgba(245,208,112,.42)}
 .selected{
   outline:2px solid #f4c15d;
   box-shadow:0 0 0 2px rgba(241,196,107,.18), inset 0 0 0 1px rgba(0,0,0,.36);
@@ -320,24 +345,28 @@ img{max-width:100%;display:block}
 
 .unit{
   position:absolute;
-  inset:4px;
+  inset:3px;
   border-radius:10px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  padding:4px 4px 6px;
-  gap:4px;
+  display:grid;
+  grid-template-rows:minmax(0,1fr) auto auto;
+  align-items:stretch;
+  justify-items:stretch;
+  padding:3px 3px 4px;
+  gap:2px;
   background:rgba(0,0,0,.16);
   border:1px solid rgba(255,255,255,.06);
   backdrop-filter:blur(2px);
   z-index:2;
+  overflow:hidden;
 }
 .unit.blue{box-shadow:0 0 0 1px rgba(90,162,255,.45), inset 0 0 10px rgba(90,162,255,.08)}
 .unit.red{box-shadow:0 0 0 1px rgba(255,109,125,.45), inset 0 0 10px rgba(255,109,125,.08)}
 .unitAvatarShell{
   width:100%;
-  aspect-ratio:1;
+  height:100%;
+  min-height:0;
+  flex:1 1 auto;
+  aspect-ratio:auto;
   border-radius:8px;
   overflow:hidden;
   background:#0c1018;
@@ -367,17 +396,20 @@ img{max-width:100%;display:block}
 .unitHpBar.gojoBlock>span{background:linear-gradient(90deg,#b08bff,#6d28d9)}
 .unitHpBar{
   width:100%;
-  height:6px;
+  height:5px;
   border-radius:999px;
   background:rgba(255,255,255,.12);
   overflow:hidden;
 }
 .unitHpBar>span{display:block;height:100%;background:linear-gradient(90deg,#f4c15d,#2fd071)}
 .unitHpText{
-  font-size:10px;
+  font-size:9px;
   font-weight:800;
+  line-height:1;
+  text-align:center;
   color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,.8);
+  white-space:nowrap;
 }
 .cellFx{
   position:absolute;
@@ -471,7 +503,8 @@ img{max-width:100%;display:block}
   padding:10px;
   line-height:1.5;
 }
-.skillDetailHead{display:flex;gap:10px;align-items:center;margin-bottom:4px}
+.skillDetailHead{display:flex;gap:10px;align-items:flex-start;margin-bottom:4px}
+.skillDetailTitleWrap{flex:1;min-width:0}
 .skillIconSlot{
   width:42px;
   height:42px;
@@ -497,8 +530,8 @@ img{max-width:100%;display:block}
   letter-spacing:.04em;
 }
 .assetFallback.hidden,.hidden{display:none !important}
-.skillDetail strong{display:block;margin-bottom:4px}
-.smallCaps{font-size:11px;letter-spacing:.06em;color:var(--muted)}
+.skillDetail strong{display:block;margin-bottom:4px;overflow-wrap:anywhere;word-break:break-word}
+.smallCaps{font-size:11px;letter-spacing:.06em;color:var(--muted);overflow-wrap:anywhere;word-break:break-word}
 .heroCard{
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.08);
@@ -525,6 +558,42 @@ img{max-width:100%;display:block}
 }
 .avatar.blue{background:linear-gradient(180deg,rgba(90,162,255,.45),rgba(39,107,205,.35))}
 .avatar.red{background:linear-gradient(180deg,rgba(255,109,125,.45),rgba(204,48,72,.35))}
+.avatarWrap,.unitAvatarWrap{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:stretch;
+  gap:0;
+  width:100%;
+  min-height:0;
+}
+.avatarBlockBadge{
+  font-size:10px;
+  line-height:1;
+  padding:3px 6px;
+  border-radius:999px;
+  background:rgba(176,139,255,.16);
+  color:#efe5ff;
+  border:1px solid rgba(176,139,255,.28);
+  white-space:nowrap;
+}
+.unitBlockBadge{
+  position:absolute;
+  left:50%;
+  top:2px;
+  transform:translate(-50%,-50%);
+  font-size:9px;
+  line-height:1;
+  padding:2px 6px;
+  border-radius:999px;
+  background:rgba(176,139,255,.78);
+  color:#f4edff;
+  border:1px solid rgba(176,139,255,.35);
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:3;
+}
 .avatarImg{
   width:100%;
   height:100%;
@@ -533,7 +602,7 @@ img{max-width:100%;display:block}
 }
 .heroBriefMain{flex:1;min-width:0}
 .heroTitle{font-size:18px;font-weight:900;margin-bottom:4px}
-.heroMeta{font-size:12px;color:var(--muted);line-height:1.55}
+.heroMeta{font-size:12px;color:var(--muted);line-height:1.55;overflow-wrap:anywhere;word-break:break-word}
 .skillChipRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .skillChip{
   display:inline-flex;
@@ -797,7 +866,7 @@ img{max-width:100%;display:block}
   .boardMain{grid-template-columns:16px minmax(0,1fr)}
   .grid{gap:3px}
   .cell{border-radius:8px}
-  .unitAvatarShell{width:26px;height:26px;border-radius:9px}
+  .unitAvatarShell{width:100%;height:100%;border-radius:8px}
   .unitHpBar{height:4px}
   .unitHpText{font-size:9px}
   .heroCard{padding:7px}
@@ -834,23 +903,6 @@ img{max-width:100%;display:block}
 }
 .actionDockPane{min-height:0;display:flex;flex-direction:column}
 .actionDockHero .heroCard{margin-bottom:0}
-.actionDockHero .heroBrief{
-  display:grid;
-  grid-template-columns:58px minmax(0,1fr);
-  gap:12px;
-  align-items:start;
-}
-.actionDockHero .heroBriefMain{
-  min-width:0;
-  width:100%;
-  overflow:hidden;
-}
-.actionDockHero .heroTitle,
-.actionDockHero .heroMeta{
-  white-space:normal;
-  overflow-wrap:anywhere;
-  word-break:break-word;
-}
 .teamCard.compact{padding:10px;min-height:0}
 .teamCard.compact .bar.ap{margin-top:6px}
 .teamHudLine{font-size:12px;color:#dfe8ff;line-height:1.45}
@@ -913,7 +965,7 @@ img{max-width:100%;display:block}
   .boardMain{grid-template-columns:16px minmax(0,1fr)}
   .grid{gap:3px}
   .cell{border-radius:8px}
-  .unitAvatarShell{width:26px;height:26px;border-radius:9px}
+  .unitAvatarShell{width:100%;height:100%;border-radius:8px}
   .unitHpBar{height:4px}
   .unitHpText{font-size:9px}
   .heroCard{padding:7px}
@@ -973,4 +1025,23 @@ img{max-width:100%;display:block}
   0%{transform:translateX(-50%) translateY(0);opacity:.82}
   80%{opacity:.62}
   100%{transform:translateX(-50%) translateY(-14px);opacity:0}
+}
+
+@keyframes gojoLinePulse{
+  from{opacity:.65;filter:brightness(1)}
+  to{opacity:1;filter:brightness(1.2)}
+}
+@keyframes gojoPull{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--gojo-to-x), var(--gojo-to-y)) scale(.22);opacity:.25}
+}
+@keyframes gojoCorePulse{
+  0%{transform:scale(.45);opacity:0}
+  30%{opacity:1}
+  100%{transform:scale(1.65);opacity:0}
+}
+@keyframes gojoBoom{
+  0%{transform:scale(.25);opacity:.18}
+  35%{opacity:1}
+  100%{transform:scale(2.15);opacity:0}
 }
