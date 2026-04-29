@@ -259,6 +259,13 @@ function heroAvatar(hero) {
   return def.avatar || "";
 }
 
+function heroInfoAvatar(hero) {
+  const def = hero ? heroDef(hero) : null;
+  if (!def) return "";
+  if (hero && hero.phase2 && def.phase2InfoAvatar) return def.phase2InfoAvatar;
+  return def.infoAvatar || `info_avatars/${hero?.defId || def.id || ""}.png`;
+}
+
 function imgWithFallback(src, alt, className, fallbackHtml) {
   if (!src) return fallbackHtml || "";
   const classAttr = className ? ` class="${className}"` : "";
@@ -285,6 +292,18 @@ function heroAvatarMarkup(hero, kind = "avatar") {
   const team = hero?.team || def?.teamColor || "blue";
   const blockBadge = hero?.defId === "gojo" ? `<div class="avatarBlockBadge">防御 ${hero.gojoBlock || 0}</div>` : "";
   return `<div class="avatarWrap"><div class="avatar ${escapeHtml(team)}">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'avatarImg', `<div class="avatarFallback hidden">${letter}</div>`)}</div>${blockBadge}</div>`;
+}
+
+function heroPortraitMarkup(hero) {
+  const def = hero ? heroDef(hero) : null;
+  const src = heroInfoAvatar(hero);
+  const letter = escapeHtml((hero?.name || def?.name || "?").slice(0, 1));
+  const label = escapeHtml(hero?.name || def?.name || "英雄");
+  return `
+    <div class="heroPortraitShell">
+      ${imgWithFallback(src, `${label}立绘`, 'heroPortraitImg', `<div class="heroPortraitFallback hidden">${letter}</div>`)}
+    </div>
+  `;
 }
 
 function visibleSkills(hero) {
@@ -1788,7 +1807,7 @@ function renderSelectedPanel(hero) {
   summary.innerHTML = `
     <div class="heroCard">
       <div class="heroBrief">
-        ${heroAvatarMarkup(hero, "avatar")}
+        ${heroPortraitMarkup(hero)}
         <div class="heroBriefMain">
           <div class="heroTitle">${escapeHtml(hero.name)}</div>
           <div class="heroMeta">
