@@ -1,0 +1,230 @@
+/*
+  ui-landscape.css
+  ================
+  手机横屏模式专用布局。
+  目标：
+  - 放大棋盘
+  - 战斗日志置于棋盘下方
+  - 左侧阵营状态，右侧英雄信息
+  - 保持同一套游戏逻辑不变
+*/
+
+body.mode-landscape{
+  overflow:hidden;
+}
+
+body.mode-landscape #app{
+  display:grid;
+  grid-template-columns:minmax(160px,.66fr) minmax(0,1.9fr) minmax(280px,.95fr);
+  grid-template-rows:auto auto auto minmax(0,1fr) auto;
+  gap:10px;
+  padding:10px;
+  min-height:100dvh;
+}
+
+body.mode-landscape .topbar,
+body.mode-landscape .topDeck,
+body.mode-landscape .mainArea{
+  display:contents;
+}
+
+body.mode-landscape .topRow{
+  grid-column:1 / 4;
+  grid-row:1;
+  margin:0;
+  padding:10px 12px;
+  border-radius:18px;
+  background:rgba(6,9,16,.95);
+  border:1px solid rgba(255,255,255,.06);
+  backdrop-filter:blur(10px);
+}
+
+body.mode-landscape .brandName{
+  font-size:18px;
+}
+
+body.mode-landscape .gameTitle{
+  font-size:18px;
+}
+
+body.mode-landscape .topRightBadges{
+  flex:1;
+  justify-content:flex-start;
+}
+
+body.mode-landscape .topActions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-left:auto;
+}
+
+body.mode-landscape .topActions button{
+  min-width:0;
+  padding:8px 11px;
+  font-size:12px;
+}
+
+body.mode-landscape #btnEndTurn{
+  display:none;
+}
+
+body.mode-landscape #blueCard{
+  grid-column:1;
+  grid-row:2;
+}
+
+body.mode-landscape #redCard{
+  grid-column:1;
+  grid-row:3;
+}
+
+body.mode-landscape .gridWrap{
+  grid-column:2;
+  grid-row:2 / 4;
+  padding:10px;
+}
+
+body.mode-landscape .boardHeader{
+  padding:0 26px 0 22px;
+}
+
+body.mode-landscape .boardMain{
+  grid-template-columns:18px minmax(0,1fr);
+  gap:8px;
+}
+
+body.mode-landscape .grid{
+  aspect-ratio:9 / 4.35;
+  gap:4px;
+}
+
+body.mode-landscape .axisMark{
+  font-size:10px;
+}
+
+body.mode-landscape .logDock{
+  grid-column:2;
+  grid-row:4;
+  min-height:0;
+  padding:10px;
+}
+
+body.mode-landscape .log{
+  height:clamp(92px, 14vh, 170px);
+  font-size:11px;
+}
+
+body.mode-landscape .actionDock{
+  grid-column:3;
+  grid-row:2 / 5;
+  margin:0;
+  max-height:none;
+  overflow-y:auto;
+}
+
+body.mode-landscape .sidebar{
+  display:none;
+}
+
+body.mode-landscape .controls{
+  grid-column:1 / 4;
+  grid-row:5;
+  margin:0;
+  padding:0 0 0;
+}
+
+body.mode-landscape .controls .inner{
+  padding:8px 0 0;
+}
+
+body.mode-landscape .skillBar{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+body.mode-landscape .btnRow{
+  grid-template-columns:1fr;
+}
+
+body.mode-landscape .heroCard{
+  padding:9px;
+}
+
+body.mode-landscape .heroBrief{
+  gap:10px;
+  align-items:flex-start;
+}
+
+body.mode-landscape .heroTitle{
+  font-size:18px;
+}
+
+body.mode-landscape .heroMeta{
+  font-size:12px;
+  line-height:1.5;
+}
+
+body.mode-landscape .heroPortraitShell{
+  width:108px;
+  aspect-ratio:3 / 4;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.1);
+  background:#0d111a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+
+body.mode-landscape .heroPortraitImg{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  image-rendering:pixelated;
+}
+
+body.mode-landscape .heroPortraitFallback{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  font-weight:900;
+  color:#fff;
+  background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+}
+
+body.mode-landscape .unitAvatarShell{
+  width:30px;
+  height:30px;
+}
+
+body.mode-landscape .unitHpBar{
+  height:4px;
+}
+
+body.mode-landscape .unitHpText{
+  font-size:9px;
+}
+
+body.mode-landscape .heroCard strong{
+  margin-bottom:8px;
+}
+
+body.mode-landscape .actionDockHero .heroCard{
+  height:100%;
+}
+
+body.mode-landscape .skillButton{
+  min-height:52px;
+}
+
+body.mode-landscape .modal{
+  width:min(860px, 100%);
+}
+
+body.mode-landscape .modePickBtn{
+  min-width:0;
+}

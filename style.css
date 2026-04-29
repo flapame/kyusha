@@ -1045,3 +1045,77 @@ img{max-width:100%;display:block}
   35%{opacity:1}
   100%{transform:scale(2.15);opacity:0}
 }
+
+/* 手机端棋盘与信息面板适配 */
+@media (max-width: 960px){
+  .unit{
+    inset:2px;
+    padding:2px 2px 3px;
+    gap:1px;
+    border-radius:9px;
+  }
+  .unitAvatarShell{
+    border-radius:7px;
+  }
+  .unitHpBar{height:4px}
+  .unitHpText{font-size:8px; line-height:1}
+  .coord{font-size:9px}
+  .heroBrief{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .avatar,.heroAvatarShell{
+    width:100%;
+    height:88px;
+    border-radius:14px;
+  }
+  .heroBriefMain{
+    width:100%;
+    min-width:0;
+  }
+  .heroMeta{
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+  .skillChipRow{
+    justify-content:flex-start;
+  }
+  .pill{
+    max-width:100%;
+    white-space:normal;
+  }
+  .selectedPill,.selectedState{
+    max-width:100%;
+    white-space:normal;
+  }
+}
+@media (max-width: 560px){
+  .unit{
+    inset:1px;
+    padding:2px 2px 2px;
+    gap:1px;
+    border-radius:8px;
+  }
+  .unitAvatarShell{border-radius:6px}
+  .unitHpBar{height:3px}
+  .unitHpText{font-size:7px}
+  .coord{font-size:8px; left:4px; top:3px}
+  .heroCard{
+    width:100%;
+  }
+  .heroBrief{
+    gap:6px;
+  }
+  .avatar,.heroAvatarShell{
+    height:80px;
+    border-radius:12px;
+  }
+  .skillDetailHead{
+    gap:8px;
+  }
+  .skillIconSlot{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+  }
+}

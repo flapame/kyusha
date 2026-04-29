@@ -1,0 +1,63 @@
+/*
+  ui-portrait.css
+  ===============
+  竖屏模式专用的少量覆盖样式。
+  主要用于：
+  - 英雄信息区全身图占位
+  - 顶部模式切换按钮
+*/
+
+body.mode-portrait .topActions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-left:auto;
+  align-items:center;
+}
+
+body.mode-portrait .topActions button{
+  min-width:0;
+  padding:8px 11px;
+  font-size:12px;
+}
+
+body.mode-portrait .heroPortraitShell{
+  width:96px;
+  aspect-ratio:3 / 4;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.1);
+  background:#0d111a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+
+body.mode-portrait .heroPortraitImg{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  image-rendering:pixelated;
+}
+
+body.mode-portrait .heroPortraitFallback{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:900;
+  color:#fff;
+  background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+}
+
+body.mode-portrait .heroBrief{
+  align-items:flex-start;
+}
+
+body.mode-portrait .modePickBtn{
+  min-width:0;
+  width:100%;
+}

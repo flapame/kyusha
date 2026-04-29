@@ -37,6 +37,83 @@ function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 // DOM 快捷函数
 const $ = (id) => document.getElementById(id);
 
+const UI_MODE_KEY = "flap_ui_mode";
+let uiMode = "portrait";
+
+function getStoredUIMode() {
+  try {
+    const value = localStorage.getItem(UI_MODE_KEY);
+    return value === "landscape" ? "landscape" : value === "portrait" ? "portrait" : "";
+  } catch {
+    return "";
+  }
+}
+
+function saveUIMode(mode) {
+  try { localStorage.setItem(UI_MODE_KEY, mode); } catch {}
+}
+
+function applyUIMode(mode, opts = {}) {
+  const nextMode = mode === "landscape" ? "landscape" : "portrait";
+  uiMode = nextMode;
+  document.body.classList.remove("mode-portrait", "mode-landscape");
+  document.body.classList.add(`mode-${nextMode}`);
+  document.documentElement.dataset.uiMode = nextMode;
+  if (opts.persist !== false) saveUIMode(nextMode);
+  syncModeButtons();
+  renderAll();
+}
+
+function syncModeButtons() {
+  const switchBtn = $("btnModeSwitch");
+  if (switchBtn) {
+    switchBtn.textContent = uiMode === "landscape" ? "转换竖屏" : "转换横屏";
+  }
+  const endTurnBtn = $("btnEndTurn");
+  if (endTurnBtn) {
+    endTurnBtn.textContent = uiMode === "landscape" ? "结束回合" : "结束回合";
+  }
+}
+
+function showModeChooser() {
+  openOverlay(`
+    <div class="introBrand">FLAP 作品</div>
+    <h2>选择显示模式</h2>
+    <p>请选择适合你设备的界面模式，之后可随时切换。</p>
+    <div class="grid2" style="margin-top:12px">
+      <button class="btnGood modePickBtn" id="pickPortraitBtn">竖屏模式</button>
+      <button class="btnDanger modePickBtn" id="pickLandscapeBtn">横屏模式</button>
+    </div>
+  `);
+  $("pickPortraitBtn").onclick = () => { closeOverlay(); applyUIMode("portrait"); showIntro(); };
+  $("pickLandscapeBtn").onclick = () => { closeOverlay(); applyUIMode("landscape"); showIntro(); };
+}
+
+function determineWinnerByScore() {
+  const blueAlive = aliveHeroes("blue");
+  const redAlive = aliveHeroes("red");
+  if (!blueAlive.length && !redAlive.length) {
+    const blueTotal = state.heroes.filter(h => h.team === "blue" && !h.dead).reduce((sum, h) => sum + Math.max(h.hp, 0), 0);
+    const redTotal = state.heroes.filter(h => h.team === "red" && !h.dead).reduce((sum, h) => sum + Math.max(h.hp, 0), 0);
+    return blueTotal >= redTotal ? "blue" : "red";
+  }
+  if (!blueAlive.length) return "red";
+  if (!redAlive.length) return "blue";
+  const blueTotal = blueAlive.reduce((sum, h) => sum + h.hp, 0);
+  const redTotal = redAlive.reduce((sum, h) => sum + h.hp, 0);
+  if (blueTotal === redTotal) return state.activeTeam || "blue";
+  return blueTotal > redTotal ? "blue" : "red";
+}
+
+function forceEndGame() {
+  if (state.phase === "gameover") return;
+  const winner = determineWinnerByScore();
+  state.phase = "gameover";
+  state.endSummary = buildSummary(winner);
+  log(`【系统】手动结束游戏，当前判定获胜方：${TEAM[winner].name}。`);
+  renderGameOverOverlay(winner);
+}
+
 // 核心游戏状态
 const state = {
   phase: "intro",          // intro -> draft -> deploy -> battle -> gameover
@@ -186,6 +263,12 @@ function heroAvatarMarkup(hero, kind = "avatar") {
   const team = hero?.team || def?.teamColor || "blue";
   const blockBadge = hero?.defId === "gojo" ? `<div class="avatarBlockBadge">防御 ${hero.gojoBlock || 0}</div>` : "";
   return `<div class="avatarWrap"><div class="avatar ${escapeHtml(team)}">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'avatarImg', `<div class="avatarFallback hidden">${letter}</div>`)}</div>${blockBadge}</div>`;
+}
+function heroPortraitMarkup(hero) {
+  const def = hero ? heroDef(hero) : null;
+  const src = hero?.portrait || def?.portrait || hero?.avatar || def?.avatar || "";
+  const letter = escapeHtml((hero?.name || def?.name || "?").slice(0, 1));
+  return `<div class="heroPortraitShell">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || "英雄")}全身图`, "heroPortraitImg", `<div class="heroPortraitFallback hidden">${letter}</div>`)}</div>`;
 }
 
 function visibleSkills(hero) {
@@ -1689,7 +1772,7 @@ function renderSelectedPanel(hero) {
   summary.innerHTML = `
     <div class="heroCard">
       <div class="heroBrief">
-        ${heroAvatarMarkup(hero, "avatar")}
+        ${heroPortraitMarkup(hero)}
         <div class="heroBriefMain">
           <div class="heroTitle">${escapeHtml(hero.name)}</div>
           <div class="heroMeta">
@@ -2567,6 +2650,10 @@ function openInfoOverlay() {
 function bindButtons() {
   $("btnDeselect").onclick = deselectHero;
   $("btnEndTurn").onclick = endTurn;
+  const endGameBtn = $("btnEndGame");
+  if (endGameBtn) endGameBtn.onclick = forceEndGame;
+  const modeSwitchBtn = $("btnModeSwitch");
+  if (modeSwitchBtn) modeSwitchBtn.onclick = () => { applyUIMode(uiMode === "landscape" ? "portrait" : "landscape"); };
   const clearBtn = $("clearLogBtn");
   if (clearBtn) clearBtn.onclick = () => {
     state.logs = [];
@@ -2579,9 +2666,18 @@ function bindButtons() {
 // ----------------------
 function init() {
   bindButtons();
-  updateHud();
-  renderAll();
-  showIntro();
+  const storedMode = getStoredUIMode();
+  if (storedMode) {
+    applyUIMode(storedMode, { persist: false });
+    updateHud();
+    renderAll();
+    showIntro();
+  } else {
+    applyUIMode("portrait", { persist: false });
+    updateHud();
+    renderAll();
+    showModeChooser();
+  }
 }
 
 function updateHud() {
