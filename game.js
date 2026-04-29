@@ -37,103 +37,83 @@ function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 // DOM 快捷函数
 const $ = (id) => document.getElementById(id);
 
-const UI_MODE_KEY = "flap_ui_mode";
 let uiMode = "portrait";
 
-function getStoredUIMode() {
-  try {
-    const value = localStorage.getItem(UI_MODE_KEY);
-    return value === "landscape" ? "landscape" : value === "portrait" ? "portrait" : "";
-  } catch {
-    return "";
-  }
+function syncModeButtons() {
+  const switchBtn = $("btnModeSwitch");
+  if (switchBtn) switchBtn.textContent = uiMode === "landscape" ? "转换竖屏" : "转换横屏";
 }
 
-function saveUIMode(mode) {
-  try { localStorage.setItem(UI_MODE_KEY, mode); } catch {}
-}
-
-function isPhoneLikeViewport() {
-  return window.matchMedia("(pointer: coarse)").matches && Math.max(window.innerWidth, window.innerHeight) <= 1024;
-}
-
-function shouldShowRotateOverlay() {
-  return uiMode === "landscape" && isPhoneLikeViewport() && window.matchMedia("(orientation: portrait)").matches;
-}
-
-function updateRotateOverlay() {
-  const overlay = $("rotateOverlay");
-  if (!overlay) return;
-  overlay.classList.toggle("show", shouldShowRotateOverlay());
+function updateRotateHint() {
+  const hint = $("rotateHint");
+  if (!hint) return;
+  const needsLandscape = uiMode === "landscape" && window.innerHeight > window.innerWidth;
+  document.body.classList.toggle("needs-landscape", needsLandscape);
+  hint.classList.toggle("show", needsLandscape);
 }
 
 async function requestLandscapeLock() {
   try {
     if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-      await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+      await document.documentElement.requestFullscreen();
     }
-  } catch (_) {
-    // 不同浏览器对全屏支持不一致，忽略即可
-  }
-
+  } catch {}
   try {
-    if (screen.orientation && typeof screen.orientation.lock === "function") {
+    if (screen.orientation && screen.orientation.lock) {
       await screen.orientation.lock("landscape");
     }
-  } catch (_) {
-    // 不支持就继续用旋转遮罩提示
-  }
-
-  updateRotateOverlay();
+  } catch {}
+  updateRotateHint();
 }
 
 async function releaseLandscapeLock() {
   try {
+    if (screen.orientation && screen.orientation.unlock) {
+      screen.orientation.unlock();
+    }
+  } catch {}
+  try {
     if (document.fullscreenElement && document.exitFullscreen) {
       await document.exitFullscreen();
     }
-  } catch (_) {}
-
-  try {
-    if (screen.orientation && typeof screen.orientation.unlock === "function") {
-      screen.orientation.unlock();
-    }
-  } catch (_) {}
-
-  updateRotateOverlay();
+  } catch {}
+  updateRotateHint();
 }
 
-function applyUIMode(mode, opts = {}) {
-  const nextMode = mode === "landscape" ? "landscape" : "portrait";
-  uiMode = nextMode;
+function applyUIMode(mode) {
+  uiMode = mode === "landscape" ? "landscape" : "portrait";
   document.body.classList.remove("mode-portrait", "mode-landscape");
-  document.body.classList.add(`mode-${nextMode}`);
-  document.documentElement.dataset.uiMode = nextMode;
-  if (opts.persist !== false) saveUIMode(nextMode);
+  document.body.classList.add(`mode-${uiMode}`);
   syncModeButtons();
+  updateRotateHint();
   renderAll();
-  updateRotateOverlay();
 }
 
-function syncModeButtons() {
-  const switchBtn = $("btnModeSwitch");
-  if (switchBtn) {
-    switchBtn.textContent = uiMode === "landscape" ? "转换竖屏" : "转换横屏";
-  }
-  const endTurnBtn = $("btnEndTurn");
-  if (endTurnBtn) {
-    endTurnBtn.textContent = uiMode === "landscape" ? "结束回合" : "结束回合";
+function toggleUIMode() {
+  if (uiMode === "landscape") {
+    applyUIMode("portrait");
+    releaseLandscapeLock();
+  } else {
+    applyUIMode("landscape");
+    requestLandscapeLock();
   }
 }
 
 function showModeChooser() {
+  state.phase = "intro";
   openOverlay(`
     <div class="introBrand">FLAP 作品</div>
-    <h2>选择显示模式</h2>
-    <p>请选择适合你设备的界面模式，之后可随时切换。</p>
-    <div class="grid2" style="margin-top:12px">
-      <button class="btnGood modePickBtn" id="pickPortraitBtn">竖屏模式</button>
-      <button class="btnDanger modePickBtn" id="pickLandscapeBtn">横屏模式</button>
+    <h2>请选择显示模式</h2>
+    <p>手机端建议使用横屏，棋盘会更大、更清楚；平板端建议使用竖屏，操作更直观。进入后仍可使用右上角按钮切换。</p>
+    <div class="modeChoiceGrid" style="margin-top:12px">
+      <button class="modeChoiceCard portrait" id="pickPortraitBtn">
+        <strong>竖屏模式</strong>
+        <span>适合平板端，也适合纵向浏览</span>
+      </button>
+      <button class="modeChoiceCard landscape" id="pickLandscapeBtn">
+        <strong>横屏模式</strong>
+        <span>适合手机端，棋盘更大更清楚</span>
+      </button>
     </div>
   `);
   $("pickPortraitBtn").onclick = async () => {
@@ -148,31 +128,6 @@ function showModeChooser() {
     await requestLandscapeLock();
     showIntro();
   };
-}
-
-function determineWinnerByScore() {
-  const blueAlive = aliveHeroes("blue");
-  const redAlive = aliveHeroes("red");
-  if (!blueAlive.length && !redAlive.length) {
-    const blueTotal = state.heroes.filter(h => h.team === "blue" && !h.dead).reduce((sum, h) => sum + Math.max(h.hp, 0), 0);
-    const redTotal = state.heroes.filter(h => h.team === "red" && !h.dead).reduce((sum, h) => sum + Math.max(h.hp, 0), 0);
-    return blueTotal >= redTotal ? "blue" : "red";
-  }
-  if (!blueAlive.length) return "red";
-  if (!redAlive.length) return "blue";
-  const blueTotal = blueAlive.reduce((sum, h) => sum + h.hp, 0);
-  const redTotal = redAlive.reduce((sum, h) => sum + h.hp, 0);
-  if (blueTotal === redTotal) return state.activeTeam || "blue";
-  return blueTotal > redTotal ? "blue" : "red";
-}
-
-function forceEndGame() {
-  if (state.phase === "gameover") return;
-  const winner = determineWinnerByScore();
-  state.phase = "gameover";
-  state.endSummary = buildSummary(winner);
-  log(`【系统】手动结束游戏，当前判定获胜方：${TEAM[winner].name}。`);
-  renderGameOverOverlay(winner);
 }
 
 // 核心游戏状态
@@ -325,9 +280,10 @@ function heroAvatarMarkup(hero, kind = "avatar") {
   const blockBadge = hero?.defId === "gojo" ? `<div class="avatarBlockBadge">防御 ${hero.gojoBlock || 0}</div>` : "";
   return `<div class="avatarWrap"><div class="avatar ${escapeHtml(team)}">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || '英雄')}头像`, 'avatarImg', `<div class="avatarFallback hidden">${letter}</div>`)}</div>${blockBadge}</div>`;
 }
+
 function heroPortraitMarkup(hero) {
   const def = hero ? heroDef(hero) : null;
-  const src = hero?.portrait || def?.portrait || hero?.avatar || def?.avatar || "";
+  const src = (hero && hero.phase2 && def?.phase2Portrait) ? def.phase2Portrait : (hero?.portrait || def?.portrait || hero?.avatar || def?.avatar || "");
   const letter = escapeHtml((hero?.name || def?.name || "?").slice(0, 1));
   return `<div class="heroPortraitShell">${imgWithFallback(src, `${escapeHtml(hero?.name || def?.name || "英雄")}全身图`, "heroPortraitImg", `<div class="heroPortraitFallback hidden">${letter}</div>`)}</div>`;
 }
@@ -598,6 +554,7 @@ function showIntro() {
       <strong>操作说明</strong>
       <ul class="ruleList">
         <li>点击英雄进行选择。</li>
+        <li>进入网页后会先让你选择横屏或竖屏模式。</li>
         <li>选中英雄后，点击空地移动，点击敌方进行普通攻击。</li>
         <li>选中英雄后，底部会显示技能按钮与说明。</li>
         <li>如果你看到了“没有这个技能”，通常表示该英雄本身没有对应技能编号。</li>
@@ -1004,6 +961,17 @@ function endTurn() {
   if (checkGameOver()) return;
 
   beginTurn(next);
+}
+
+function forceEndGame() {
+  if (state.phase !== "battle") return;
+  const bluePower = aliveHeroes("blue").reduce((sum, h) => sum + Math.max(h.hp, 0), 0);
+  const redPower = aliveHeroes("red").reduce((sum, h) => sum + Math.max(h.hp, 0), 0);
+  const winner = bluePower === redPower ? state.activeTeam : (bluePower > redPower ? "blue" : "red");
+  state.phase = "gameover";
+  state.endSummary = buildSummary(winner);
+  log("玩家手动结束游戏，开始结算。");
+  renderGameOverOverlay(winner);
 }
 
 // ----------------------
@@ -1882,7 +1850,10 @@ function renderSelectedPanel(hero) {
 
 
 function renderSkillBar(hero) {
-  const bar = $("skillBar");
+  const bar = document.body.classList.contains("mode-landscape")
+    ? ($("landscapeSkillBar") || $("skillBar"))
+    : $("skillBar");
+  if (!bar) return;
   bar.innerHTML = "";
 
   if (!hero || state.phase !== "battle" || !canAct(hero)) {
@@ -1915,7 +1886,6 @@ function renderSkillBar(hero) {
     bar.appendChild(btn);
   }
 }
-
 
 function isSkillAvailable(hero, skillNo) {
   if (!canUseSkills(hero)) return false;
@@ -2714,35 +2684,22 @@ function bindButtons() {
   const endGameBtn = $("btnEndGame");
   if (endGameBtn) endGameBtn.onclick = forceEndGame;
   const modeSwitchBtn = $("btnModeSwitch");
-  if (modeSwitchBtn) modeSwitchBtn.onclick = async () => {
-    const nextMode = uiMode === "landscape" ? "portrait" : "landscape";
-    applyUIMode(nextMode);
-    if (nextMode === "landscape") {
-      await requestLandscapeLock();
-    } else {
-      await releaseLandscapeLock();
-    }
-  };
+  if (modeSwitchBtn) {
+    modeSwitchBtn.onclick = async () => {
+      if (uiMode === "landscape") {
+        await releaseLandscapeLock();
+        applyUIMode("portrait");
+      } else {
+        applyUIMode("landscape");
+        await requestLandscapeLock();
+      }
+    };
+  }
   const clearBtn = $("clearLogBtn");
   if (clearBtn) clearBtn.onclick = () => {
     state.logs = [];
     renderLog();
   };
-
-  const retryLandscapeBtn = $("retryLandscapeBtn");
-  if (retryLandscapeBtn) retryLandscapeBtn.onclick = async () => {
-    applyUIMode("landscape");
-    await requestLandscapeLock();
-  };
-  const backPortraitBtn = $("backPortraitBtn");
-  if (backPortraitBtn) backPortraitBtn.onclick = async () => {
-    applyUIMode("portrait");
-    await releaseLandscapeLock();
-  };
-
-  window.addEventListener("resize", updateRotateOverlay, { passive: true });
-  window.addEventListener("orientationchange", updateRotateOverlay, { passive: true });
-  document.addEventListener("fullscreenchange", updateRotateOverlay);
 }
 
 // ----------------------
@@ -2751,18 +2708,11 @@ function bindButtons() {
 function init() {
   bindButtons();
   const storedMode = getStoredUIMode();
-  if (storedMode) {
-    applyUIMode(storedMode, { persist: false });
-    updateHud();
-    renderAll();
-    showIntro();
-  } else {
-    applyUIMode("portrait", { persist: false });
-    updateHud();
-    renderAll();
-    showModeChooser();
-  }
-  updateRotateOverlay();
+  const initialMode = storedMode || (window.innerWidth >= window.innerHeight ? "landscape" : "portrait");
+  applyUIMode(initialMode, { persist: false });
+  updateHud();
+  renderAll();
+  showModeChooser();
 }
 
 function updateHud() {
@@ -2770,4 +2720,9 @@ function updateHud() {
 }
 
 // 在页面加载完成后启动
+window.addEventListener("resize", updateRotateHint);
+window.addEventListener("orientationchange", updateRotateHint);
 window.addEventListener("DOMContentLoaded", init);
+window.addEventListener("resize", updateRotateHint);
+window.addEventListener("orientationchange", updateRotateHint);
+document.addEventListener("fullscreenchange", updateRotateHint);

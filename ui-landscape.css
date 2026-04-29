@@ -15,10 +15,10 @@ body.mode-landscape{
 
 body.mode-landscape #app{
   display:grid;
-  grid-template-columns:minmax(160px,.66fr) minmax(0,1.9fr) minmax(280px,.95fr);
+  grid-template-columns:minmax(128px,.54fr) minmax(0,2.18fr) minmax(252px,.88fr);
   grid-template-rows:auto auto auto minmax(0,1fr) auto;
-  gap:10px;
-  padding:10px;
+  gap:8px;
+  padding:8px;
   min-height:100dvh;
 }
 
@@ -32,7 +32,7 @@ body.mode-landscape .topRow{
   grid-column:1 / 4;
   grid-row:1;
   margin:0;
-  padding:10px 12px;
+  padding:8px 10px;
   border-radius:18px;
   background:rgba(6,9,16,.95);
   border:1px solid rgba(255,255,255,.06);
@@ -40,11 +40,11 @@ body.mode-landscape .topRow{
 }
 
 body.mode-landscape .brandName{
-  font-size:18px;
+  font-size:17px;
 }
 
 body.mode-landscape .gameTitle{
-  font-size:18px;
+  font-size:17px;
 }
 
 body.mode-landscape .topRightBadges{
@@ -65,9 +65,6 @@ body.mode-landscape .topActions button{
   font-size:12px;
 }
 
-body.mode-landscape #btnEndTurn{
-  display:none;
-}
 
 body.mode-landscape #blueCard{
   grid-column:1;
@@ -82,7 +79,7 @@ body.mode-landscape #redCard{
 body.mode-landscape .gridWrap{
   grid-column:2;
   grid-row:2 / 4;
-  padding:10px;
+  padding:8px;
 }
 
 body.mode-landscape .boardHeader{
@@ -90,12 +87,12 @@ body.mode-landscape .boardHeader{
 }
 
 body.mode-landscape .boardMain{
-  grid-template-columns:18px minmax(0,1fr);
+  grid-template-columns:16px minmax(0,1fr);
   gap:8px;
 }
 
 body.mode-landscape .grid{
-  aspect-ratio:9 / 4.35;
+  aspect-ratio:9 / 4.1;
   gap:4px;
 }
 
@@ -107,11 +104,11 @@ body.mode-landscape .logDock{
   grid-column:2;
   grid-row:4;
   min-height:0;
-  padding:10px;
+  padding:8px;
 }
 
 body.mode-landscape .log{
-  height:clamp(92px, 14vh, 170px);
+  height:clamp(86px, 12vh, 150px);
   font-size:11px;
 }
 
@@ -151,12 +148,12 @@ body.mode-landscape .heroCard{
 }
 
 body.mode-landscape .heroBrief{
-  gap:10px;
+  gap:8px;
   align-items:flex-start;
 }
 
 body.mode-landscape .heroTitle{
-  font-size:18px;
+  font-size:17px;
 }
 
 body.mode-landscape .heroMeta{
@@ -165,7 +162,7 @@ body.mode-landscape .heroMeta{
 }
 
 body.mode-landscape .heroPortraitShell{
-  width:108px;
+  width:100px;
   aspect-ratio:3 / 4;
   border-radius:18px;
   overflow:hidden;
@@ -180,7 +177,7 @@ body.mode-landscape .heroPortraitShell{
 body.mode-landscape .heroPortraitImg{
   width:100%;
   height:100%;
-  object-fit:cover;
+  object-fit:contain;
   image-rendering:pixelated;
 }
 
@@ -190,7 +187,7 @@ body.mode-landscape .heroPortraitFallback{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:24px;
+  font-size:22px;
   font-weight:900;
   color:#fff;
   background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
@@ -228,3 +225,42 @@ body.mode-landscape .modal{
 body.mode-landscape .modePickBtn{
   min-width:0;
 }
+
+
+body.mode-landscape .gridWrap{padding:8px}
+body.mode-landscape .boardHeader{padding:0 20px 0 18px}
+body.mode-landscape .boardMain{grid-template-columns:16px minmax(0,1fr);gap:6px}
+body.mode-landscape .grid{gap:3px}
+body.mode-landscape .cell{border-radius:8px}
+body.mode-landscape .unit{inset:3px;padding:2px 2px 3px;gap:1px}
+body.mode-landscape .unitAvatarShell{width:clamp(22px, 3.2vw, 30px);height:clamp(22px, 3.2vw, 30px);border-radius:8px}
+body.mode-landscape .unitHpBar{height:4px}
+body.mode-landscape .unitHpText{font-size:9px}
+body.mode-landscape .coord{font-size:9px;left:4px;top:3px}
+body.mode-landscape .cellMarkStack{left:3px;bottom:3px;gap:1px}
+body.mode-landscape .sukunaMarkLabel,
+body.mode-landscape .gojoBlueMarkLabel,
+body.mode-landscape .gojoRedMarkLabel{
+  font-size:8px;
+  padding:2px 4px;
+  max-width:100%;
+}
+body.mode-landscape .avatarBlockBadge,
+body.mode-landscape .unitBlockBadge{
+  font-size:8px;
+  padding:2px 5px;
+  top:-2px;
+}
+body.mode-landscape .miniBarStack{gap:3px;margin-top:6px}
+body.mode-landscape .actionDockHero .avatar,
+body.mode-landscape .actionDockHero .heroAvatarShell{width:86px;height:86px;border-radius:16px}
+body.mode-landscape .actionDockHero .heroBrief{align-items:flex-start}
+body.mode-landscape .actionDockHero .heroMeta{font-size:11px;line-height:1.45}
+body.mode-landscape .modeChoiceCard{min-height:102px}
+body.mode-landscape .modeChoiceCard strong{font-size:15px}
+body.mode-landscape .modeChoiceCard span{font-size:11px}
+body.mode-landscape .rotateHint{font-size:17px}
+
+body.mode-landscape .landscapeSkillPane{display:block;margin-top:10px;}
+body.mode-landscape .footerSkillBar{display:none;}
+body.mode-landscape .heroPortraitImg{object-fit:contain;}

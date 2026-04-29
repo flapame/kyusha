@@ -37,7 +37,7 @@ body.mode-portrait .heroPortraitShell{
 body.mode-portrait .heroPortraitImg{
   width:100%;
   height:100%;
-  object-fit:cover;
+  object-fit:contain;
   image-rendering:pixelated;
 }
 
@@ -61,3 +61,19 @@ body.mode-portrait .modePickBtn{
   min-width:0;
   width:100%;
 }
+
+
+body.mode-portrait .actionDockHero .avatarImg{
+  object-fit:contain;
+  background:#0d111a;
+}
+body.mode-portrait .actionDockHero .avatar,
+body.mode-portrait .actionDockHero .heroAvatarShell{
+  background:#0d111a;
+}
+body.mode-portrait .modeChoiceCard{min-height:102px}
+body.mode-portrait .modeChoiceCard strong{font-size:15px}
+body.mode-portrait .modeChoiceCard span{font-size:11px}
+
+body.mode-portrait .landscapeSkillPane{display:none;}
+body.mode-portrait .heroPortraitImg{object-fit:contain;}
