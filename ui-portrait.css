@@ -61,3 +61,16 @@ body.mode-portrait .modePickBtn{
   min-width:0;
   width:100%;
 }
+
+
+body.mode-portrait .actionDockHero .avatarImg{
+  object-fit:contain;
+  background:#0d111a;
+}
+body.mode-portrait .actionDockHero .avatar,
+body.mode-portrait .actionDockHero .heroAvatarShell{
+  background:#0d111a;
+}
+body.mode-portrait .modeChoiceCard{min-height:102px}
+body.mode-portrait .modeChoiceCard strong{font-size:15px}
+body.mode-portrait .modeChoiceCard span{font-size:11px}
