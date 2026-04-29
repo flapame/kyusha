@@ -11,7 +11,7 @@
   注意：
   1) 这里尽量只放“描述 + 基础数值”，不要写复杂逻辑。
   2) 真正的技能结算逻辑在 game.js。
-  3) avatar 字段指向 avatars/ 文件夹里的头像图片；infoAvatar 字段则指向 info_avatars/ 文件夹里的英雄信息立绘。
+  3) avatar 字段指向 avatars/ 文件夹里的头像图片。
   4) effects.attack / effects.hit 指向攻击特效与命中特效图片，后期可直接替换文件。
 */
 
@@ -33,7 +33,7 @@ window.HERO_DEFS = {
     name: "剑仙",
     teamColor: "blue",
     avatar: "avatars/sword.png",
-    infoAvatar: "info_avatars/sword.png",
+    portrait: "info_avatars/sword.png",
     effects: {
       attack: "assets/effects/attack_01.png",
       hit: "assets/effects/hit_01.png"
@@ -77,7 +77,7 @@ window.HERO_DEFS = {
     name: "两面宿傩",
     teamColor: "red",
     avatar: "avatars/sukuna.png",
-    infoAvatar: "info_avatars/sukuna.png",
+    portrait: "info_avatars/sukuna.png",
     phase2Avatar: "avatars/sukuna_phase2.png",
     effects: {
       attack: "assets/effects/attack_02.png",
@@ -137,7 +137,7 @@ window.HERO_DEFS = {
     name: "五条悟",
     teamColor: "blue",
     avatar: "avatars/gojo.png",
-    infoAvatar: "info_avatars/gojo.png",
+    portrait: "info_avatars/gojo.png",
     phase2Avatar: "avatars/gojo_phase2.png",
     effects: {
       attack: "assets/effects/attack_03.png",
@@ -194,7 +194,7 @@ window.HERO_DEFS = {
     name: "寂声射手",
     teamColor: "blue",
     avatar: "avatars/archer.png",
-    infoAvatar: "info_avatars/archer.png",
+    portrait: "info_avatars/archer.png",
     effects: {
       attack: "assets/effects/attack_04.png",
       hit: "assets/effects/hit_04.png"
@@ -235,7 +235,7 @@ window.HERO_DEFS = {
     name: "山脉之神",
     teamColor: "red",
     avatar: "avatars/mountain.png",
-    infoAvatar: "info_avatars/mountain.png",
+    portrait: "info_avatars/mountain.png",
     effects: {
       attack: "assets/effects/attack_05.png",
       hit: "assets/effects/hit_05.png"
@@ -269,7 +269,7 @@ window.HERO_DEFS = {
     name: "烈焰之夜神",
     teamColor: "red",
     avatar: "avatars/night.png",
-    infoAvatar: "info_avatars/night.png",
+    portrait: "info_avatars/night.png",
     effects: {
       attack: "assets/effects/attack_06.png",
       hit: "assets/effects/hit_06.png"
