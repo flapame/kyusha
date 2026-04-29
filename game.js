@@ -38,6 +38,24 @@ function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 const $ = (id) => document.getElementById(id);
 
 let uiMode = "portrait";
+const UI_MODE_STORAGE_KEY = "flap.uiMode";
+
+function getStoredUIMode() {
+  try {
+    const value = localStorage.getItem(UI_MODE_STORAGE_KEY);
+    return value === "landscape" || value === "portrait" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function setStoredUIMode(mode) {
+  try {
+    if (mode === "landscape" || mode === "portrait") {
+      localStorage.setItem(UI_MODE_STORAGE_KEY, mode);
+    }
+  } catch {}
+}
 
 function syncModeButtons() {
   const switchBtn = $("btnModeSwitch");
@@ -82,6 +100,7 @@ async function releaseLandscapeLock() {
 
 function applyUIMode(mode) {
   uiMode = mode === "landscape" ? "landscape" : "portrait";
+  setStoredUIMode(uiMode);
   document.body.classList.remove("mode-portrait", "mode-landscape");
   document.body.classList.add(`mode-${uiMode}`);
   syncModeButtons();
@@ -2709,7 +2728,7 @@ function init() {
   bindButtons();
   const storedMode = getStoredUIMode();
   const initialMode = storedMode || (window.innerWidth >= window.innerHeight ? "landscape" : "portrait");
-  applyUIMode(initialMode, { persist: false });
+  applyUIMode(initialMode);
   updateHud();
   renderAll();
   showModeChooser();
