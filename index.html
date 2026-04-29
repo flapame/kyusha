@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#0b1020" />
   <title>FLAP 作品 · 战棋对战</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="ui-portrait.css" />
+  <link rel="stylesheet" href="ui-landscape.css" />
 </head>
 <body>
   <div id="app">
@@ -24,6 +26,11 @@
           <span id="turnBadge" class="badge">回合：—</span>
           <span id="turnTeamBadge" class="badge turn">当前行动：—</span>
           <span id="matchBadge" class="badge">本地双人</span>
+        </div>
+
+        <div class="topActions">
+          <button id="btnModeSwitch" class="btnGhost">转换横屏</button>
+          <button id="btnEndGame" class="btnDanger">结束游戏</button>
         </div>
       </div>
 
@@ -100,12 +107,6 @@
             <div class="hintText">点击棋盘上的英雄查看属性、被动、技能与当前状态。</div>
           </div>
         </div>
-        <div class="actionDockPane landscapeSkillPane">
-          <div class="heroCard">
-            <strong>技能释放</strong>
-            <div id="landscapeSkillBar" class="skillBar footerSkillBar landscapeSkillBar"></div>
-          </div>
-        </div>
       </div>
     </section>
   </div>
@@ -114,6 +115,10 @@
     <div class="modal">
       <div id="overlayContent"></div>
     </div>
+  </div>
+
+  <div id="rotateHint" class="rotateHint" aria-live="polite">
+    请切换到横屏后继续游玩
   </div>
 
   <script src="heroes.js"></script>

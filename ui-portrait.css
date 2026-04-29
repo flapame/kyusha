@@ -75,27 +75,5 @@ body.mode-portrait .modeChoiceCard{min-height:102px}
 body.mode-portrait .modeChoiceCard strong{font-size:15px}
 body.mode-portrait .modeChoiceCard span{font-size:11px}
 
-body.mode-portrait .unit{
-  grid-template-rows:minmax(0,1fr) auto auto;
-  padding:2px 2px 3px;
-  gap:1px;
-}
-
-body.mode-portrait .unitAvatarShell{
-  width:100%;
-  height:auto;
-  aspect-ratio:1 / 1;
-  border-radius:7px;
-}
-
-body.mode-portrait .unitHpBar{height:4px}
-
-body.mode-portrait .unitHpText{font-size:8px;line-height:1}
-
-body.mode-portrait .cellMarkStack{left:2px;bottom:2px;gap:1px}
-
-body.mode-portrait .unitBlockBadge{
-  top:1px;
-  font-size:8px;
-  padding:2px 4px;
-}
+body.mode-portrait .landscapeSkillPane{display:none;}
+body.mode-portrait .heroPortraitImg{object-fit:contain;}
