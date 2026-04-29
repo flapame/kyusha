@@ -53,6 +53,56 @@ function saveUIMode(mode) {
   try { localStorage.setItem(UI_MODE_KEY, mode); } catch {}
 }
 
+function isPhoneLikeViewport() {
+  return window.matchMedia("(pointer: coarse)").matches && Math.max(window.innerWidth, window.innerHeight) <= 1024;
+}
+
+function shouldShowRotateOverlay() {
+  return uiMode === "landscape" && isPhoneLikeViewport() && window.matchMedia("(orientation: portrait)").matches;
+}
+
+function updateRotateOverlay() {
+  const overlay = $("rotateOverlay");
+  if (!overlay) return;
+  overlay.classList.toggle("show", shouldShowRotateOverlay());
+}
+
+async function requestLandscapeLock() {
+  try {
+    if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+      await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+    }
+  } catch (_) {
+    // 不同浏览器对全屏支持不一致，忽略即可
+  }
+
+  try {
+    if (screen.orientation && typeof screen.orientation.lock === "function") {
+      await screen.orientation.lock("landscape");
+    }
+  } catch (_) {
+    // 不支持就继续用旋转遮罩提示
+  }
+
+  updateRotateOverlay();
+}
+
+async function releaseLandscapeLock() {
+  try {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      await document.exitFullscreen();
+    }
+  } catch (_) {}
+
+  try {
+    if (screen.orientation && typeof screen.orientation.unlock === "function") {
+      screen.orientation.unlock();
+    }
+  } catch (_) {}
+
+  updateRotateOverlay();
+}
+
 function applyUIMode(mode, opts = {}) {
   const nextMode = mode === "landscape" ? "landscape" : "portrait";
   uiMode = nextMode;
@@ -62,6 +112,7 @@ function applyUIMode(mode, opts = {}) {
   if (opts.persist !== false) saveUIMode(nextMode);
   syncModeButtons();
   renderAll();
+  updateRotateOverlay();
 }
 
 function syncModeButtons() {
@@ -85,8 +136,18 @@ function showModeChooser() {
       <button class="btnDanger modePickBtn" id="pickLandscapeBtn">横屏模式</button>
     </div>
   `);
-  $("pickPortraitBtn").onclick = () => { closeOverlay(); applyUIMode("portrait"); showIntro(); };
-  $("pickLandscapeBtn").onclick = () => { closeOverlay(); applyUIMode("landscape"); showIntro(); };
+  $("pickPortraitBtn").onclick = async () => {
+    closeOverlay();
+    await releaseLandscapeLock();
+    applyUIMode("portrait");
+    showIntro();
+  };
+  $("pickLandscapeBtn").onclick = async () => {
+    closeOverlay();
+    applyUIMode("landscape");
+    await requestLandscapeLock();
+    showIntro();
+  };
 }
 
 function determineWinnerByScore() {
@@ -2653,12 +2714,35 @@ function bindButtons() {
   const endGameBtn = $("btnEndGame");
   if (endGameBtn) endGameBtn.onclick = forceEndGame;
   const modeSwitchBtn = $("btnModeSwitch");
-  if (modeSwitchBtn) modeSwitchBtn.onclick = () => { applyUIMode(uiMode === "landscape" ? "portrait" : "landscape"); };
+  if (modeSwitchBtn) modeSwitchBtn.onclick = async () => {
+    const nextMode = uiMode === "landscape" ? "portrait" : "landscape";
+    applyUIMode(nextMode);
+    if (nextMode === "landscape") {
+      await requestLandscapeLock();
+    } else {
+      await releaseLandscapeLock();
+    }
+  };
   const clearBtn = $("clearLogBtn");
   if (clearBtn) clearBtn.onclick = () => {
     state.logs = [];
     renderLog();
   };
+
+  const retryLandscapeBtn = $("retryLandscapeBtn");
+  if (retryLandscapeBtn) retryLandscapeBtn.onclick = async () => {
+    applyUIMode("landscape");
+    await requestLandscapeLock();
+  };
+  const backPortraitBtn = $("backPortraitBtn");
+  if (backPortraitBtn) backPortraitBtn.onclick = async () => {
+    applyUIMode("portrait");
+    await releaseLandscapeLock();
+  };
+
+  window.addEventListener("resize", updateRotateOverlay, { passive: true });
+  window.addEventListener("orientationchange", updateRotateOverlay, { passive: true });
+  document.addEventListener("fullscreenchange", updateRotateOverlay);
 }
 
 // ----------------------
@@ -2678,6 +2762,7 @@ function init() {
     renderAll();
     showModeChooser();
   }
+  updateRotateOverlay();
 }
 
 function updateHud() {
