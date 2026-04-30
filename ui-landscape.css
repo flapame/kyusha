@@ -246,3 +246,67 @@ body.mode-landscape .unitAvatar{
   object-fit:contain !important;
   object-position:center center !important;
 }
+
+/* ============ landscape fit fix ============ */
+body.mode-landscape{
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:8px;
+}
+
+body.mode-landscape #app{
+  width:1600px !important;
+  height:860px !important;
+  min-height:860px !important;
+  max-width:none !important;
+  transform-origin:top center;
+  transform:scale(var(--landscape-stage-scale, 1));
+  will-change:transform;
+}
+
+/* 横屏时让棋盘中的头像完整显示，不再压成小块或被裁切 */
+body.mode-landscape .unitAvatarWrap{
+  gap:0 !important;
+  padding-top:0 !important;
+}
+body.mode-landscape .unitAvatarShell{
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  border-radius:8px !important;
+}
+body.mode-landscape .unitAvatar{
+  width:100%;
+  height:100%;
+  object-fit:contain !important;
+  object-position:center center;
+  image-rendering:auto;
+}
+
+/* 轻微收紧棋盘下方信息区，保留原有整体风格 */
+body.mode-landscape .topDeck{
+  gap:6px;
+}
+body.mode-landscape .logDock{
+  padding:6px !important;
+}
+body.mode-landscape .log{
+  height:clamp(72px, 8.5vh, 118px) !important;
+  font-size:10px;
+}
+
+/* 横屏选择 / 出生位置选择也跟着同一套适配 */
+body.mode-landscape .overlay{
+  padding:10px;
+  align-items:flex-start;
+  justify-content:center;
+}
+body.mode-landscape .modal{
+  width:min(860px, 100%) !important;
+  max-height:92vh !important;
+  transform:scale(var(--landscape-stage-scale, 1));
+  transform-origin:top center;
+}
+
