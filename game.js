@@ -1472,12 +1472,28 @@ function manhattan(a, b) {
 // ----------------------
 // 统一渲染入口：任何状态变化后尽量调用这里，避免漏刷某个面板。
 function renderAll() {
+  const hero = selectedHero();
   renderHud();
   renderGrid();
-  renderSelectedPanel(selectedHero());
-  renderSkillBar(selectedHero());
+  renderSelectedPanel(hero);
+  renderSkillBar(hero);
+  updateLandscapeOverlayState(hero);
 }
 
+
+function updateLandscapeOverlayState(hero) {
+  const overlay = $("landscapeSkillOverlay");
+  const logDock = document.querySelector(".logDock");
+  if (!overlay || !logDock) return;
+
+  const active = uiMode === "landscape" && !!hero && state.phase === "battle" && canAct(hero);
+  overlay.classList.toggle("show", active);
+  overlay.setAttribute("aria-hidden", active ? "false" : "true");
+  logDock.classList.toggle("skillOverlayActive", active);
+
+  const btn = $("btnEndTurnLandscape");
+  if (btn) btn.style.display = uiMode === "landscape" ? "inline-flex" : "none";
+}
 function renderHud() {
   $("phaseBadge").textContent = `阶段：${phaseText(state.phase)}`;
   $("turnBadge").textContent = `回合：${state.turn}`;
@@ -1886,11 +1902,16 @@ function renderSelectedPanel(hero) {
 
 
 function renderSkillBar(hero) {
-  const bar = $("skillBar");
+  renderSkillBarInto($("skillBar"), hero, { emptyText: "请先选择可行动英雄" });
+  renderSkillBarInto($("landscapeSkillBar"), hero, { emptyText: "请先选择可行动英雄" });
+}
+
+function renderSkillBarInto(bar, hero, opts = {}) {
+  if (!bar) return;
   bar.innerHTML = "";
 
   if (!hero || state.phase !== "battle" || !canAct(hero)) {
-    bar.innerHTML = `<button disabled>请先选择可行动英雄</button>`;
+    bar.innerHTML = `<button disabled>${escapeHtml(opts.emptyText || "请先选择可行动英雄")}</button>`;
     return;
   }
 
@@ -2711,6 +2732,8 @@ function openInfoOverlay() {
 function bindButtons() {
   $("btnDeselect").onclick = deselectHero;
   $("btnEndTurn").onclick = endTurn;
+  const endTurnLandscapeBtn = $("btnEndTurnLandscape");
+  if (endTurnLandscapeBtn) endTurnLandscapeBtn.onclick = endTurn;
   const endGameBtn = $("btnEndGame");
   if (endGameBtn) endGameBtn.onclick = forceEndGame;
   const modeSwitchBtn = $("btnModeSwitch");

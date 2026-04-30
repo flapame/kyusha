@@ -69,9 +69,17 @@ body.mode-landscape .boardHeader{padding:0 22px 0 18px}
 body.mode-landscape .boardMain{grid-template-columns:16px minmax(0,1fr);gap:8px}
 body.mode-landscape .grid{aspect-ratio:9 / 4;gap:4px}
 body.mode-landscape .axisMark{font-size:10px}
-body.mode-landscape .logDock{grid-column:1 / 3;grid-row:4;min-height:0;padding:8px}
+body.mode-landscape .logDock{grid-column:1 / 3;grid-row:4;min-height:0;padding:8px;overflow:hidden}
 body.mode-landscape .log{height:clamp(92px, 12vh, 150px);font-size:11px}
+body.mode-landscape .logDock.skillOverlayActive .log{opacity:0;pointer-events:none}
+body.mode-landscape .landscapeSkillOverlay{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;gap:10px;padding:12px;border-radius:18px;background:linear-gradient(180deg, rgba(9,14,24,.92), rgba(9,14,24,.98));backdrop-filter:blur(12px);overflow-y:auto}
+body.mode-landscape .landscapeSkillOverlay.show{display:flex}
+body.mode-landscape .landscapeSkillOverlayHead{margin-bottom:0}
+body.mode-landscape .landscapeSkillOverlay .landscapeSkillBar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+body.mode-landscape .landscapeSkillOverlay .skillButton{min-height:58px}
+body.mode-landscape .landscapeSkillOverlayHint{margin-top:auto}
 body.mode-landscape .actionDock{grid-column:3;grid-row:2 / 5;margin:0;max-height:100%;overflow-y:auto;position:sticky;top:8px;align-self:start}
+body.mode-landscape #selectedInfo{max-height:100%;overflow-y:auto;scrollbar-gutter:stable}
 body.mode-landscape .sidebar{display:none}
 body.mode-landscape .controls{display:none}
 body.mode-landscape .skillBar{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -119,4 +127,6 @@ body.mode-landscape .modeChoiceCard span{font-size:11px}
 body.mode-landscape .rotateHint{font-size:17px}
 body.mode-landscape .landscapeSkillPane{display:block;margin-top:10px}
 body.mode-landscape .footerSkillBar{display:none}
+body.mode-landscape .landscapeTurnDock{display:block;position:fixed;right:16px;bottom:16px;z-index:50}
+body.mode-landscape .landscapeTurnDock button{min-width:150px;padding:12px 18px;border-radius:16px;box-shadow:0 12px 28px rgba(0,0,0,.35)}
 body.mode-landscape .heroPortraitImg{object-fit:contain}
