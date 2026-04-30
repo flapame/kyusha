@@ -246,17 +246,3 @@ body.mode-landscape .unitAvatar{
   object-fit:contain !important;
   object-position:center center !important;
 }
-
-/* avatar complete-fit fix for landscape board units */
-body.mode-landscape .unitAvatarShell{
-  padding:2px;
-  box-sizing:border-box;
-}
-body.mode-landscape .unitAvatar{
-  width:100% !important;
-  height:100% !important;
-  object-fit:contain !important;
-  object-position:center center !important;
-  display:block;
-}
-
