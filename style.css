@@ -959,16 +959,6 @@ img{max-width:100%;display:block}
 .actionDockPane{min-height:0;display:flex;flex-direction:column}
 .actionDockHero .heroCard{margin-bottom:0}
 .teamCard.compact{padding:10px;min-height:0}
-
-.landscapeTurnDock{
-  display:none;
-}
-.landscapeSkillOverlay{
-  display:none;
-}
-.topTeamStrip{
-  display:none;
-}
 .teamCard.compact .bar.ap{margin-top:6px}
 .teamHudLine{font-size:12px;color:#dfe8ff;line-height:1.45}
 
@@ -1189,3 +1179,115 @@ img{max-width:100%;display:block}
 /* 英雄信息里的大头像使用全图展示，避免裁切 */
 .actionDockHero .avatarImg{object-fit:contain;background:#0d111a}
 .actionDockHero .avatar,.actionDockHero .heroAvatarShell{background:#0d111a}
+
+/* Landscape HUD compacting + fixed right dock to prevent board shifting */
+body.mode-landscape #app{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  grid-template-rows:auto auto auto auto;
+  padding:8px calc(clamp(290px, 25vw, 380px) + 16px) 8px 8px;
+}
+
+body.mode-landscape .topRow{
+  grid-column:1 / 3;
+  grid-row:1;
+  align-items:flex-start;
+  gap:8px 10px;
+}
+
+body.mode-landscape .topTeamStrip{
+  flex:1 0 100%;
+  width:100%;
+  order:4;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:2px;
+}
+
+body.mode-landscape .topTeamStrip .teamCard{
+  min-height:68px;
+  padding:8px 10px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-rows:auto auto auto;
+  gap:2px 8px;
+}
+
+body.mode-landscape .topTeamStrip .teamCard h3{
+  grid-column:1;
+  margin:0;
+  font-size:13px;
+}
+
+body.mode-landscape .topTeamStrip .teamHudLine{
+  grid-column:1;
+  font-size:11px;
+  line-height:1.25;
+}
+
+body.mode-landscape .topTeamStrip .bar.ap{
+  display:block;
+  grid-column:1 / -1;
+  margin-top:2px;
+  height:8px;
+}
+
+body.mode-landscape .topTeamStrip .teamSummary{
+  display:block;
+  grid-column:1 / -1;
+  font-size:10px;
+  line-height:1.2;
+  color:var(--muted);
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+body.mode-landscape #blueCard{
+  grid-column:1;
+  grid-row:2;
+}
+
+body.mode-landscape #redCard{
+  grid-column:2;
+  grid-row:2;
+}
+
+body.mode-landscape .gridWrap{
+  grid-column:1 / 3;
+  grid-row:3;
+}
+
+body.mode-landscape .logDock{
+  grid-column:1 / 3;
+  grid-row:4;
+}
+
+body.mode-landscape .gridWrap,
+body.mode-landscape .logDock{
+  overflow:hidden;
+}
+
+body.mode-landscape .actionDock{
+  position:fixed;
+  top:8px;
+  right:8px;
+  bottom:8px;
+  width:clamp(290px, 25vw, 380px);
+  margin:0;
+  z-index:30;
+  overflow-y:auto;
+}
+
+body.mode-landscape .actionDockGrid{
+  flex:1 1 auto;
+}
+
+body.mode-landscape .actionDockHero .heroCard{
+  height:auto;
+}
+
+body.mode-landscape .sidebar,
+body.mode-landscape .controls{
+  display:none;
+}
