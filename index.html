@@ -21,16 +21,20 @@
           </div>
         </div>
 
+        <div class="topActions">
+          <button id="btnModeSwitch" class="btnGhost">转换横屏</button>
+          <button id="btnEndGame" class="btnDanger">结束游戏</button>
+        </div>
+
+        <div id="topTeamStrip" class="topTeamStrip" aria-hidden="true"></div>
+      </div>
+
+      <div class="battleStrip card" aria-label="战斗状态栏">
         <div class="topRightBadges">
           <span id="phaseBadge" class="badge gold">阶段：—</span>
           <span id="turnBadge" class="badge">回合：—</span>
           <span id="turnTeamBadge" class="badge turn">当前行动：—</span>
           <span id="matchBadge" class="badge">本地双人</span>
-        </div>
-
-        <div class="topActions">
-          <button id="btnModeSwitch" class="btnGhost">转换横屏</button>
-          <button id="btnEndGame" class="btnDanger">结束游戏</button>
         </div>
       </div>
 
@@ -41,6 +45,14 @@
             <button id="clearLogBtn" class="textBtn">清空</button>
           </div>
           <div id="log" class="log"></div>
+          <div id="landscapeSkillOverlay" class="landscapeSkillOverlay" aria-hidden="true">
+            <div class="panelHeader landscapeSkillOverlayHead">
+              <h3>技能操作</h3>
+              <div class="small">点击英雄后显示技能，取消选择后恢复日志</div>
+            </div>
+            <div id="landscapeSkillBar" class="skillBar landscapeSkillBar"></div>
+            <div class="small landscapeSkillOverlayHint">取消选中英雄即可回到战斗日志。</div>
+          </div>
         </section>
 
         <section id="blueCard" class="card teamCard compact">
@@ -94,6 +106,10 @@
         </div>
       </div>
     </footer>
+
+    <div id="landscapeTurnDock" class="landscapeTurnDock">
+      <button id="btnEndTurnLandscape" class="btnGood">结束回合</button>
+    </div>
 
     <section class="actionDock card" id="actionDock">
       <div class="panelHeader">
