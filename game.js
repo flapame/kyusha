@@ -57,6 +57,25 @@ function isPhoneLikeViewport() {
   return window.matchMedia("(pointer: coarse)").matches && Math.max(window.innerWidth, window.innerHeight) <= 1024;
 }
 
+const LANDSCAPE_BASE_WIDTH = 1280;
+const LANDSCAPE_BASE_HEIGHT = 720;
+
+function syncLandscapeScale() {
+  const root = document.documentElement;
+  if (!root) return;
+  if (uiMode !== "landscape") {
+    root.style.setProperty("--landscape-scale", "1");
+    return;
+  }
+
+  const paddingX = 16;
+  const paddingY = 16;
+  const vw = Math.max(window.innerWidth - paddingX, 320);
+  const vh = Math.max(window.innerHeight - paddingY, 320);
+  const scale = Math.min(vw / LANDSCAPE_BASE_WIDTH, vh / LANDSCAPE_BASE_HEIGHT, 1);
+  root.style.setProperty("--landscape-scale", String(Math.max(0.42, Math.min(scale, 1)).toFixed(4)));
+}
+
 function shouldShowRotateOverlay() {
   return uiMode === "landscape" && isPhoneLikeViewport() && window.matchMedia("(orientation: portrait)").matches;
 }
@@ -112,6 +131,7 @@ function applyUIMode(mode, opts = {}) {
   if (opts.persist !== false) saveUIMode(nextMode);
   syncModeButtons();
   syncLandscapeLayout();
+  syncLandscapeScale();
   renderAll();
   updateRotateOverlay();
 }
@@ -2780,9 +2800,18 @@ function bindButtons() {
     await releaseLandscapeLock();
   };
 
-  window.addEventListener("resize", updateRotateOverlay, { passive: true });
-  window.addEventListener("orientationchange", updateRotateOverlay, { passive: true });
-  document.addEventListener("fullscreenchange", updateRotateOverlay);
+  window.addEventListener("resize", () => {
+    syncLandscapeScale();
+    updateRotateOverlay();
+  }, { passive: true });
+  window.addEventListener("orientationchange", () => {
+    syncLandscapeScale();
+    updateRotateOverlay();
+  }, { passive: true });
+  document.addEventListener("fullscreenchange", () => {
+    syncLandscapeScale();
+    updateRotateOverlay();
+  });
 }
 
 // ----------------------
@@ -2793,6 +2822,7 @@ function init() {
   const storedMode = getStoredUIMode();
   const initialMode = storedMode || "portrait";
   applyUIMode(initialMode, { persist: false });
+  syncLandscapeScale();
   updateHud();
   renderAll();
   showModeChooser();

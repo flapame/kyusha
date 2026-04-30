@@ -215,3 +215,41 @@ body.mode-landscape .logDock{
 body.mode-landscape .topTeamStrip{
   display:none !important;
 }
+
+
+/* === step4 landscape scale + avatar visibility === */
+body.mode-landscape{
+  align-items:center;
+}
+body.mode-landscape #app{
+  --landscape-scale: 1;
+  width:1280px;
+  height:720px;
+  min-width:1280px;
+  min-height:720px;
+  transform:scale(var(--landscape-scale));
+  transform-origin:center center;
+  margin:0 auto;
+}
+body.mode-landscape .actionDockHero .heroBrief{
+  flex-direction:row !important;
+  align-items:flex-start !important;
+  gap:10px;
+}
+body.mode-landscape .actionDockHero .avatar,
+body.mode-landscape .actionDockHero .heroAvatarShell,
+body.mode-landscape .actionDockHero .heroPortraitShell{
+  width:clamp(72px, 8vw, 96px) !important;
+  height:clamp(72px, 8vw, 96px) !important;
+  flex:0 0 auto !important;
+}
+body.mode-landscape .actionDockHero .avatarImg,
+body.mode-landscape .actionDockHero .heroPortraitImg{
+  object-fit:contain !important;
+}
+body.mode-landscape .actionDockHero .heroBriefMain{
+  min-width:0;
+}
+body.mode-landscape .actionDockHero .heroCard{
+  overflow:visible;
+}
