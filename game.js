@@ -127,14 +127,13 @@ function syncModeButtons() {
 }
 
 function showModeChooser() {
-  const current = uiMode === "landscape" ? "横屏" : "竖屏";
   openOverlay(`
     <div class="introBrand">FLAP 作品</div>
     <h2>选择显示模式</h2>
-    <p>请选择适合你设备的界面模式，当前默认：<strong>${current}</strong>。进入后可随时切换。</p>
+    <p>请选择适合你设备的界面模式，之后可随时切换。</p>
     <div class="grid2" style="margin-top:12px">
-      <button class="btnGood modePickBtn" id="pickPortraitBtn">竖屏模式</button>
-      <button class="btnDanger modePickBtn" id="pickLandscapeBtn">横屏模式</button>
+      <button class="btnGood modePickBtn" id="pickPortraitBtn">进入竖屏模式</button>
+      <button class="btnDanger modePickBtn" id="pickLandscapeBtn">进入横屏模式</button>
     </div>
   `);
   $("pickPortraitBtn").onclick = async () => {
@@ -2752,7 +2751,8 @@ function bindButtons() {
 function init() {
   bindButtons();
   const storedMode = getStoredUIMode();
-  applyUIMode(storedMode || "portrait", { persist: false });
+  const initialMode = storedMode || "portrait";
+  applyUIMode(initialMode, { persist: false });
   updateHud();
   renderAll();
   showModeChooser();

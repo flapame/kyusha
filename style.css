@@ -55,7 +55,7 @@ img{max-width:100%;display:block}
 }
 
 .topbar{
-  padding:12px 12px 12px;
+  padding:12px 12px 0;
   background:rgba(6,9,16,.95);
   border-bottom:1px solid rgba(255,255,255,.06);
   backdrop-filter:blur(10px);
@@ -99,61 +99,11 @@ img{max-width:100%;display:block}
 .badge.turn.red{background:rgba(255,109,125,.22);border-color:rgba(255,109,125,.35)}
 
 .topDeck{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  padding-bottom:8px;
-}
-.battleStrip{
   display:grid;
-  grid-template-columns:minmax(250px,1.08fr) minmax(220px,.78fr) minmax(250px,1.08fr);
+  grid-template-columns:minmax(280px,1.4fr) minmax(170px,.3fr) minmax(170px,.3fr);
   gap:8px;
   align-items:stretch;
-}
-.turnCenter{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  padding:10px 12px;
-  border-radius:18px;
-  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 8px 24px rgba(0,0,0,.24);
-  min-height:90px;
-}
-.turnCenter .badge{width:100%;justify-content:center}
-.teamCard.compact{
-  padding:12px 14px;
-  min-height:90px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-}
-.teamCard.compact h3{
-  font-size:15px;
-  margin-bottom:6px;
-}
-.teamHudLine{font-size:12px;line-height:1.45}
-.teamCard.compact .bar{margin-top:10px;height:11px}
-.teamCard.compact .teamSummary{display:block;margin-top:8px;font-size:12px;color:var(--muted);line-height:1.35}
-#blueCard{border-color:rgba(90,162,255,.22)}
-#redCard{border-color:rgba(255,109,125,.22)}
-#blueCard::before,#redCard::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:inherit;
-  pointer-events:none;
-}
-#blueCard::before{background:linear-gradient(90deg,rgba(90,162,255,.18),rgba(90,162,255,0) 42%)}
-#redCard::before{background:linear-gradient(270deg,rgba(255,109,125,.18),rgba(255,109,125,0) 42%)}
-
-@media (max-width: 920px){
-  .battleStrip{grid-template-columns:1fr;}
-  .turnCenter{min-height:0;}
-  .teamCard.compact{min-height:0;}
+  padding-bottom:8px;
 }
 .card{
   position:relative;
@@ -923,7 +873,7 @@ img{max-width:100%;display:block}
 
 @media (max-width: 960px){
   #app{padding-bottom:0;}
-  .topbar{padding:10px 10px 10px}
+  .topbar{padding:10px 10px 0}
   .brandName{font-size:18px}
   .gameTitle{font-size:16px}
   .gameSubtitle{font-size:11px}
@@ -1022,7 +972,7 @@ img{max-width:100%;display:block}
 
 @media (max-width: 960px){
   #app{padding-bottom:0;}
-  .topbar{padding:10px 10px 10px}
+  .topbar{padding:10px 10px 0}
   .brandName{font-size:18px}
   .gameTitle{font-size:16px}
   .gameSubtitle{font-size:11px}
