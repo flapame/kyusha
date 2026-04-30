@@ -21,48 +21,26 @@
           </div>
         </div>
 
-        <div class="topRightBadges">
-          <span id="phaseBadge" class="badge gold">阶段：—</span>
-          <span id="turnBadge" class="badge">回合：—</span>
-          <span id="turnTeamBadge" class="badge turn">当前行动：—</span>
-          <span id="matchBadge" class="badge">本地双人</span>
-        </div>
-
         <div class="topActions">
           <button id="btnModeSwitch" class="btnGhost">转换横屏</button>
           <button id="btnEndGame" class="btnDanger">结束游戏</button>
         </div>
       </div>
 
-      <div class="teamStrip">
-        <section id="blueTopCard" class="card teamCard miniTeamCard">
-          <h3>èæ¹</h3>
-          <div id="blueTopHud" class="small teamHudLine">â</div>
-          <div id="blueTopSummary" class="teamSummary">â</div>
-        </section>
-
-        <section id="redTopCard" class="card teamCard miniTeamCard">
-          <h3>çº¢æ¹</h3>
-          <div id="redTopHud" class="small teamHudLine">â</div>
-          <div id="redTopSummary" class="teamSummary">â</div>
-        </section>
-      </div>
-
-      <div class="topDeck">
-        <section class="logDock card">
-          <div class="panelHeader">
-            <h3>战斗日志</h3>
-            <button id="clearLogBtn" class="textBtn">清空</button>
-          </div>
-          <div id="log" class="log"></div>
-        </section>
-
+      <div class="battleStrip">
         <section id="blueCard" class="card teamCard compact">
           <h3>蓝方</h3>
           <div id="blueHud" class="small teamHudLine">—</div>
           <div class="bar ap"><div id="blueApBar" style="width:0%"></div></div>
           <div id="blueSummary" class="teamSummary">—</div>
         </section>
+
+        <div class="turnCenter">
+          <span id="phaseBadge" class="badge gold">阶段：—</span>
+          <span id="turnBadge" class="badge">回合：—</span>
+          <span id="turnTeamBadge" class="badge turn">当前行动：—</span>
+          <span id="matchBadge" class="badge">本地双人</span>
+        </div>
 
         <section id="redCard" class="card teamCard compact">
           <h3>红方</h3>
@@ -72,6 +50,16 @@
         </section>
       </div>
     </header>
+
+    <div class="topDeck">
+      <section class="logDock card">
+        <div class="panelHeader">
+          <h3>战斗日志</h3>
+          <button id="clearLogBtn" class="textBtn">清空</button>
+        </div>
+        <div id="log" class="log"></div>
+      </section>
+    </div>
 
     <main class="mainArea">
       <section class="gridWrap">
@@ -123,32 +111,6 @@
         </div>
       </div>
     </section>
-  </div>
-
-  <div id="modeOverlay" class="overlay modeOverlay">
-    <div class="modal modeModal">
-      <div class="introBrand">FLAP ä½å</div>
-      <h2>éæ©æ¾ç¤ºæ¨¡å¼</h2>
-      <div class="modeHelp">ææºç«¯å»ºè®®ä¼åä½¿ç¨æ¨ªå±ï¼å¹³æ¿ç«¯å»ºè®®ä¼åä½¿ç¨ç«å±ã</div>
-      <div class="modeChoiceGrid">
-        <button id="choosePortraitBtn" class="modeChoiceCard">
-          <strong>ç«å±æ¨¡å¼</strong>
-          <span>éååææ¥çï¼å¸å±æ´ç´§å</span>
-        </button>
-        <button id="chooseLandscapeBtn" class="modeChoiceCard">
-          <strong>æ¨ªå±æ¨¡å¼</strong>
-          <span>éåææºæ¨ªå±æ¸¸ç©ï¼æ£çæ´å¤§æ´æ¸æ¥</span>
-        </button>
-      </div>
-      <div class="modeHint">è¿å¥åä»å¯éè¿å³ä¸è§æé®åæ¢æ¾ç¤ºæ¨¡å¼ã</div>
-    </div>
-  </div>
-
-  <div id="rotateOverlay" class="rotateOverlay" aria-hidden="true">
-    <div class="rotateOverlayCard">
-      <div class="rotateTitle">è¯·æè½¬ææº</div>
-      <div class="rotateText">å½åä¸ºæ¨ªå±æ¨¡å¼ï¼è¯·å°è®¾å¤æè½¬ä¸ºæ¨ªååç»§ç»­ã</div>
-    </div>
   </div>
 
   <div id="overlay" class="overlay">

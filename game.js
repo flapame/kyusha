@@ -41,11 +41,16 @@ const UI_MODE_KEY = "flap_ui_mode";
 let uiMode = "portrait";
 
 function getStoredUIMode() {
-  return "";
+  try {
+    const value = localStorage.getItem(UI_MODE_KEY);
+    return value === "landscape" ? "landscape" : value === "portrait" ? "portrait" : "";
+  } catch {
+    return "";
+  }
 }
 
 function saveUIMode(mode) {
-  void mode;
+  try { localStorage.setItem(UI_MODE_KEY, mode); } catch {}
 }
 
 function isPhoneLikeViewport() {
@@ -122,18 +127,25 @@ function syncModeButtons() {
 }
 
 function showModeChooser() {
-  const overlay = $("modeOverlay");
-  if (!overlay) return;
-  overlay.classList.add("show");
-  $("choosePortraitBtn").onclick = async () => {
-    overlay.classList.remove("show");
+  const current = uiMode === "landscape" ? "横屏" : "竖屏";
+  openOverlay(`
+    <div class="introBrand">FLAP 作品</div>
+    <h2>选择显示模式</h2>
+    <p>请选择适合你设备的界面模式，当前默认：<strong>${current}</strong>。进入后可随时切换。</p>
+    <div class="grid2" style="margin-top:12px">
+      <button class="btnGood modePickBtn" id="pickPortraitBtn">竖屏模式</button>
+      <button class="btnDanger modePickBtn" id="pickLandscapeBtn">横屏模式</button>
+    </div>
+  `);
+  $("pickPortraitBtn").onclick = async () => {
+    closeOverlay();
     await releaseLandscapeLock();
-    applyUIMode("portrait", { persist: false });
+    applyUIMode("portrait");
     showIntro();
   };
-  $("chooseLandscapeBtn").onclick = async () => {
-    overlay.classList.remove("show");
-    applyUIMode("landscape", { persist: false });
+  $("pickLandscapeBtn").onclick = async () => {
+    closeOverlay();
+    applyUIMode("landscape");
     await requestLandscapeLock();
     showIntro();
   };
@@ -1468,52 +1480,32 @@ function renderAll() {
 }
 
 function renderHud() {
-  $("phaseBadge").textContent = `é¶æ®µï¼${phaseText(state.phase)}`;
-  $("turnBadge").textContent = `ååï¼${state.turn}`;
+  $("phaseBadge").textContent = `阶段：${phaseText(state.phase)}`;
+  $("turnBadge").textContent = `回合：${state.turn}`;
 
   const turnBadge = $("turnTeamBadge");
   if (turnBadge) {
-    turnBadge.textContent = `å½åè¡å¨ï¼${TEAM[state.activeTeam].name}`;
+    turnBadge.textContent = `当前行动：${TEAM[state.activeTeam].name}`;
     turnBadge.className = `badge turn ${state.activeTeam}`;
   }
 
   const blueHud = $("blueHud");
   const redHud = $("redHud");
-  const blueTopHud = $("blueTopHud");
-  const redTopHud = $("redTopHud");
-  if (blueHud) blueHud.textContent = `æ¬æ¹ï¼èæ¹ Â· è¡å¨ç¹ ${teamAP("blue")} / ${state.apMax.blue || 0}`;
-  if (redHud) redHud.textContent = `æ¬æ¹ï¼çº¢æ¹ Â· è¡å¨ç¹ ${teamAP("red")} / ${state.apMax.red || 0}`;
-  if (blueTopHud) blueTopHud.textContent = `è¡å¨ç¹ ${teamAP("blue")} / ${state.apMax.blue || 0}`;
-  if (redTopHud) redTopHud.textContent = `è¡å¨ç¹ ${teamAP("red")} / ${state.apMax.red || 0}`;
+  if (blueHud) blueHud.textContent = `本方：蓝方 · 行动点 ${teamAP("blue")} / ${state.apMax.blue || 0}`;
+  if (redHud) redHud.textContent = `本方：红方 · 行动点 ${teamAP("red")} / ${state.apMax.red || 0}`;
 
   const blueCard = $("blueCard");
   const redCard = $("redCard");
-  const blueTopCard = $("blueTopCard");
-  const redTopCard = $("redTopCard");
   if (blueCard && redCard) {
     blueCard.classList.toggle("teamActive", state.activeTeam === "blue");
     redCard.classList.toggle("teamActive", state.activeTeam === "red");
   }
-  if (blueTopCard && redTopCard) {
-    blueTopCard.classList.toggle("teamActive", state.activeTeam === "blue");
-    redTopCard.classList.toggle("teamActive", state.activeTeam === "red");
-  }
 
-  const blueApBar = $("blueApBar");
-  const redApBar = $("redApBar");
-  if (blueApBar) blueApBar.style.width = `${clamp((teamAP("blue") / Math.max(state.apMax.blue, 1)) * 100, 0, 100)}%`;
-  if (redApBar) redApBar.style.width = `${clamp((teamAP("red") / Math.max(state.apMax.red, 1)) * 100, 0, 100)}%`;
+  $("blueApBar").style.width = `${clamp((teamAP("blue") / Math.max(state.apMax.blue, 1)) * 100, 0, 100)}%`;
+  $("redApBar").style.width = `${clamp((teamAP("red") / Math.max(state.apMax.red, 1)) * 100, 0, 100)}%`;
 
-  const blueSummary = $("blueSummary");
-  const redSummary = $("redSummary");
-  const blueTopSummary = $("blueTopSummary");
-  const redTopSummary = $("redTopSummary");
-  const blueNames = aliveHeroes("blue").map(h => h.name).join("ã") || "å¨åéµäº¡";
-  const redNames = aliveHeroes("red").map(h => h.name).join("ã") || "å¨åéµäº¡";
-  if (blueSummary) blueSummary.textContent = blueNames;
-  if (redSummary) redSummary.textContent = redNames;
-  if (blueTopSummary) blueTopSummary.textContent = blueNames;
-  if (redTopSummary) redTopSummary.textContent = redNames;
+  $("blueSummary").textContent = aliveHeroes("blue").map(h => h.name).join("、") || "全员阵亡";
+  $("redSummary").textContent = aliveHeroes("red").map(h => h.name).join("、") || "全员阵亡";
 }
 
 function phaseText(phase) {
@@ -2759,7 +2751,8 @@ function bindButtons() {
 // ----------------------
 function init() {
   bindButtons();
-  applyUIMode("portrait", { persist: false });
+  const storedMode = getStoredUIMode();
+  applyUIMode(storedMode || "portrait", { persist: false });
   updateHud();
   renderAll();
   showModeChooser();
