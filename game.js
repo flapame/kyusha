@@ -40,6 +40,8 @@ const $ = (id) => document.getElementById(id);
 const UI_MODE_KEY = "flap_ui_mode";
 let uiMode = "portrait";
 
+const LANDSCAPE_STAGE = { width: 1440, height: 810 };
+
 function getStoredUIMode() {
   try {
     const value = localStorage.getItem(UI_MODE_KEY);
@@ -57,25 +59,6 @@ function isPhoneLikeViewport() {
   return window.matchMedia("(pointer: coarse)").matches && Math.max(window.innerWidth, window.innerHeight) <= 1024;
 }
 
-const LANDSCAPE_BASE_WIDTH = 1280;
-const LANDSCAPE_BASE_HEIGHT = 720;
-
-function syncLandscapeScale() {
-  const root = document.documentElement;
-  if (!root) return;
-  if (uiMode !== "landscape") {
-    root.style.setProperty("--landscape-scale", "1");
-    return;
-  }
-
-  const paddingX = 16;
-  const paddingY = 16;
-  const vw = Math.max(window.innerWidth - paddingX, 320);
-  const vh = Math.max(window.innerHeight - paddingY, 320);
-  const scale = Math.min(vw / LANDSCAPE_BASE_WIDTH, vh / LANDSCAPE_BASE_HEIGHT, 1);
-  root.style.setProperty("--landscape-scale", String(Math.max(0.42, Math.min(scale, 1)).toFixed(4)));
-}
-
 function shouldShowRotateOverlay() {
   return uiMode === "landscape" && isPhoneLikeViewport() && window.matchMedia("(orientation: portrait)").matches;
 }
@@ -86,6 +69,29 @@ function updateRotateOverlay() {
   overlay.classList.toggle("show", shouldShowRotateOverlay());
 }
 
+
+function updateLandscapeScale() {
+  const root = document.documentElement;
+  if (uiMode !== "landscape") {
+    root.style.setProperty("--landscape-scale", "1");
+    root.style.setProperty("--landscape-stage-w", `${LANDSCAPE_STAGE.width}px`);
+    root.style.setProperty("--landscape-stage-h", `${LANDSCAPE_STAGE.height}px`);
+    return;
+  }
+
+  const safePad = 12;
+  const viewportW = Math.max(window.innerWidth - safePad * 2, 320);
+  const viewportH = Math.max(window.innerHeight - safePad * 2, 240);
+  const scale = Math.min(
+    1,
+    viewportW / LANDSCAPE_STAGE.width,
+    viewportH / LANDSCAPE_STAGE.height
+  );
+
+  root.style.setProperty("--landscape-stage-w", `${LANDSCAPE_STAGE.width}px`);
+  root.style.setProperty("--landscape-stage-h", `${LANDSCAPE_STAGE.height}px`);
+  root.style.setProperty("--landscape-scale", String(scale));
+}
 async function requestLandscapeLock() {
   try {
     if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
@@ -131,7 +137,7 @@ function applyUIMode(mode, opts = {}) {
   if (opts.persist !== false) saveUIMode(nextMode);
   syncModeButtons();
   syncLandscapeLayout();
-  syncLandscapeScale();
+  updateLandscapeScale();
   renderAll();
   updateRotateOverlay();
 }
@@ -2801,17 +2807,14 @@ function bindButtons() {
   };
 
   window.addEventListener("resize", () => {
-    syncLandscapeScale();
+    updateLandscapeScale();
     updateRotateOverlay();
   }, { passive: true });
   window.addEventListener("orientationchange", () => {
-    syncLandscapeScale();
+    updateLandscapeScale();
     updateRotateOverlay();
   }, { passive: true });
-  document.addEventListener("fullscreenchange", () => {
-    syncLandscapeScale();
-    updateRotateOverlay();
-  });
+  document.addEventListener("fullscreenchange", updateRotateOverlay);
 }
 
 // ----------------------
@@ -2822,7 +2825,6 @@ function init() {
   const storedMode = getStoredUIMode();
   const initialMode = storedMode || "portrait";
   applyUIMode(initialMode, { persist: false });
-  syncLandscapeScale();
   updateHud();
   renderAll();
   showModeChooser();

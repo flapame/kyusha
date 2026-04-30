@@ -217,39 +217,32 @@ body.mode-landscape .topTeamStrip{
 }
 
 
-/* === step4 landscape scale + avatar visibility === */
+/* === landscape scale fix: fit the whole game like a video fullscreen frame === */
 body.mode-landscape{
-  align-items:center;
+  padding:0 !important;
+  overflow:hidden !important;
+  display:block !important;
 }
+
 body.mode-landscape #app{
-  --landscape-scale: 1;
-  width:1280px;
-  height:720px;
-  min-width:1280px;
-  min-height:720px;
-  transform:scale(var(--landscape-scale));
-  transform-origin:center center;
-  margin:0 auto;
+  position:fixed !important;
+  left:50% !important;
+  top:50% !important;
+  width:var(--landscape-stage-w, 1440px) !important;
+  height:var(--landscape-stage-h, 810px) !important;
+  min-width:var(--landscape-stage-w, 1440px) !important;
+  min-height:var(--landscape-stage-h, 810px) !important;
+  transform:translate(-50%, -50%) scale(var(--landscape-scale, 1)) !important;
+  transform-origin:center center !important;
+  overflow:hidden !important;
 }
-body.mode-landscape .actionDockHero .heroBrief{
-  flex-direction:row !important;
-  align-items:flex-start !important;
-  gap:10px;
+
+body.mode-landscape .log{
+  height:150px !important;
 }
-body.mode-landscape .actionDockHero .avatar,
-body.mode-landscape .actionDockHero .heroAvatarShell,
-body.mode-landscape .actionDockHero .heroPortraitShell{
-  width:clamp(72px, 8vw, 96px) !important;
-  height:clamp(72px, 8vw, 96px) !important;
-  flex:0 0 auto !important;
-}
-body.mode-landscape .actionDockHero .avatarImg,
-body.mode-landscape .actionDockHero .heroPortraitImg{
+
+body.mode-landscape .avatarImg,
+body.mode-landscape .unitAvatar{
   object-fit:contain !important;
-}
-body.mode-landscape .actionDockHero .heroBriefMain{
-  min-width:0;
-}
-body.mode-landscape .actionDockHero .heroCard{
-  overflow:visible;
+  object-position:center center !important;
 }
