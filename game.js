@@ -111,6 +111,7 @@ function applyUIMode(mode, opts = {}) {
   document.documentElement.dataset.uiMode = nextMode;
   if (opts.persist !== false) saveUIMode(nextMode);
   syncModeButtons();
+  syncLandscapeLayout();
   renderAll();
   updateRotateOverlay();
 }
@@ -123,6 +124,22 @@ function syncModeButtons() {
   const endTurnBtn = $("btnEndTurn");
   if (endTurnBtn) {
     endTurnBtn.textContent = uiMode === "landscape" ? "结束回合" : "结束回合";
+  }
+}
+
+function syncLandscapeLayout() {
+  const topTeamStrip = $("topTeamStrip");
+  const topDeck = document.querySelector(".topDeck");
+  const blueCard = $("blueCard");
+  const redCard = $("redCard");
+  if (!topDeck || !blueCard || !redCard) return;
+
+  if (uiMode === "landscape" && topTeamStrip) {
+    if (blueCard.parentElement !== topTeamStrip) topTeamStrip.appendChild(blueCard);
+    if (redCard.parentElement !== topTeamStrip) topTeamStrip.appendChild(redCard);
+  } else {
+    if (blueCard.parentElement !== topDeck) topDeck.appendChild(blueCard);
+    if (redCard.parentElement !== topDeck) topDeck.appendChild(redCard);
   }
 }
 
@@ -1486,7 +1503,7 @@ function updateLandscapeOverlayState(hero) {
   const logDock = document.querySelector(".logDock");
   if (!overlay || !logDock) return;
 
-  const active = uiMode === "landscape" && !!hero && state.phase === "battle" && canAct(hero);
+  const active = uiMode === "landscape" && !!hero && state.phase === "battle";
   overlay.classList.toggle("show", active);
   overlay.setAttribute("aria-hidden", active ? "false" : "true");
   logDock.classList.toggle("skillOverlayActive", active);
