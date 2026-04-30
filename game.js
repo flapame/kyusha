@@ -63,24 +63,6 @@ function shouldShowRotateOverlay() {
   return uiMode === "landscape" && isPhoneLikeViewport() && window.matchMedia("(orientation: portrait)").matches;
 }
 
-const LANDSCAPE_STAGE_WIDTH = 1600;
-const LANDSCAPE_STAGE_HEIGHT = 860;
-
-function updateLandscapeStageScale() {
-  const root = document.documentElement;
-  if (!root) return;
-
-  if (uiMode !== "landscape") {
-    root.style.removeProperty("--landscape-stage-scale");
-    return;
-  }
-
-  const vw = Math.max(window.innerWidth - 16, 320);
-  const vh = Math.max(window.innerHeight - 16, 240);
-  const scale = Math.min(vw / LANDSCAPE_STAGE_WIDTH, vh / LANDSCAPE_STAGE_HEIGHT, 1);
-  root.style.setProperty("--landscape-stage-scale", String(Math.max(0.35, Math.min(scale, 1)).toFixed(4)));
-}
-
 function updateRotateOverlay() {
   const overlay = $("rotateOverlay");
   if (!overlay) return;
@@ -89,7 +71,26 @@ function updateRotateOverlay() {
 
 
 function updateLandscapeScale() {
-  updateLandscapeStageScale();
+  const root = document.documentElement;
+  if (uiMode !== "landscape") {
+    root.style.setProperty("--landscape-scale", "1");
+    root.style.setProperty("--landscape-stage-w", `${LANDSCAPE_STAGE.width}px`);
+    root.style.setProperty("--landscape-stage-h", `${LANDSCAPE_STAGE.height}px`);
+    return;
+  }
+
+  const safePad = 12;
+  const viewportW = Math.max(window.innerWidth - safePad * 2, 320);
+  const viewportH = Math.max(window.innerHeight - safePad * 2, 240);
+  const scale = Math.min(
+    1,
+    viewportW / LANDSCAPE_STAGE.width,
+    viewportH / LANDSCAPE_STAGE.height
+  );
+
+  root.style.setProperty("--landscape-stage-w", `${LANDSCAPE_STAGE.width}px`);
+  root.style.setProperty("--landscape-stage-h", `${LANDSCAPE_STAGE.height}px`);
+  root.style.setProperty("--landscape-scale", String(scale));
 }
 async function requestLandscapeLock() {
   try {
