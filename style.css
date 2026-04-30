@@ -79,6 +79,7 @@ img{max-width:100%;display:block}
 .gameTitle{font-size:18px;font-weight:900;letter-spacing:.02em}
 .gameSubtitle{font-size:12px;color:var(--muted)}
 .topRightBadges{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.topActions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
 .badge{
   display:inline-flex;
   align-items:center;
@@ -378,7 +379,7 @@ img{max-width:100%;display:block}
 .unitAvatar{
   width:100%;
   height:100%;
-  object-fit:contain;
+  object-fit:cover;
   image-rendering:pixelated;
 }
 .unitAvatarFallback{
@@ -520,7 +521,7 @@ img{max-width:100%;display:block}
 .skillIconImg{
   width:100%;
   height:100%;
-  object-fit:contain;
+  object-fit:cover;
   image-rendering:pixelated;
 }
 .skillIconFallback{
@@ -597,7 +598,7 @@ img{max-width:100%;display:block}
 .avatarImg{
   width:100%;
   height:100%;
-  object-fit:contain;
+  object-fit:cover;
   image-rendering:pixelated;
 }
 .heroBriefMain{flex:1;min-width:0}
@@ -662,6 +663,60 @@ img{max-width:100%;display:block}
   padding:16px;
 }
 .overlay.show{display:flex}
+
+.rotateOverlay{
+  position:fixed;
+  inset:0;
+  z-index:95;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(8px);
+  padding:20px;
+  pointer-events:auto;
+}
+.rotateOverlay.show{display:flex}
+.rotateOverlayCard{
+  width:min(440px,100%);
+  border-radius:22px;
+  background:linear-gradient(180deg,#171d33,#101627);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 70px rgba(0,0,0,.5);
+  padding:20px;
+  text-align:center;
+}
+.rotateOverlayBadge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(90,162,255,.16);
+  color:#cfe3ff;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.04em;
+  margin-bottom:12px;
+}
+.rotateOverlayCard h2{
+  margin:0 0 10px;
+  font-size:24px;
+}
+.rotateOverlayCard p{
+  margin:0;
+  color:var(--muted);
+  line-height:1.7;
+  font-size:14px;
+}
+.rotateOverlayActions{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+.rotateOverlayActions button{
+  min-width:140px;
+}
 .modal{
   width:min(760px,100%);
   max-height:90vh;
@@ -710,7 +765,7 @@ img{max-width:100%;display:block}
 .pickAvatar img{
   width:100%;
   height:100%;
-  object-fit:contain;
+  object-fit:cover;
   image-rendering:pixelated;
 }
 .pickAvatar span{
@@ -802,7 +857,7 @@ img{max-width:100%;display:block}
 }
 
 .hero-avatar-slot{width:92px;height:78px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0d111a;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-.hero-avatar-slot img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.hero-avatar-slot img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 
 
 /* 强化领域 / 封路视觉 */
@@ -1046,57 +1101,81 @@ img{max-width:100%;display:block}
   100%{transform:scale(2.15);opacity:0}
 }
 
+/* 手机端棋盘与信息面板适配 */
+@media (max-width: 960px){
+  .unit{
+    inset:2px;
+    padding:2px 2px 3px;
+    gap:1px;
+    border-radius:9px;
+  }
+  .unitAvatarShell{
+    border-radius:7px;
+  }
+  .unitHpBar{height:4px}
+  .unitHpText{font-size:8px; line-height:1}
+  .coord{font-size:9px}
+  .heroBrief{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .avatar,.heroAvatarShell{
+    width:100%;
+    height:88px;
+    border-radius:14px;
+  }
+  .heroBriefMain{
+    width:100%;
+    min-width:0;
+  }
+  .heroMeta{
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+  .skillChipRow{
+    justify-content:flex-start;
+  }
+  .pill{
+    max-width:100%;
+    white-space:normal;
+  }
+  .selectedPill,.selectedState{
+    max-width:100%;
+    white-space:normal;
+  }
+}
+@media (max-width: 560px){
+  .unit{
+    inset:1px;
+    padding:2px 2px 2px;
+    gap:1px;
+    border-radius:8px;
+  }
+  .unitAvatarShell{border-radius:6px}
+  .unitHpBar{height:3px}
+  .unitHpText{font-size:7px}
+  .coord{font-size:8px; left:4px; top:3px}
+  .heroCard{
+    width:100%;
+  }
+  .heroBrief{
+    gap:6px;
+  }
+  .avatar,.heroAvatarShell{
+    height:80px;
+    border-radius:12px;
+  }
+  .skillDetailHead{
+    gap:8px;
+  }
+  .skillIconSlot{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+  }
+}
 
-/* 模式选择与横屏提示 */
-.modeChoiceGrid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-}
-.modeChoiceCard{
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:18px;
-  padding:14px;
-  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-  color:var(--text);
-  text-align:left;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  min-height:112px;
-  box-shadow:0 10px 24px rgba(0,0,0,.2);
-}
-.modeChoiceCard strong{font-size:16px;line-height:1.2}
-.modeChoiceCard span{font-size:12px;color:var(--muted);line-height:1.55}
-.modeChoiceCard.portrait{border-color:rgba(90,162,255,.3);background:linear-gradient(180deg, rgba(90,162,255,.14), rgba(255,255,255,.03));}
-.modeChoiceCard.landscape{border-color:rgba(255,109,125,.3);background:linear-gradient(180deg, rgba(255,109,125,.14), rgba(255,255,255,.03));}
-.modeChoiceTip{margin-top:12px;font-size:12px;color:var(--muted);}
-
-.rotateHint{
-  position:fixed;
-  inset:0;
-  z-index:120;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(5,8,14,.94);
-  color:#fff;
-  font-size:18px;
-  font-weight:800;
-  text-align:center;
-  padding:24px;
-  letter-spacing:.02em;
-}
-.rotateHint.show{display:flex}
-body.needs-landscape #app{filter:blur(1px);pointer-events:none;user-select:none}
-body.needs-landscape .rotateHint{display:flex}
 
 /* 英雄信息里的大头像使用全图展示，避免裁切 */
-.actionDockHero .avatarImg{
-  object-fit:contain;
-  background:#0d111a;
-}
-.actionDockHero .avatar,
-.actionDockHero .heroAvatarShell{
-  background:#0d111a;
-}
+.actionDockHero .avatarImg{object-fit:contain;background:#0d111a}
+.actionDockHero .avatar,.actionDockHero .heroAvatarShell{background:#0d111a}

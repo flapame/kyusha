@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0b1020" />
   <title>FLAP 作品 · 战棋对战</title>
   <link rel="stylesheet" href="style.css" />
@@ -117,8 +117,16 @@
     </div>
   </div>
 
-  <div id="rotateHint" class="rotateHint" aria-live="polite">
-    请切换到横屏后继续游玩
+  <div id="rotateOverlay" class="rotateOverlay" aria-hidden="true">
+    <div class="rotateOverlayCard">
+      <div class="rotateOverlayBadge">横屏模式</div>
+      <h2>请横过手机继续游玩</h2>
+      <p>当前已切换到横屏 UI。请将手机旋转为横屏，系统支持时会自动锁定；如果你的浏览器不支持锁定，请保持横屏后继续操作。</p>
+      <div class="rotateOverlayActions">
+        <button id="retryLandscapeBtn" class="btnGood">重新锁定横屏</button>
+        <button id="backPortraitBtn" class="btnGhost">返回竖屏</button>
+      </div>
+    </div>
   </div>
 
   <script src="heroes.js"></script>
