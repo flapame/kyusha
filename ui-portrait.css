@@ -76,3 +76,18 @@ body.mode-portrait .modeChoiceCard span{font-size:11px}
   body.mode-portrait .gojoBlueMarkLabel,
   body.mode-portrait .gojoRedMarkLabel{font-size:7px;padding:1px 3px}
 }
+
+/* ---- 追加：竖屏模式安全修正 ---- */
+body.mode-portrait .teamStrip{display:none}
+body.mode-portrait .unitAvatarShell{aspect-ratio:1 / 1}
+body.mode-portrait .unitAvatar{object-fit:contain}
+body.mode-portrait .unitAvatarWrap{gap:1px;padding-top:0}
+body.mode-portrait .unitHpText{white-space:nowrap}
+body.mode-portrait .modeChoiceCard{min-height:102px}
+body.mode-portrait .topActions button{min-width:0;padding:8px 11px;font-size:12px}
+body.mode-portrait .heroPortraitShell{width:96px;aspect-ratio:3 / 4}
+body.mode-portrait .heroPortraitImg{width:100%;height:100%;object-fit:contain}
+body.mode-portrait .heroBrief{align-items:flex-start}
+body.mode-portrait .heroDetailScroll{max-height:none}
+
+body.mode-portrait .unitAvatarShell{height:auto;}
